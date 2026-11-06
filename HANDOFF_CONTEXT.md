@@ -32,6 +32,8 @@
    - Đường dẫn: `docs/superpowers/specs/2026-11-06-ai-writing-style-auditor-design.md`
 3. **Kế hoạch Triển khai Chi tiết 4 Tasks (Implementation Plan — Phương án b)**:
    - Đường dẫn: `docs/superpowers/plans/2026-11-06-ai-writing-style-auditor-plan.md`
+4. **Bản Mẫu Giao diện Frontend Chuẩn (Approved Standalone UI Prototype)**:
+   - Đường dẫn: `ai-writing-style-auditor-ui.html` (Kết hợp tinh hoa UX/UI từ *Agni.vn* và *EziTranslate*: Chuyển đổi nền Sáng/Tối kèm họa tiết lưới bản thảo + Cross-hair + Đèn UV, Mascot mắt đảo theo chuột, hiệu ứng từ tính khi di gần icon `.magnetic-icon`, viền thẻ phát sáng theo tọa độ chuột `.proximity-card`, bộ bài xòe 3D `.fan-deck`, và Bàn Kiểm toán 3 Cột hoàn chỉnh). Khi triển khai Task 3 & Task 4, hãy chuyển hóa trực tiếp giao diện và hệ thống CSS/Hiệu ứng từ file này sang các React Component trong `src/`.
 
 ### B. Cơ sở Tri thức Chuyên sâu 26 Dấu hiệu Văn phong AI (Knowledge Base)
 0. `Sign of AI Writing.md` & `knowledge_base/source/Sign_of_AI_Writing_Full_Original.md`: Toàn văn tài liệu gốc ban đầu của chủ dự án (180 KB).
