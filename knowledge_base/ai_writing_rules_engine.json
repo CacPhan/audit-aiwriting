@@ -1,0 +1,279 @@
+{
+  "engine_id": "VN-AI-STYLE-DECISION-ENGINE-V1",
+  "total_standardized_signs": 26,
+  "rules_index": [
+    {
+      "id": "LEX-01",
+      "name": "Mật độ cao 'Từ vựng định danh AI' & Sáo ngữ học thuật giả tạo",
+      "source_ref": "WP:AIVOCAB / WP:AIWORDS",
+      "priority_stage": "P3",
+      "vi_triggers": [
+        "bức tranh toàn cảnh", "tấm thảm đa sắc", "đóng vai trò then chốt", "điều hướng qua những thách thức",
+        "tích hợp một cách liền mạch", "đi sâu khám phá", "sự giao thoa phức tạp", "đa chiều", "đa diện",
+        "bối cảnh không ngừng biến đổi", "góc nhìn giá trị", "nuôi dưỡng sự đổi mới", "tận dụng tối đa"
+      ],
+      "en_triggers_by_era": {
+        "2023_2024_gpt4": ["delve", "tapestry", "testament", "pivotal", "intricate", "interplay", "meticulously", "realm", "beacon", "additionally"],
+        "2024_2025_gpt4o": ["align with", "bolstered", "fostering", "highlighting", "showcasing", "underscoring", "vibrant", "enhance"],
+        "2025_2026_gpt5_gpt6": ["multifaceted", "practical", "prioritize", "quietly", "steady", "universally", "leverage", "matters", "echoed"],
+        "grok_specific": ["causal", "empirical", "correlate", "underscore"]
+      },
+      "decision_logic": "IF match_count >= 3 per 150 words OR matches unnatural calque ('điều hướng thách thức', 'tấm thảm văn hóa') -> REPLACE with concrete domain verb/noun or DELETE intensifier. PRESERVE if literal technical term (e.g. maritime navigation)."
+    },
+    {
+      "id": "LEX-02",
+      "name": "Né tránh hệ từ cơ bản 'là/có' bằng động từ phô trương",
+      "source_ref": "WP:AINOCOPULA / WP:AIREPRESENTS",
+      "priority_stage": "P3",
+      "vi_triggers": [
+        "đóng vai trò là", "đóng vai trò như là", "đứng như một", "hoạt động như một",
+        "giữ vị thế là", "sở hữu", "tự hào có", "nổi bật với", "đề cập đến"
+      ],
+      "decision_logic": "IF subject is inanimate/location AND verb is 'sở hữu / tự hào có / nổi bật với' -> REPLACE with 'có / gồm'. IF 'X đóng vai trò là Y' expresses essential taxonomic identity -> REPLACE with 'là'. IF lead sentence defines entity X via 'X đề cập đến' -> REPLACE with 'X là'."
+    },
+    {
+      "id": "LEX-03",
+      "name": "Ngôn ngữ quảng cáo, tán dương sáo rỗng",
+      "source_ref": "WP:AIPUFFERY / WP:AIPEACOCK",
+      "priority_stage": "P3",
+      "vi_triggers": [
+        "nép mình giữa", "tọa lạc tại trái tim", "bề dày lịch sử phong phú", "cam kết không ngừng nghỉ",
+        "minh chứng sống động cho", "tiên phong mang tính đột phá", "sự kết hợp hoàn hảo giữa"
+      ],
+      "decision_logic": "Apply Fact-Extraction Test: Strip evaluative adjectives; if clause contains zero verifiable facts/numbers/dates -> DELETE clause; else retain only factual kernel."
+    },
+    {
+      "id": "LEX-04",
+      "name": "Đa dạng từ vựng giả tạo / Né lặp từ cơ học",
+      "source_ref": "WP:AIELEVAR / User_Block_1.Item_2",
+      "priority_stage": "P3",
+      "vi_triggers": [
+        "Ngân hàng này -> Tổ chức tín dụng này -> Định chế tài chính trên -> Nhà băng này"
+      ],
+      "decision_logic": "IF technical/legal term is cycled across synonyms -> LOCK to 1 canonical term. IF subject noun is cycled in consecutive clauses -> APPLY zero-anaphora (SYN-VN-01) instead of ornate epithets."
+    },
+    {
+      "id": "LEX-05",
+      "name": "Diễn đạt mơ hồ về mối liên hệ / gắn kết",
+      "source_ref": "WP:AICONNECT / WP:AIASSOCIATION",
+      "priority_stage": "P3",
+      "vi_triggers": [
+        "gắn liền với các hoạt động", "có mối liên hệ mật thiết với", "được ghi nhận trong mối tương quan với", "xoay quanh các lĩnh vực liên quan đến"
+      ],
+      "decision_logic": "IF source text specifies exact role/action (e.g., 'là Giám đốc', 'giảng dạy tại', 'làm tăng 5%') -> REPLACE vague association with direct verb. ELSE flag [VERIFY_EXACT_RELATION] if factual."
+    },
+    {
+      "id": "LEX-VN-01",
+      "name": "Tắc nghẽn âm tiết Hán – Việt & Danh hóa chuỗi",
+      "source_ref": "User_Block_1.Item_6_3",
+      "priority_stage": "P3",
+      "vi_triggers": [
+        "Chuỗi >= 4 từ ghép Hán-Việt trừu tượng liên tiếp (>= 8 âm tiết)",
+        "thực hiện việc tiết giảm", "triển khai sự tái cấu trúc", "quá trình tối ưu hóa hiệu suất"
+      ],
+      "decision_logic": "Unpack nominalized Sino-Vietnamese head into active verb; interleave native Vietnamese dynamic verbs ('kéo tụt', 'đẩy lên', 'bó hẹp', 'lọc bỏ', 'giữ nhịp') while preserving core technical Sino-Vietnamese nouns."
+    },
+    {
+      "id": "SYN-01",
+      "name": "Đẳng cấu cú pháp liên câu (Syntactic Isomorphism)",
+      "source_ref": "User_Block_1.Item_2",
+      "priority_stage": "P2",
+      "vi_triggers": [
+        ">= 2 câu liên tiếp trùng khung: [Trạng ngữ bối cảnh 7-8 chữ], [Chủ-Vị-Tân 12-14 chữ], [qua đó/từ đó/góp phần 8-10 chữ]"
+      ],
+      "decision_logic": "Check causal/subsumption link between isomorphic sentences -> Merge related clauses, vary sentence openers (Topic, Direct Subject, Verb-chaining), and prune trailing resultative clauses."
+    },
+    {
+      "id": "SYN-02",
+      "name": "Mệnh đề phụ tổng kết/đánh giá giả tạo cuối câu",
+      "source_ref": "WP:SUPERFICIAL / User_Block_1.Item_2",
+      "priority_stage": "P2",
+      "vi_triggers": [
+        ", qua đó nâng cao", ", qua đó khẳng định", ", từ đó đảm bảo", ", góp phần tối ưu hóa",
+        ", điều này phản ánh", ", mở ra triển vọng", ", tạo tiền đề vững chắc cho"
+      ],
+      "decision_logic": "Tail-Pruning Test: Does trailing clause contain new quantitative data, named entity, or concrete mechanism? IF NO -> DELETE trailing clause completely. IF YES but represents unverified intention -> CHANGE 'qua đó/từ đó' to 'nhằm/để'."
+    },
+    {
+      "id": "SYN-03",
+      "name": "Cấu trúc sóng đôi phủ định (Negative Parallelisms)",
+      "source_ref": "WP:AIPARALLEL",
+      "priority_stage": "P3",
+      "vi_triggers": [
+        "Không chỉ... mà còn...", "Không đơn thuần là... mà là...", "Đó không phải là... đó là...", "thay vì chỉ đơn thuần là"
+      ],
+      "decision_logic": "Enforce max quota <= 1 negative parallelism per 500 words. IF negated element X is a strawman/trivial -> CONVERT to direct affirmative statement or native 'vừa... vừa...'."
+    },
+    {
+      "id": "SYN-04",
+      "name": "Quy tắc số 3 cơ học (Mechanical Rule of Three)",
+      "source_ref": "WP:RO3",
+      "priority_stage": "P3",
+      "vi_triggers": [
+        "Liệt kê 3 tính từ/động từ/danh từ ('A, B và C') lặp lại >= 3 lần/đoạn hoặc bộ ba kép trong 1 câu"
+      ],
+      "decision_logic": "IF triad is domain taxonomy (e.g., 3 pillars of Basel II) -> PRESERVE. IF triad contains synonymous fillers ('đồng bộ, toàn diện và hiệu quả') -> TRIM to 1 precise word or 2-item rhythmic pair."
+    },
+    {
+      "id": "SYN-VN-01",
+      "name": "Dư thừa đại từ hồi chỉ / Thiếu tỉnh lược chủ ngữ",
+      "source_ref": "User_Block_1.Item_6_1",
+      "priority_stage": "P2",
+      "vi_triggers": [
+        "Khi nó ", "nó đã ", "nó có thể", "Điều này ", "Việc này ", "của họ", "của nó", "của mình"
+      ],
+      "decision_logic": "BAN inanimate 'nó' in formal prose. IF same subject across clauses without intervening distractor noun -> APPLY zero-anaphora (delete pronoun). DELETE redundant reflexive possessives ('của họ/của mình')."
+    },
+    {
+      "id": "SYN-VN-02",
+      "name": "Đánh mất cấu trúc Đề – Thuyết vì khung Chủ – Vị dịch máy",
+      "source_ref": "User_Block_1.Item_6_2",
+      "priority_stage": "P2",
+      "vi_triggers": [
+        "Đối với vấn đề [X], nó thường được...", "Liên quan đến khía cạnh [X],...", "Xét trên phương diện [X],..."
+      ],
+      "decision_logic": "Strip wrapper ('Đối với vấn đề', 'nó'); front [X] directly as Topic (Đề) and convert passive predicate into active Comment (Thuyết)."
+    },
+    {
+      "id": "SYN-VN-03",
+      "name": "[Bổ sung] Bị động dịch máy ('được/bị... bởi') & Danh hóa ngoại lai ('việc/sự + V')",
+      "source_ref": "NEW-VN-01",
+      "priority_stage": "P2",
+      "vi_triggers": [
+        "được [V] bởi", "bị [V] bởi", "Thông qua việc [V]", "Bằng việc [V]", "Việc [V] đã mang lại sự [N]"
+      ],
+      "decision_logic": "Convert 'được/bị V bởi Agent' -> 'Agent + V'. Convert 'Thông qua việc V' -> 'Nhờ V / Khi V'. Unpack sentence-initial 'Việc/Sự + V' into verbal or conditional clause."
+    },
+    {
+      "id": "RHY-01",
+      "name": "Độ biến thiên chiều dài câu cực thấp (Low Burstiness)",
+      "source_ref": "User_Block_1.Item_1",
+      "priority_stage": "P3",
+      "vi_triggers": [
+        "CV_L < 0.18 across >= 4 sentences; all sentences clustered in 18-28 words or 12-20 words"
+      ],
+      "decision_logic": "Combine 2 contrasting/causal medium sentences into 1 multi-layered complex sentence (35-45 words) using colon (:) or 'trong khi... thì...', paired with a crisp 8-14 word punchline sentence."
+    },
+    {
+      "id": "DIS-01",
+      "name": "Cấu trúc 'Đoạn văn đóng hộp' 4 bước khép kín",
+      "source_ref": "User_Block_1.Item_3",
+      "priority_stage": "P1",
+      "vi_triggers": [
+        "4-sentence paragraphs: [1-Topic] -> [2-Cụ thể] -> [3-Tuy nhiên] -> [4-Do đó/Như vậy]"
+      ],
+      "decision_logic": "Delete Sentence 4 mini-conclusion; rewrite end of Paragraph k or start of Paragraph k+1 as an open bridge/pivot linking the two paragraphs."
+    },
+    {
+      "id": "DIS-02",
+      "name": "Câu kết đoạn / kết mục tổng kết thừa",
+      "source_ref": "WP:CONCLUSION / WP:INCONCLUSION",
+      "priority_stage": "P1",
+      "vi_triggers": [
+        "Tóm lại,", "Nhìn chung,", "Như vậy, qua đó có thể thấy", "Chính vì vậy, cần... để phát triển bền vững"
+      ],
+      "decision_logic": "IF sentence introduces zero new facts/numbers and merely echoes the paragraph's topic sentence -> DELETE 100%."
+    },
+    {
+      "id": "DIS-03",
+      "name": "[Bổ sung] Lạm dụng từ nối khung đầu câu cơ học",
+      "source_ref": "NEW-VN-02 / WP:AIVOCAB_Additionally",
+      "priority_stage": "P2",
+      "vi_triggers": [
+        "Hơn nữa,", "Thêm vào đó,", "Bên cạnh đó,", "Ngoài ra,", "Cụ thể,", "Đáng chú ý là,", "Thật vậy,"
+      ],
+      "decision_logic": "Cap sentence-initial connectives at <= 1 per paragraph. Convert others into native Vietnamese pre-verbal particles ('cũng', 'còn', 'lại', 'vẫn', 'mới') or punctuation (:)."
+    },
+    {
+      "id": "DIS-04",
+      "name": "Mở đầu định nghĩa tiêu đề như thực thể độc lập",
+      "source_ref": "WP:AISIGNS_Leads_Proper_Nouns",
+      "priority_stage": "P3",
+      "vi_triggers": [
+        "'[Tiêu đề danh sách/chủ đề rộng] là một tập hợp / đề cập đến...'"
+      ],
+      "decision_logic": "Rewrite lead sentence to state the core phenomenon or action directly without quoting the broad title as a standalone noun."
+    },
+    {
+      "id": "ARG-01",
+      "name": "Trọng số luận điểm phẳng & Mật độ thông tin đồng đều",
+      "source_ref": "User_Block_1.Item_4 / WP:AI-ISM",
+      "priority_stage": "P1",
+      "vi_triggers": [
+        "Equal word count across all points (<15% variance) + absence of concrete numbers, dates, exceptions"
+      ],
+      "decision_logic": "Establish 60/40 Pareto hierarchy (deep-dive primary driver, group secondary factors); preserve 100% of specific facts/numbers against regression smoothing."
+    },
+    {
+      "id": "ARG-02",
+      "name": "Đường cong lập luận kiểu 'Con lắc an toàn' (Pendulum Hedging)",
+      "source_ref": "User_Block_1.Item_5",
+      "priority_stage": "P1",
+      "vi_triggers": [
+        "Mặt tích cực là A -> Tuy nhiên hạn chế là B -> Do đó cần phối hợp đồng bộ và hài hòa"
+      ],
+      "decision_logic": "Delete 'hòa cả làng' synthesis; reframe into explicit trade-offs or conditional boundary thresholds."
+    },
+    {
+      "id": "ARG-03",
+      "name": "Phóng đại tầm quan trọng, di sản và xu hướng vĩ mô",
+      "source_ref": "WP:AILEGACY / WP:AITREND",
+      "priority_stage": "P1",
+      "vi_triggers": [
+        "phản ánh xu hướng rộng lớn hơn", "để lại dấu ấn không phai mờ", "đặt nền móng cho", "sự phân biệt này rất quan trọng vì"
+      ],
+      "decision_logic": "Delete unsubstantiated macro-significance claims unless backed by specific comparative data or direct scholarly citation."
+    },
+    {
+      "id": "ARG-04",
+      "name": "Kết luận đóng khung 'Thách thức & Triển vọng' và Đề mục đối xứng",
+      "source_ref": "WP:FACESCHALLENGES",
+      "priority_stage": "P1",
+      "vi_triggers": [
+        "Mặc dù đạt được X, Y vẫn đối mặt với nhiều thách thức...", "Tiêu đề: Thách thức và Triển vọng tương lai / Giải thưởng và Sự ghi nhận"
+      ],
+      "decision_logic": "Replace generic 'Challenges and Future Prospects' header with specific issue-focused header; replace formulaic opening with direct bottleneck analysis."
+    },
+    {
+      "id": "PRG-01",
+      "name": "Quy chiếu nguồn mơ hồ & Nhấn mạnh rập khuôn độ phủ truyền thông",
+      "source_ref": "WP:AIWEASEL / WP:OVERATTRIBUTION",
+      "priority_stage": "P4",
+      "vi_triggers": [
+        "Các chuyên gia cho rằng", "Nhiều nhà quan sát nhận định", "sự đưa tin độc lập từ các cơ quan truyền thông địa phương, khu vực và quốc gia", "các ấn phẩm thương mại chuyên ngành", "duy trì sự hiện diện tích cực trên mạng xã hội"
+      ],
+      "decision_logic": "Replace weasel attribution with named source if available; delete meta-descriptions of media outlet categories; summarize actual content instead of praising source types."
+    },
+    {
+      "id": "PRG-02",
+      "name": "Rào đón giáo huấn & Miễn trừ trách nhiệm nguồn tin",
+      "source_ref": "WP:DIDACTIC / WP:AIDISCLAIMER",
+      "priority_stage": "P4",
+      "vi_triggers": [
+        "Điều quan trọng cần lưu ý là", "Cần phải nhớ rằng", "Mặc dù chi tiết cụ thể không được công bố rộng rãi trong các nguồn hiện có", "Tự thân nó không chứng minh rằng", "nên được xem như X thay vì Y"
+      ],
+      "decision_logic": "Delete 'Điều quan trọng cần lưu ý là' wrapper; delete speculative excuses about missing search results ('duy trì lối sống kín tiếng')."
+    },
+    {
+      "id": "FMT-01",
+      "name": "Định dạng thị giác cơ học: Danh sách tiêu đề in đậm, Bold, Title Case, Gạch ngang dài / Phẳng hóa dấu câu",
+      "source_ref": "WP:AILIST / WP:AIBOLD / WP:AIDASH / WP:AITITLECASE",
+      "priority_stage": "P0_P3",
+      "vi_triggers": [
+        "- **[Tiêu đề]**: [Mô tả]", "Viết Hoa Mọi Chữ Cái Đầu Trong Tiêu Đề Tiếng Việt", "Lạm dụng dấu — hoặc chỉ dùng dấu , và ."
+      ],
+      "decision_logic": "Convert Title Case Vietnamese headings to Sentence case; strip excessive inline bolding; convert fragmented inline-header bullet lists to cohesive prose in narrative/academic genres; balance punctuation with colons (:) and semicolons (;)."
+    },
+    {
+      "id": "FOR-01",
+      "name": "Dấu vết kỹ thuật, Giao tiếp hội thoại thừa & Nguồn trích dẫn ảo giác",
+      "source_ref": "WP:COLLABCOMM / WP:OAICITE / WP:AIFICTREF / WP:AIPLACEHOLDER",
+      "priority_stage": "P0",
+      "vi_triggers": [
+        "Chắc chắn rồi! Dưới đây là", "Hy vọng thông tin này hữu ích", "contentReference[oaicite", "turn0search",
+        "[span_", "grok_card", "【", "[attached_file:", ":::writing", "utm_source=chatgpt.com", "[Điền tên vào đây]", "2025-xx-xx"
+      ],
+      "decision_logic": "HARD STRIP all conversational framing and internal citation markup bugs; RAISE CRITICAL ALERT on unfilled placeholders, broken URLs, unpaged book citations, or unverifiable DOIs/ISBNs."
+    }
+  ]
+}

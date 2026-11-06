@@ -1,0 +1,724 @@
+{
+  "metadata": {
+    "kb_id": "VN-AI-WRITING-STYLE-KB-V1",
+    "version": "1.0.0",
+    "created_at": "2026-11-06",
+    "target_language": "vi",
+    "source_comparison_languages": ["en", "vi"],
+    "purpose": "Structured Knowledge Base for AI Writing Style Checker & Context-Aware Vietnamese Humanization Skill",
+    "evidence_levels_legend": {
+      "A": "Direct empirical evidence on Vietnamese AI-generated text.",
+      "B": "Direct empirical evidence on AI-generated text in other languages (primarily English).",
+      "C": "Established linguistic theory (Vietnamese functional grammar, discourse cohesion, information theory) explaining the phenomenon.",
+      "D": "Expert analytical hypothesis requiring further large-scale empirical validation.",
+      "E": "Practical editorial recommendation for quality optimization."
+    },
+    "pipeline_stages": [
+      {
+        "stage": "P0_FORENSIC_SANITIZATION",
+        "target_ids": ["FOR-01", "FMT-01"],
+        "action": "Deterministic regex stripping of chatbot meta-talk, internal citation tags, and citation verification alerts."
+      },
+      {
+        "stage": "P1_MACRO_DISCOURSE_AND_ARGUMENT",
+        "target_ids": ["DIS-01", "DIS-02", "ARG-01", "ARG-02", "ARG-03", "ARG-04"],
+        "action": "Unbox 4-step paragraphs, delete redundant mini-conclusions, establish inter-paragraph chaining, and replace pendulum hedging with concrete boundary conditions."
+      },
+      {
+        "stage": "P2_VIETNAMESE_NATIVE_SYNTAX",
+        "target_ids": ["SYN-VN-01", "SYN-VN-02", "SYN-VN-03", "SYN-01", "SYN-02", "DIS-03"],
+        "action": "Restore zero-anaphora, convert Subject-Predicate calques to Topic-Comment, unpack nominalizations (việc/sự) and passive calques (được/bị), break syntactic isomorphism, and prune trailing superficial clauses."
+      },
+      {
+        "stage": "P3_LEXICAL_AND_PROSODIC_CALIBRATION",
+        "target_ids": ["LEX-VN-01", "RHY-01", "LEX-01", "LEX-02", "LEX-03", "LEX-04", "LEX-05", "SYN-03", "SYN-04", "DIS-04", "PRG-01", "PRG-02"],
+        "action": "De-congest Sino-Vietnamese noun strings, modulate sentence length burstiness (CV >= 0.30), restore basic copulatives (là/có), and enforce terminological consistency."
+      }
+    ]
+  },
+  "profiles": [
+    {
+      "id": "RHY-01",
+      "name": "Độ biến thiên chiều dài câu cực thấp (Low Burstiness – Nhịp văn 'máy đếm nhịp')",
+      "source_mapping": ["User_Block_1.Item_1", "WP:AIVOCAB_GPT6_Length"],
+      "linguistic_tier": "RHYTHM_PROSODY",
+      "operational_definition": "Phương sai chiều dài câu (tính theo số âm tiết tiếng Việt) trong một đoạn văn (>= 4 câu) cực thấp (Hệ số biến thiên CV = sigma / mu < 0.18, độ lệch chuẩn < 3.5 chữ), toàn bộ các câu co cụm quanh ngưỡng trung bình an toàn (18-28 chữ ở thế hệ 2023-2025 hoặc 12-20 chữ ở thế hệ cuối 2026), vắng bóng sự luân phiên giữa câu đơn ngắn tạo điểm nhấn (<= 12 chữ) và câu phức phân tích đa tầng (>= 35 chữ).",
+      "scope_and_unit": {
+        "level": "Inter-sentential / Paragraph prosody",
+        "observation_unit": "Chuỗi độ dài câu (l_1, l_2, ..., l_n) trong phạm vi 1 đoạn văn (n >= 4) hoặc 10 câu liên tiếp",
+        "observability": "Direct quantitative measurement"
+      },
+      "sub_manifestations": [
+        {
+          "sub_id": "RHY-01a",
+          "name": "Nhịp trung bình an toàn (18-28 chữ/câu)",
+          "pattern": "4-5 câu liên tiếp đều dài khoảng 22-26 chữ, mỗi câu gồm 2-3 mệnh đề cân xứng."
+        },
+        {
+          "sub_id": "RHY-01b",
+          "name": "Nhịp ngắn đều kiểu Staccato (12-20 chữ/câu ở mô hình cuối 2026)",
+          "pattern": "Các câu bị cắt ngắn đồng loạt quanh mốc 14-18 chữ kèm mật độ dấu chấm và phẩy dày đặc."
+        },
+        {
+          "sub_id": "RHY-01c",
+          "name": "Đồng nhất độ sâu cây cú pháp (Uniform Parse-Tree Depth)",
+          "pattern": "Mọi câu đều có cùng số lượng dấu phẩy (1-2 dấu phẩy) và cùng bậc phân nhánh mệnh đề."
+        }
+      ],
+      "mechanisms_and_certainty": {
+        "generative_mechanisms": [
+          "Locally Typical Sampling (Meister et al., 2023): Bộ giải mã tự hồi quy duy trì entropy từng bước sát với mức kỳ vọng trung bình, khiến xác suất kết thúc câu đạt đỉnh quanh độ dài trung bình của tập huấn luyện.",
+          "Thiếu cơ chế lập kế hoạch nhịp điệu cấp đoạn (Global Prosodic Planning) trước khi sinh token."
+        ],
+        "certainty_level": "High (Evidence Level B & C)"
+      },
+      "supporting_evidence": [
+        {
+          "citation": "Meister et al. (2023), TACL",
+          "level": "B",
+          "finding": "Giải thích cơ chế toán học của locally typical sampling làm giảm phương sai thông tin và độ dài câu."
+        },
+        {
+          "citation": "Reinhart et al. (2025), PNAS & The Economist (July 2026)",
+          "level": "B",
+          "finding": "Xác nhận độ biến thiên cấu trúc và dấu câu của LLM thấp hơn có ý nghĩa thống kê so với văn viết chuyên nghiệp của con người."
+        }
+      ],
+      "counter_evidence": [
+        {
+          "citation": "Russell et al. (2025) & Dik et al. (2025) (WP:AIDETECTION)",
+          "level": "B",
+          "finding": "Các công cụ đo Burstiness thuần túy có tỷ lệ dương tính giả đáng kể trên văn bản tóm tắt khoa học (abstracts), tin vắn thông tấn và văn bản quy phạm pháp luật."
+        }
+      ],
+      "diagnostic_specificity_and_limits": {
+        "specificity": "Medium alone; Very High when co-occurring with SYN-01 and DIS-01",
+        "confounders": ["Tin vắn tài chính/thông tấn", "Tóm tắt bài báo khoa học giới hạn số từ", "Điều khoản hợp đồng/luật"]
+      },
+      "examples": {
+        "positive_clear": "Trong bối cảnh biên lãi ròng thu hẹp, việc đa dạng hóa nguồn thu ngoài lãi đóng vai trò then chốt đối với các ngân hàng (24 chữ). Cụ thể, các hoạt động dịch vụ thanh toán và kinh doanh ngoại hối đã mang lại nguồn thu ổn định, giúp giảm sự phụ thuộc vào tín dụng (25 chữ). Tuy nhiên, mảng phân phối bảo hiểm qua ngân hàng lại đang đối mặt với nhiều thách thức lớn về niềm tin của khách hàng (23 chữ). Do đó, các tổ chức tín dụng cần tái cấu trúc danh mục dịch vụ một cách toàn diện để đảm bảo sự phát triển bền vững (25 chữ).",
+        "positive_subtle": "Biên lãi ròng của các ngân hàng đang thu hẹp dần trong năm nay (14 chữ). Do đó, nguồn thu ngoài lãi trở thành ưu tiên quan trọng của hệ thống (15 chữ). Mảng dịch vụ thanh toán và ngoại hối vẫn duy trì mức tăng trưởng tốt (14 chữ). Ngược lại, mảng phân phối bảo hiểm tiếp tục sụt giảm vì khủng hoảng niềm tin (15 chữ).",
+        "negative_lookalike": "Kết thúc phiên giao dịch ngày 06/11, VN-Index tăng 8,5 điểm lên mức 1.265 điểm (14 chữ). Thanh khoản toàn thị trường đạt 18.400 tỷ đồng trên cả ba sàn (13 chữ). Khối ngoại bán ròng nhẹ 120 tỷ đồng, tập trung ở nhóm cổ phiếu thép (15 chữ). [Hợp lệ vì là điểm tin số liệu thị trường].",
+        "human_natural": "Khi NIM bị thu hẹp, các ngân hàng buộc phải tìm đường sống từ thu nhập ngoài lãi (18 chữ). Nhưng bức tranh năm 2025–2026 không còn dễ dàng như giai đoạn trước: trong khi mảng thanh toán và kinh doanh ngoại hối giữ được nhịp tăng trưởng ổn định, thì 'con gà đẻ trứng vàng' một thời là Bancassurance lại sụt giảm mạnh sau hàng loạt biến cố về niềm tin thị trường (52 chữ). Bài toán lúc này không còn là mở rộng bằng mọi giá, mà là lọc lại chất lượng dịch vụ (20 chữ).",
+        "exception_preserve": "Các định nghĩa toán học, điều khoản pháp lý hoặc bước thực thi quy trình kỹ thuật tiêu chuẩn (SOP)."
+      },
+      "detection_guide": {
+        "quantitative_trigger": "CV_L < 0.18 OR (max(l_i) - min(l_i) < 10) across >= 4 consecutive sentences.",
+        "contextual_check": "Verify text is not a news ticker, legal clause list, or technical step list."
+      },
+      "humanization_decision_rules": [
+        "RULE 1: Tìm 2 câu liền kề có quan hệ đối lập hoặc nhân quả trực tiếp -> Gộp thành 1 câu phức đa tầng (35-48 chữ) sử dụng dấu hai chấm (:) hoặc cặp quan hệ từ 'trong khi... thì...' kèm tỉnh lược chủ ngữ.",
+        "RULE 2: Rút gọn câu mở đoạn hoặc câu chuyển ý cuối đoạn thành câu đơn sắc gọn (8-15 chữ) bằng cách cắt bỏ trạng ngữ rườm rà ('Trong bối cảnh...').",
+        "RULE 3: Cấm chặt nhỏ mọi câu dài thành câu đơn cụt lủn làm phát sinh lỗi lặp đại từ SYN-VN-01."
+      ],
+      "before_after_pairs": [
+        {
+          "before": "Trong bối cảnh biên lãi ròng thu hẹp, việc đa dạng hóa nguồn thu ngoài lãi đóng vai trò then chốt đối với các ngân hàng. Cụ thể, các hoạt động dịch vụ thanh toán và kinh doanh ngoại hối đã mang lại nguồn thu ổn định, giúp giảm sự phụ thuộc vào tín dụng. Tuy nhiên, mảng phân phối bảo hiểm qua ngân hàng lại đang đối mặt với nhiều thách thức lớn về niềm tin của khách hàng. Do đó, các tổ chức tín dụng cần tái cấu trúc danh mục dịch vụ một cách toàn diện để đảm bảo sự phát triển bền vững.",
+          "after": "Khi NIM bị thu hẹp, các ngân hàng buộc phải tìm đường sống từ thu nhập ngoài lãi. Nhưng bức tranh năm 2025–2026 không còn dễ dàng như giai đoạn trước: trong khi mảng thanh toán và kinh doanh ngoại hối giữ được nhịp tăng trưởng ổn định, thì 'con gà đẻ trứng vàng' một thời là Bancassurance lại sụt giảm mạnh sau hàng loạt biến cố về niềm tin thị trường. Bài toán lúc này không còn là mở rộng bằng mọi giá, mà là lọc lại chất lượng dịch vụ.",
+          "why_better_explanation": "Tăng hệ số biến thiên chiều dài câu CV từ 0.034 lên 0.54; câu 1 mở trực diện ngắn gọn, câu 2 gom hai mảng đối lập vào chung một khung so sánh bằng dấu hai chấm (:), câu 3 chốt lại định hướng sắc bén."
+        }
+      ],
+      "content_preservation_safeguards": [
+        "Khi gộp câu để tăng Burstiness, phải giữ nguyên quan hệ tương phản giữa mảng tăng trưởng (thanh toán, ngoại hối) và mảng sụt giảm (bảo hiểm).",
+        "Khi rút gọn câu ngắn, không được cắt mất điều kiện giới hạn (ví dụ: 'khi NIM thu hẹp')."
+      ],
+      "evaluation_criteria": {
+        "target_cv_range": [0.28, 0.65],
+        "min_length_spread": 16,
+        "semantic_fidelity": 1.0
+      },
+      "references": ["Meister et al. (2023)", "Gehrmann et al. (2019)", "Reinhart et al. (2025)", "Russell et al. (2025)"],
+      "open_questions": [
+        "Ngưỡng CV_L tối ưu cho từng tiểu thể loại văn bản tiếng Việt (báo chí kinh tế vs. luận văn khoa học xã hội) biến thiên trong biên độ chính xác nào?"
+      ]
+    },
+    {
+      "id": "SYN-01",
+      "name": "Hiện tượng 'Đẳng cấu cú pháp' liên câu (Syntactic Isomorphism – Khác từ nhưng trùng khuôn câu)",
+      "source_mapping": ["User_Block_1.Item_2"],
+      "linguistic_tier": "SYNTAX_SENTENCE",
+      "operational_definition": "Hai hoặc nhiều câu liên tiếp có từ vựng bề mặt hoàn toàn khác nhau nhưng chia sẻ cùng một cấu trúc cây cú pháp thành tố (Constituency Parse Tree) và tỷ lệ độ dài các mệnh đề (điển hình là khuôn 3 nhịp: [Trạng ngữ bối cảnh 7-8 chữ], [Mệnh đề chính S-V-O 12-14 chữ], [Mệnh đề phụ chỉ hệ quả/ý nghĩa 8-10 chữ]).",
+      "scope_and_unit": {
+        "level": "Inter-sentential syntax",
+        "observation_unit": "Chuỗi 2-4 câu liên tiếp trong đoạn hoặc các câu mở đầu của các đoạn liên tiếp",
+        "observability": "Direct structural parsing"
+      },
+      "sub_manifestations": [
+        {
+          "sub_id": "SYN-01a",
+          "name": "Khuôn câu 3 nhịp kinh điển ([Trạng ngữ], [S-V-O], [qua đó/từ đó/góp phần...])",
+          "pattern": "[Trong bối cảnh / Trước những / Thông qua việc + NP], [NP + VP], [qua đó / từ đó / góp phần + VP]."
+        },
+        {
+          "sub_id": "SYN-01b",
+          "name": "Đẳng cấu câu mở đoạn xuyên suốt văn bản",
+          "pattern": "Mọi đoạn văn đều mở đầu bằng cấu trúc '[Về mặt X / Trên phương diện Y], [S + V]'."
+        },
+        {
+          "sub_id": "SYN-01c",
+          "name": "Đẳng cấu câu đối xứng nhị phân",
+          "pattern": "Lặp lại khuôn 'Trong khi A..., thì B...' ở nhiều câu liên tiếp."
+        }
+      ],
+      "mechanisms_and_certainty": {
+        "generative_mechanisms": [
+          "Tương tác giữa Structural Priming (cây cú pháp của câu trước mồi xác suất cho câu sau trong self-attention) và Lexical Repetition Penalty (phạt lặp từ vựng buộc mô hình thay từ mới vào đúng các khe cú pháp cũ).",
+          "Tối ưu hóa nén thông tin kiểu báo cáo tổng hợp (Bối cảnh -> Hành động -> Kết quả)."
+        ],
+        "certainty_level": "High (Evidence Level B & C)"
+      },
+      "supporting_evidence": [
+        {
+          "citation": "Reinhart et al. (2025), PNAS",
+          "level": "B",
+          "finding": "LLM lặp lại các khuôn mệnh đề trạng ngữ và phân từ với độ biến thiên nội văn bản thấp hơn con người."
+        }
+      ],
+      "counter_evidence": [
+        {
+          "citation": "Rhetorical Parallelism / Anaphora in Human Oratory",
+          "level": "C",
+          "finding": "Con người có sử dụng phép điệp cấu trúc tu từ, nhưng phép điệp của con người cố tình lặp lại từ khóa neo (anchor words) để tạo nhịp nhấn, chứ không thay từ đồng nghĩa để giấu khuôn cú pháp như AI."
+        }
+      ],
+      "diagnostic_specificity_and_limits": {
+        "specificity": "Very High (>= 3 isomorphic sentences in a row without rhetorical anaphora is a top-tier AI tell)",
+        "confounders": ["Báo cáo hành chính tổng kết liệt kê thành tựu từng phòng ban"]
+      },
+      "examples": {
+        "positive_clear": "(1) Trong bối cảnh cạnh tranh gay gắt hiện nay, các ngân hàng thương mại đang đẩy mạnh quá trình số hóa dịch vụ, qua đó nâng cao trải nghiệm cho khách hàng cá nhân. (2) Trước những biến động khó lường của vĩ mô, nhiều tổ chức tín dụng cũng chủ động thắt chặt khẩu vị rủi ro, từ đó đảm bảo sự an toàn cho toàn bộ hệ thống. (3) Thông qua việc ứng dụng trí tuệ nhân tạo, quy trình thẩm định tín dụng đã được rút ngắn đáng kể, góp phần tối ưu hóa chi phí vận hành của doanh nghiệp.",
+        "positive_subtle": "Việc nâng lãi suất đã làm tăng chi phí vốn, buộc ngân hàng thu hẹp gói vay. Sự sụt giảm trái phiếu cũng làm hạn chế kênh dẫn vốn, khiến doanh nghiệp thiếu dòng tiền. Quá trình siết tiêu chuẩn tín dụng càng làm chậm giải ngân, đẩy dự án vào thế đình trệ.",
+        "negative_lookalike": "Nếu chần chừ số hóa, ngân hàng sẽ mất khách hàng trẻ. Nếu buông lỏng thẩm định, ngân hàng sẽ gánh nợ xấu. Nhưng nếu siết tín dụng quá mức, ngân hàng lại tự cắt đi nguồn thu cốt lõi. [Điệp cấu trúc tu từ có chủ đích].",
+        "human_natural": "Cạnh tranh bán lẻ ngày càng khốc liệt buộc các ngân hàng thương mại phải tăng tốc số hóa. Nhờ đưa trí tuệ nhân tạo vào khâu thẩm định, thời gian duyệt hồ sơ đã rút ngắn đáng kể, vừa giữ chân được khách hàng cá nhân vừa cắt giảm chi phí vận hành. Tuy vậy, trước biến động vĩ mô khó lường, nhiều nhà băng vẫn chủ động siết lại khẩu vị rủi ro để giữ an toàn thanh khoản.",
+        "exception_preserve": "Các câu khẩu hiệu song hành có chủ đích tu từ hoặc bảng đối chiếu song song."
+      },
+      "detection_guide": {
+        "structural_trigger": ">= 2 consecutive sentences matching [Prepositional/Adverbial Phrase] + [Main Clause] + [Resultative Participial Clause].",
+        "lexical_divergence_check": "High lexical variation paired with >0.80 constituent tree similarity."
+      },
+      "humanization_decision_rules": [
+        "RULE 1: Kiểm tra quan hệ nhân quả/bao hàm giữa các câu đẳng cấu (ví dụ Câu 3 'ứng dụng AI' thực chất là phương tiện cụ thể của Câu 1 'số hóa') -> Gộp hoặc móc xích trực tiếp.",
+        "RULE 2: Đa dạng hóa cách mở câu: Câu 1 mở bằng Chủ ngữ/Đề ngữ trực diện -> Câu 2 mở bằng Động từ/Liên kết nhân quả -> Câu 3 dùng cấu trúc Đề - Thuyết.",
+        "RULE 3: Cắt bỏ ít nhất 2/3 số mệnh đề phụ gắn đuôi ('qua đó...', 'từ đó...', 'góp phần...')."
+      ],
+      "before_after_pairs": [
+        {
+          "before": "Trong bối cảnh cạnh tranh gay gắt hiện nay, các ngân hàng thương mại đang đẩy mạnh quá trình số hóa dịch vụ, qua đó nâng cao trải nghiệm cho khách hàng cá nhân. Trước những biến động khó lường của vĩ mô, nhiều tổ chức tín dụng cũng chủ động thắt chặt khẩu vị rủi ro, từ đó đảm bảo sự an toàn cho toàn bộ hệ thống. Thông qua việc ứng dụng trí tuệ nhân tạo, quy trình thẩm định tín dụng đã được rút ngắn đáng kể, góp phần tối ưu hóa chi phí vận hành của doanh nghiệp.",
+          "after": "Cạnh tranh bán lẻ ngày càng khốc liệt buộc các ngân hàng thương mại phải tăng tốc số hóa. Nhờ đưa trí tuệ nhân tạo vào khâu thẩm định, thời gian duyệt hồ sơ đã rút ngắn đáng kể, vừa giữ chân được khách hàng cá nhân vừa cắt giảm chi phí vận hành. Tuy vậy, trước biến động vĩ mô khó lường, nhiều nhà băng vẫn chủ động siết lại khẩu vị rủi ro để giữ an toàn thanh khoản.",
+          "why_better_explanation": "Phá vỡ hoàn toàn khuôn 3 nhịp lặp lại 3 lần; sắp xếp lại trật tự logic (đưa câu AI thẩm định lên ngay sau câu số hóa); thay đổi cấu trúc mở câu và kết câu ở cả 3 câu."
+        }
+      ],
+      "content_preservation_safeguards": [
+        "Bảo toàn đủ 3 luồng thông tin: (1) số hóa nâng trải nghiệm khách hàng, (2) ứng dụng AI rút ngắn thẩm định & giảm chi phí, (3) thắt chặt khẩu vị rủi ro trước biến động vĩ mô."
+      ],
+      "evaluation_criteria": {
+        "max_consecutive_isomorphic_sentences": 1,
+        "parse_tree_similarity_threshold": 0.65
+      },
+      "references": ["Reinhart et al. (2025)", "Diệp Quang Ban (2005)", "Trần Ngọc Thêm (1999)"],
+      "open_questions": [
+        "Xây dựng bộ parser nhẹ cho tiếng Việt để tính điểm tương đồng cây thành tố tự động mà không cần full syntactic parsing nặng."
+      ]
+    },
+    {
+      "id": "DIS-01",
+      "name": "Cấu trúc 'Đoạn văn đóng hộp' 4 bước khép kín (Boxy, Self-Contained Paragraphs)",
+      "source_mapping": ["User_Block_1.Item_3", "WP:CONCLUSION"],
+      "linguistic_tier": "PARAGRAPH_DISCOURSE",
+      "operational_definition": "Các đoạn văn có độ dài hình học đồng đều (3-5 câu, 75-110 chữ), mỗi đoạn vận hành như một bài văn thu nhỏ khép kín gồm 4 bước cố định: (1) Câu chủ đề khái quát -> (2) Câu giải thích ('Cụ thể,...') -> (3) Câu chi tiết/phản biện ('Tuy nhiên,...') -> (4) Câu kết đoạn tự tóm tắt ('Như vậy / Do đó...'). Các đoạn văn hoàn toàn độc lập, có thể hoán đổi vị trí Đoạn k và Đoạn k+1 mà không gãy mạch ngữ pháp.",
+      "scope_and_unit": {
+        "level": "Paragraph & Inter-paragraph discourse",
+        "observation_unit": "Cấu trúc nội tại của từng đoạn văn và ranh giới chuyển tiếp giữa 2 đoạn liên tiếp",
+        "observability": "Discourse structure & Permutation test"
+      },
+      "sub_manifestations": [
+        {
+          "sub_id": "DIS-01a",
+          "name": "Đồng dạng kích thước hình học giữa các đoạn",
+          "pattern": "Mọi đoạn văn đều dài 4-5 dòng đều như gạch đúc khuôn."
+        },
+        {
+          "sub_id": "DIS-01b",
+          "name": "Chu trình 4 bước khép kín nội đoạn (PEEL Box)",
+          "pattern": "Mở đoạn bằng nhận định chung -> Giải thích -> Đưa ví dụ/phản biện -> Tự đóng nắp đoạn bằng câu kết luận."
+        },
+        {
+          "sub_id": "DIS-01c",
+          "name": "Đứt gãy móc xích liên đoạn (Inter-paragraph modularity)",
+          "pattern": "Câu cuối đoạn trước không mở ra vấn đề cho đoạn sau; các đoạn có thể đảo thứ tự tùy ý."
+        }
+      ],
+      "mechanisms_and_certainty": {
+        "generative_mechanisms": [
+          "Khuôn mẫu đoạn văn PEEL (Point-Explanation-Example-Link) trong dữ liệu huấn luyện viết luận chuẩn hóa và SFT/RLHF.",
+          "Cơ chế sinh theo từng mục dàn ý độc lập kèm thiên kiến đóng gói hoàn chỉnh (conversational wrap-up bias)."
+        ],
+        "certainty_level": "High (Evidence Level B & C)"
+      },
+      "supporting_evidence": [
+        {
+          "citation": "Ju et al. (2024) (WP:CONCLUSION)",
+          "level": "B",
+          "finding": "LLM có xu hướng tự động tóm tắt và đóng lại ý chính ở cuối mỗi đoạn hoặc mỗi mục."
+        },
+        {
+          "citation": "Trần Ngọc Thêm (1985/1999) - Hệ thống liên kết văn bản tiếng Việt",
+          "level": "C",
+          "finding": "Diễn ngôn tiếng Việt tự nhiên kết hợp liên kết móc xích liên đoạn thay vì đóng kín từng đoạn độc lập."
+        }
+      ],
+      "counter_evidence": [
+        {
+          "citation": "Standardized Test Essays (IELTS/TOEFL human writers)",
+          "level": "C",
+          "finding": "Người học viết luận theo công thức luyện thi cũng tạo ra các đoạn văn 4 câu đóng hộp tương tự."
+        }
+      ],
+      "diagnostic_specificity_and_limits": {
+        "specificity": "Very High when >= 3 consecutive body paragraphs end with a self-summarizing sentence and pass the Permutation Test",
+        "confounders": ["Bài luận thi chuẩn hóa", "Tài liệu tra cứu theo từng mục độc lập"]
+      },
+      "examples": {
+        "positive_clear": "[Đoạn 1] Chuyển đổi số ngân hàng mang lại nhiều lợi ích. Cụ thể, tự động hóa giúp giảm sai sót. Nhiều ngân hàng đã dùng eKYC. Như vậy, đầu tư công nghệ là chìa khóa nâng cao hiệu quả. [Đoạn 2] Bên cạnh đó, an ninh mạng là mối quan tâm hàng đầu. Thực tế, tấn công mạng ngày càng tinh vi. Kẻ gian lợi dụng lỗ hổng để chiếm đoạt tiền. Do đó, ngân hàng cần tăng cường phòng thủ để phát triển bền vững.",
+        "positive_subtle": "Đoạn văn không dùng từ 'Như vậy' nhưng câu thứ 4 vẫn tự đóng lại bằng nhận định tổng kết 'Điều này khẳng định vai trò không thể thiếu của X trong kỷ nguyên mới.'",
+        "negative_lookalike": "Các mục trong báo cáo kiểm toán độc lập (Mục 1: Rủi ro tín dụng; Mục 2: Rủi ro hoạt động) bắt buộc phải có câu kết luận đánh giá mức độ tuân thủ ở cuối mỗi mục.",
+        "human_natural": "[Đoạn 1] Tự động hóa quy trình đang giúp các ngân hàng cắt giảm mạnh chi phí vận hành tại quầy. Nhờ định danh điện tử (eKYC), khách hàng hiện có thể mở tài khoản chỉ trong vài phút. Thế nhưng, chính tốc độ mở rộng quá nhanh của các kênh trực tuyến này lại đang mở ra những kẽ hở mới về an ninh mạng. [Đoạn 2] Rủi ro lớn nhất hiện nay nằm ở chính khâu xác thực sinh trắc học...",
+        "exception_preserve": "Báo cáo kiểm toán, bản án pháp lý, hoặc tài liệu kỹ thuật chia theo module độc lập."
+      },
+      "detection_guide": {
+        "structural_trigger": "Body paragraphs consistently have 3-5 sentences where Sentence 4 begins with 'Như vậy / Do đó / Tóm lại / Qua đó' and repeats Sentence 1's theme.",
+        "permutation_test": "Can Paragraph k and Paragraph k+1 be swapped without breaking anaphoric references?"
+      },
+      "humanization_decision_rules": [
+        "RULE 1 (Cắt đáy hộp): Xóa bỏ câu kết đoạn tổng kết sáo rỗng ở cuối các đoạn văn thân bài (DIS-02).",
+        "RULE 2 (Móc xích liên đoạn): Biến câu cuối của Đoạn k thành câu bản lề mở ra vấn đề/hệ quả mà Đoạn k+1 sẽ giải quyết tiếp.",
+        "RULE 3 (Đa dạng hóa kích thước đoạn): Cho phép đoạn bản lề ngắn 2 câu xen kẽ với đoạn phân tích sâu 5-6 câu."
+      ],
+      "before_after_pairs": [
+        {
+          "before": "[Đoạn 1] ...Nhiều ngân hàng đã ứng dụng eKYC để mở tài khoản trong vài phút. Như vậy, đầu tư công nghệ là chìa khóa tất yếu để nâng cao hiệu quả.\n[Đoạn 2] Bên cạnh đó, an ninh mạng đang trở thành mối quan tâm hàng đầu...",
+          "after": "[Đoạn 1] ...Nhờ eKYC, khách hàng hiện có thể mở tài khoản chỉ trong vài phút thay vì phải ra quầy. Thế nhưng, chính tốc độ mở rộng quá nhanh của các kênh trực tuyến này lại đang mở ra những kẽ hở mới về an ninh mạng.\n[Đoạn 2] Rủi ro lớn nhất hiện nay nằm ở chính khâu xác thực sinh trắc học...",
+          "why_better_explanation": "Xóa bỏ câu kết sáo rỗng ở cuối Đoạn 1 và từ nối liệt kê 'Bên cạnh đó' ở đầu Đoạn 2; tạo móc xích nhân quả trực tiếp từ 'mở rộng eKYC' sang 'kẽ hở an ninh mạng'."
+        }
+      ],
+      "content_preservation_safeguards": [
+        "Chỉ xóa câu kết đoạn khi câu đó không chứa dữ kiện hay con số mới; nếu có dữ kiện mới, phải tích hợp dữ kiện đó vào câu phân tích phía trên."
+      ],
+      "evaluation_criteria": {
+        "boxed_closure_rate_body_paragraphs": 0.0,
+        "inter_paragraph_lexical_hook_rate": ">= 0.70"
+      },
+      "references": ["Trần Ngọc Thêm (1985/1999)", "Ju et al. (2024)"],
+      "open_questions": [
+        "Làm thế nào để tự động hóa phép thử hoán vị đoạn văn (Permutation Test) bằng mô hình ngôn ngữ nhỏ?"
+      ]
+    },
+    {
+      "id": "ARG-01",
+      "name": "Trọng số luận điểm phẳng và Mật độ thông tin đồng đều (Uniform Information Density / Flat Epistemic Weight)",
+      "source_mapping": ["User_Block_1.Item_4", "WP:AI-ISM_Regression_to_the_mean"],
+      "linguistic_tier": "ARGUMENTATION_INFORMATION",
+      "operational_definition": "Văn bản phân tích nhiều nguyên nhân/khía cạnh nhưng chia đều dung lượng cơ học cho mọi luận điểm (ví dụ 4 nguyên nhân -> 4 đoạn đều 80 chữ), đánh đồng mức độ quan trọng của mọi yếu tố, và làm phẳng các chi tiết đặc thù/con số lẻ thành các nhận định vĩ mô chung chung (regression to the mean).",
+      "scope_and_unit": {
+        "level": "Macro-argumentative & Information density across sections",
+        "observation_unit": "Tỷ lệ dung lượng giữa các luận điểm và mật độ dữ kiện đặc thù (con số lẻ, tên riêng, điều khoản, ngoại lệ) trên 100 chữ",
+        "observability": "Quantitative word-count variance across points & Named-Entity/Number density"
+      },
+      "sub_manifestations": [
+        {
+          "sub_id": "ARG-01a",
+          "name": "Chia đều tài nguyên câu chữ cơ học (Equal Budget Partitioning)",
+          "pattern": "Mỗi luận điểm được viết đúng 1 đoạn có số chữ ngang nhau (độ lệch < 15%)."
+        },
+        {
+          "sub_id": "ARG-01b",
+          "name": "Phẳng hóa trọng số đánh giá (Flat Importance Modality)",
+          "pattern": "Mọi yếu tố đều được dán nhãn 'then chốt', 'cốt lõi', 'vô cùng quan trọng' ngang nhau."
+        },
+        {
+          "sub_id": "ARG-01c",
+          "name": "Làm mờ chi tiết đặc thù thành sáo ngữ khái quát (Granularity Smoothing)",
+          "pattern": "Thay chi tiết sắc nét ('người phát minh thiết bị nối toa tàu') bằng sáo ngữ mờ ('người tiên phong cách mạng trong ngành công nghiệp')."
+        }
+      ],
+      "mechanisms_and_certainty": {
+        "generative_mechanisms": [
+          "Statistical Regression to the Mean & Uniform Information Density (Levy & Jaeger, 2007; Meister et al., 2023): Các chi tiết đặc thù hiếm gặp có xác suất điều kiện thấp nên bị loại bỏ khi lấy mẫu, nhường chỗ cho các mệnh đề khái quát có xác suất cao.",
+          "Thiếu tri thức trọng số nhân quả thực nghiệm khi sinh văn bản từ prompt tổng quát."
+        ],
+        "certainty_level": "High (Evidence Level B & C)"
+      },
+      "supporting_evidence": [
+        {
+          "citation": "Meister et al. (2023), TACL & Levy & Jaeger (2007), NIPS",
+          "level": "B",
+          "finding": "Giải thích cơ chế tối ưu hóa mật độ thông tin đồng đều trong sinh văn bản tự hồi quy."
+        }
+      ],
+      "counter_evidence": [
+        {
+          "citation": "Overview / Introductory Textbooks",
+          "level": "C",
+          "finding": "Giáo trình nhập môn hoặc bài tóm tắt điểm mục có chủ đích giới thiệu sơ lược từng khía cạnh với dung lượng tương đương."
+        }
+      ],
+      "diagnostic_specificity_and_limits": {
+        "specificity": "High in analytical, business, and academic texts",
+        "confounders": ["Tài liệu tóm tắt danh mục", "Đề cương sơ bộ"]
+      },
+      "examples": {
+        "positive_clear": "4 nguyên nhân nợ xấu tăng được chia thành 4 đoạn văn, mỗi đoạn đúng 80 chữ, không có nguyên nhân chính/phụ, không có con số hay tên phân khúc cụ thể.",
+        "positive_subtle": "Bài viết có nêu ví dụ nhưng mọi ví dụ đều là danh từ chung ('nhiều ngân hàng lớn', 'một số doanh nghiệp bất động sản', 'các quy định mới ban hành').",
+        "negative_lookalike": "Bảng phân loại 4 nhóm nợ theo quy định của Ngân hàng Nhà nước (Nhóm 1 đến Nhóm 5), mỗi nhóm được định nghĩa với dung lượng tương đương.",
+        "human_natural": "Dành 60-65% dung lượng (kèm số liệu, cơ chế pháp lý tài sản thế chấp) để mổ xẻ nguyên nhân số 1 là sự đóng băng của bất động sản; gom 2-3 nguyên nhân phụ còn lại vào 1 đoạn ngắn 35% dung lượng như yếu tố cộng hưởng.",
+        "exception_preserve": "Định nghĩa danh mục phân loại tiêu chuẩn."
+      },
+      "detection_guide": {
+        "quantitative_trigger": "Word count standard deviation across >= 3 parallel points < 15% AND specific entity/number density < 1 per 150 words."
+      },
+      "humanization_decision_rules": [
+        "RULE 1 (Phân tầng 60/40): Xác lập rõ luận điểm trọng tâm (chiếm 60% dung lượng) và gom các luận điểm phụ thành nhóm yếu tố cộng hưởng/thứ cấp.",
+        "RULE 2 (Cấm làm phẳng dữ kiện): Khi chỉnh sửa văn bản có sẵn dữ kiện cụ thể của người dùng, bảo toàn 100% số lẻ, tên riêng, mã văn bản pháp lý; cấm thay thế bằng từ khái quát.",
+        "RULE 3 (Không tự bịa số liệu): Nếu văn bản gốc của AI hoàn toàn thiếu dữ kiện cụ thể, công cụ gom gọn các câu chữ rỗng và chèn placeholder yêu cầu tác giả bổ sung số liệu thực tế."
+      ],
+      "before_after_pairs": [
+        {
+          "before": "Thứ nhất, kinh tế suy giảm làm giảm thu nhập người vay (30 chữ). Thứ hai, bất động sản trầm lắng làm khó xử lý tài sản thế chấp (30 chữ). Thứ ba, thẩm định tín dụng tại một số nơi chưa chặt chẽ (30 chữ).",
+          "after": "Đợt tăng nợ xấu lần này chủ yếu bắt nguồn từ sự đóng băng của thị trường bất động sản: khi hơn 70% tài sản thế chấp là bất động sản nhưng thanh khoản tắc nghẽn, ngân hàng không thể phát mãi để thu hồi nợ. Hai yếu tố còn lại — gồm thu nhập người vay cá nhân suy yếu và việc nới lỏng thẩm định ở giai đoạn tiền rẻ trước đó — đóng vai trò cộng hưởng đẩy nhanh tốc độ nhảy nhóm nợ.",
+          "why_better_explanation": "Tạo trọng số rõ rệt giữa nguyên nhân gốc rễ và yếu tố cộng hưởng; làm rõ cơ chế nghiệp vụ tại sao bất động sản trầm lắng lại gây nợ xấu."
+        }
+      ],
+      "content_preservation_safeguards": [
+        "Không tự ý bịa đặt con số thống kê nếu văn bản gốc và nguồn tham chiếu của người dùng không có."
+      ],
+      "evaluation_criteria": {
+        "point_weight_differentiation": true,
+        "fact_smoothing_loss": 0.0
+      },
+      "references": ["Meister et al. (2023)", "Levy & Jaeger (2007)"],
+      "open_questions": [
+        "Làm sao để công cụ tự động phân biệt đâu là luận điểm trọng tâm khi người dùng không cung cấp dữ liệu nền?"
+      ]
+    },
+    {
+      "id": "ARG-02",
+      "name": "Đường cong lập luận kiểu 'Con lắc an toàn' (Pendulum Hedging)",
+      "source_mapping": ["User_Block_1.Item_5", "WP:FACESCHALLENGES"],
+      "linguistic_tier": "ARGUMENTATION_INFORMATION",
+      "operational_definition": "Mô hình lập luận lặp đi lặp lại quỹ đạo 3 bước cố định ở mọi đoạn/mục: (1) Khen/Khẳng định mặt tích cực -> (2) Chê nhẹ/Chỉ ra thách thức ('Tuy nhiên,...') -> (3) Hòa cả làng ('Do đó, cần có sự phối hợp đồng bộ, hài hòa giữa A và B để phát triển bền vững').",
+      "scope_and_unit": {
+        "level": "Paragraph & Section argumentation trajectory",
+        "observation_unit": "Chuỗi mệnh đề lập luận trong đoạn văn hoặc mục văn bản",
+        "observability": "Discourse polarity & Epistemic stance analysis"
+      },
+      "sub_manifestations": [
+        {
+          "sub_id": "ARG-02a",
+          "name": "Con lắc nội đoạn (Positive -> Tuy nhiên Negative -> Do đó Đồng bộ)",
+          "pattern": "Mặt tích cực là A. Tuy nhiên hạn chế là B. Do đó cần kết hợp hài hòa C và D."
+        },
+        {
+          "sub_id": "ARG-02b",
+          "name": "Kết luận đóng khung 'Thách thức và Triển vọng' (WP:FACESCHALLENGES)",
+          "pattern": "Mặc dù đạt được X, chủ thể vẫn đối mặt với nhiều thách thức Y... Tuy nhiên với các sáng kiến Z, triển vọng tương lai rất hứa hẹn."
+        }
+      ],
+      "mechanisms_and_certainty": {
+        "generative_mechanisms": [
+          "RLHF Safety & Neutrality Alignment (Ouyang et al., 2022; Perez et al., 2023): Mô hình tối ưu hóa điểm thưởng bằng cách tránh đứng hẳn về một phía, luôn rào đón hai mặt và kết thúc bằng giải pháp dung hòa vô thưởng vô phạt."
+        ],
+        "certainty_level": "High (Evidence Level B)"
+      },
+      "supporting_evidence": [
+        {
+          "citation": "Russell et al. (2025) & Perez et al. (2023)",
+          "level": "B",
+          "finding": "Xác nhận cấu trúc rào đón hai mặt và công thức 'Despite its X, faces challenges...' là chỉ báo đặc trưng của các mô hình qua tinh chỉnh RLHF."
+        }
+      ],
+      "counter_evidence": [
+        {
+          "citation": "Balanced Policy Briefs / SWOT Summaries",
+          "level": "C",
+          "finding": "Báo cáo tổng quan chính sách có yêu cầu liệt kê cả thuận lợi và khó khăn, nhưng báo cáo chuyên sâu của con người chỉ ra sự đánh đổi (trade-off) cụ thể chứ không kết luận 'hòa cả làng' ở mọi đoạn."
+        }
+      ],
+      "diagnostic_specificity_and_limits": {
+        "specificity": "Very High when repeated across >= 2 sections/paragraphs",
+        "confounders": ["Báo cáo tổng kết hành chính nhà nước"]
+      },
+      "examples": {
+        "positive_clear": "Chính sách nới lỏng tín dụng mang lại động lực phục hồi sản xuất. Tuy nhiên, việc bơm vốn nhanh tiềm ẩn nguy cơ lạm phát và nợ xấu. Do đó, cần điều hành linh hoạt, phối hợp đồng bộ và hài hòa giữa tăng trưởng và kiểm soát rủi ro để phát triển bền vững.",
+        "positive_subtle": "Mặc dù công nghệ AI giúp tăng tốc độ xử lý, nó cũng đặt ra bài toán về bảo mật dữ liệu. Vì vậy, doanh nghiệp cần cân bằng giữa đổi mới công nghệ và an toàn thông tin.",
+        "negative_lookalike": "Phân tích kinh tế lượng chỉ ra ngưỡng giới hạn: khi lãi suất giảm dưới 4%, tín dụng tăng 12% nhưng tỷ lệ nợ xấu chỉ tăng 0,2%; tuy nhiên nếu tiếp tục ép lãi suất xuống dưới 3%, dòng vốn sẽ chuyển sang đầu cơ tài sản.",
+        "human_natural": "Nới lỏng tín dụng giúp doanh nghiệp sớm có vốn quay vòng, nhưng cái giá phải trả là áp lực lạm phát và nợ xấu sẽ trễ pha khoảng 12–18 tháng. Vì không thể vừa bơm tiền mạnh vừa giữ lạm phát thấp cùng lúc, nhà điều hành buộc phải ưu tiên hạn mức cho nhóm sản xuất – xuất khẩu và siết chặt tín dụng bất động sản thứ cấp.",
+        "exception_preserve": "Các câu trích dẫn nguyên văn nghị quyết điều hành vĩ mô của Chính phủ."
+      },
+      "detection_guide": {
+        "pattern_trigger": "[Positive Claim] + 'Tuy nhiên / Bên cạnh đó' + [Negative Risk] + 'Do đó / Vì vậy cần phối hợp đồng bộ / kết hợp hài hòa / cân bằng giữa...'."
+      },
+      "humanization_decision_rules": [
+        "RULE 1: Cắt bỏ hoàn toàn mệnh đề kết 'hòa cả làng' ('cần phối hợp đồng bộ, hài hòa để phát triển bền vững').",
+        "RULE 2: Chuyển quan hệ đối lập chung chung thành 'Bài toán đánh đổi (Trade-off)' hoặc 'Điều kiện biên (Boundary condition)': nêu rõ trong điều kiện nào thì ưu tiên A, vượt ngưỡng nào thì rủi ro B xảy ra."
+      ],
+      "before_after_pairs": [
+        {
+          "before": "Mặt tích cực của nới lỏng tín dụng là thúc đẩy tăng trưởng. Tuy nhiên, hạn chế là rủi ro lạm phát. Do đó, cần kết hợp hài hòa giữa tăng trưởng và ổn định vĩ mô.",
+          "after": "Nới lỏng tín dụng giúp giải cơn khát vốn ngắn hạn nhưng luôn đi kèm độ trễ lạm phát sau 12–18 tháng; vì vậy, dòng vốn mới cần được khóa chặt vào khu vực sản xuất thay vì chảy tự do vào đầu cơ tài sản.",
+          "why_better_explanation": "Thay lời khuyên sáo rỗng 'kết hợp hài hòa' bằng cơ chế đánh đổi thực tế (độ trễ 12-18 tháng và phân luồng tín dụng)."
+        }
+      ],
+      "content_preservation_safeguards": [
+        "Cấm xóa bỏ mặt rủi ro/hạn chế để làm câu văn một chiều; phải giữ cả hai mặt nhưng nối chúng bằng quan hệ đánh đổi hoặc điều kiện biên."
+      ],
+      "evaluation_criteria": {
+        "hollow_synthesis_count": 0,
+        "dual_aspect_preservation": 1.0
+      },
+      "references": ["Ouyang et al. (2022)", "Perez et al. (2023)", "Russell et al. (2025)"],
+      "open_questions": []
+    },
+    {
+      "id": "SYN-VN-01",
+      "name": "Dư thừa đại từ hồi chỉ và Thiếu tỉnh lược chủ ngữ tự nhiên (Zero-Anaphora Deficit)",
+      "source_mapping": ["User_Block_1.Item_6_1"],
+      "linguistic_tier": "VIETNAMESE_NATIVE_SYNTAX",
+      "operational_definition": "Câu văn tiếng Việt nhồi nhét cơ học các đại từ nhân xưng ngôi thứ ba ('nó', 'họ', 'chúng'), chỉ định từ ('điều này', 'việc này') và định ngữ sở hữu ('của họ', 'của nó', 'của mình') vào các vị trí đồng quy chiếu mà tiếng Việt bản ngữ luôn tỉnh lược (zero-anaphora).",
+      "scope_and_unit": {
+        "level": "Syntactic-Discourse Referential Cohesion",
+        "observation_unit": "Vị trí chủ ngữ của mệnh đề thứ 2 trở đi và các cụm sở hữu cách trong câu tiếng Việt",
+        "observability": "Direct lexical-syntactic pattern matching & co-reference resolution"
+      },
+      "sub_manifestations": [
+        {
+          "sub_id": "SYN-VN-01a",
+          "name": "Dùng đại từ 'nó / chúng' cho khái niệm trừu tượng hoặc tổ chức",
+          "pattern": "'Chính sách X đã được ban hành. Nó giúp...' (Dịch từ 'It helps...')."
+        },
+        {
+          "sub_id": "SYN-VN-01b",
+          "name": "Lạm dụng 'Điều này / Việc này' làm chủ ngữ đầu câu sau",
+          "pattern": "Mọi câu thứ 2 đều mở đầu bằng 'Điều này cho thấy...', 'Việc này dẫn đến...' (Dịch từ 'This shows/leads to...')."
+        },
+        {
+          "sub_id": "SYN-VN-01c",
+          "name": "Dư thừa định ngữ sở hữu 'của họ / của nó / của mình'",
+          "pattern": "'Các ngân hàng cơ cấu lại danh mục của họ để bảo vệ lợi nhuận của mình' (Dịch từ 'their...')."
+        }
+      ],
+      "mechanisms_and_certainty": {
+        "generative_mechanisms": [
+          "Giao thoa loại hình học ngôn ngữ (Cross-lingual Typological Transfer): Tiếng Anh là ngôn ngữ non-pro-drop bắt buộc điền chủ ngữ (It, They, This) và từ hạn định sở hữu (its, their), trong khi tiếng Việt là ngôn ngữ radical pro-drop tỉnh lược theo ngữ cảnh (Cao Xuân Hạo, 1991; Trần Ngọc Thêm, 1985)."
+        ],
+        "certainty_level": "Very High (Evidence Level C & D)"
+      },
+      "supporting_evidence": [
+        {
+          "citation": "Trần Ngọc Thêm (1985/1999) & Cao Xuân Hạo (1991/2004)",
+          "level": "C",
+          "finding": "Chứng minh phép tỉnh lược yếu tố cốt lõi là phương thức liên kết tự nhiên và phổ biến bậc nhất trong diễn ngôn tiếng Việt."
+        }
+      ],
+      "counter_evidence": [
+        {
+          "citation": "Ambiguous Switch-Reference Contexts",
+          "level": "C",
+          "finding": "Khi câu trước có >= 2 thực thể danh từ có khả năng làm chủ ngữ cho hành động ở câu sau, việc tỉnh lược hoàn toàn sẽ gây mơ hồ quy chiếu."
+        }
+      ],
+      "diagnostic_specificity_and_limits": {
+        "specificity": "Very High for native Vietnamese naturalness",
+        "confounders": ["Văn dịch thuật của con người từ tiếng Anh sang tiếng Việt"]
+      },
+      "examples": {
+        "positive_clear": "Rủi ro thanh khoản là một mối đe dọa lớn đối với các ngân hàng nhỏ. Khi nó xảy ra, nó có thể làm tê liệt hoạt động thanh toán của họ. Điều này buộc các nhà quản lý phải giám sát chặt chẽ các chỉ số dự trữ của mình.",
+        "positive_subtle": "Khi khách hàng cá nhân gặp khó khăn về thu nhập, họ có xu hướng cắt giảm chi tiêu không thiết yếu của mình.",
+        "negative_lookalike": "Ngân hàng mẹ đã bơm thêm vốn cho công ty tài chính con, nhưng bản thân công ty này vẫn chưa thể tự cân đối dòng tiền. [Bắt buộc giữ 'công ty này' để không nhầm với 'Ngân hàng mẹ'].",
+        "human_natural": "Rủi ro thanh khoản là mối đe dọa lớn đối với các ngân hàng nhỏ: một khi bùng phát, rủi ro này có thể làm tê liệt ngay hoạt động thanh toán, buộc cơ quan quản lý phải giám sát chặt tỷ lệ dự trữ.",
+        "exception_preserve": "Khi cần phân biệt rõ chủ thể thứ hai trong câu có nhiều danh ngữ cạnh tranh quy chiếu."
+      },
+      "detection_guide": {
+        "lexical_triggers": ["Khi nó ", "nó có thể", "nó thường", "của họ", "của nó", "của mình", "Điều này ", "Việc này "]
+      },
+      "humanization_decision_rules": [
+        "RULE 1: Cấm tuyệt đối dùng đại từ 'nó' để chỉ khái niệm trừu tượng, chính sách, văn bản, tổ chức trong văn phong trang trọng/học thuật.",
+        "RULE 2: Nếu mệnh đề 2 cùng chủ ngữ với mệnh đề 1 và không có danh ngữ gây nhiễu ở giữa -> Tỉnh lược hoàn toàn chủ ngữ ở mệnh đề 2.",
+        "RULE 3: Xóa bỏ 'của họ / của nó / của mình' khi danh từ đứng trước đương nhiên thuộc về chủ ngữ của câu."
+      ],
+      "before_after_pairs": [
+        {
+          "before": "Khi khách hàng cá nhân gặp khó khăn về thu nhập, họ có xu hướng cắt giảm chi tiêu không thiết yếu của mình và ưu tiên trả các khoản nợ đến hạn của họ.",
+          "after": "Khi thu nhập sụt giảm, khách hàng cá nhân thường cắt bớt chi tiêu không thiết yếu để ưu tiên trả các khoản nợ đến hạn.",
+          "why_better_explanation": "Tỉnh lược toàn bộ 3 cụm đại từ/sở hữu dịch máy ('họ', 'của mình', 'của họ'), rút gọn câu từ 34 chữ xuống 23 chữ mà nghĩa sáng rõ hơn."
+        }
+      ],
+      "content_preservation_safeguards": [
+        "Trước khi xóa đại từ hoặc danh ngữ chỉ định, phải kiểm tra xem trong mệnh đề trước có 1 hay 2 thực thể; nếu có 2 thực thể cùng loại, phải giữ lại danh từ loại thể ('ngân hàng con', 'bên vay') để tránh nhầm chủ thể."
+      ],
+      "evaluation_criteria": {
+        "inanimate_no_pronoun_count": 0,
+        "over_explicit_pronoun_rate_per_100_words": "<= 0.8"
+      },
+      "references": ["Cao Xuân Hạo (1991)", "Trần Ngọc Thêm (1985)", "Li & Thompson (1976)"],
+      "open_questions": []
+    },
+    {
+      "id": "SYN-VN-02",
+      "name": "Đánh mất cấu trúc Đề – Thuyết vì áp đặt khung Chủ – Vị dịch máy (Topic-Comment Suppression)",
+      "source_mapping": ["User_Block_1.Item_6_2", "NEW-VN-01_SYN-VN-03"],
+      "linguistic_tier": "VIETNAMESE_NATIVE_SYNTAX",
+      "operational_definition": "Thay vì đặt đối tượng/khung phạm vi cần bàn trực tiếp lên đầu câu làm Đề (Topic) và dùng mệnh đề chủ động làm Thuyết (Comment), văn bản lại bọc phần Đề trong các giới từ dịch máy rườm rà ('Đối với vấn đề X,', 'Xét trên khía cạnh Y,') kèm cấu trúc bị động Chủ - Vị ('...nó thường được xử lý bởi Z thông qua việc...').",
+      "scope_and_unit": {
+        "level": "Functional Syntax & Information Structure",
+        "observation_unit": "Cấu trúc Đề - Thuyết (Topic - Comment) của câu tiếng Việt",
+        "observability": "Syntactic pattern matching"
+      },
+      "sub_manifestations": [
+        {
+          "sub_id": "SYN-VN-02a",
+          "name": "Bọc phần Đề trong cụm giới từ dịch can ('Đối với vấn đề...', 'Về mặt khía cạnh...')",
+          "pattern": "'Đối với vấn đề [X], nó thường được [Y] xử lý...'"
+        },
+        {
+          "sub_id": "SYN-VN-02b",
+          "name": "Bị động dịch máy ('được/bị + V + bởi') và danh hóa ('thông qua việc + V')",
+          "pattern": "Dùng 'được... bởi' cho câu trung tính và đóng gói mọi động từ sau từ 'việc / sự'."
+        }
+      ],
+      "mechanisms_and_certainty": {
+        "generative_mechanisms": [
+          "Áp đặt cấu trúc Subject-Prominent và Passive Voice của tiếng Anh lên ngôn ngữ Topic-Prominent như tiếng Việt (Cao Xuân Hạo, 1991; Li & Thompson, 1976; Nguyễn Hồng Cổn, 2009)."
+        ],
+        "certainty_level": "Very High (Evidence Level C)"
+      },
+      "supporting_evidence": [
+        {
+          "citation": "Cao Xuân Hạo (1991/2004) & Nguyễn Hồng Cổn (2009)",
+          "level": "C",
+          "finding": "Khẳng định cấu trúc Đề - Thuyết là cấu trúc cú pháp cơ bản của câu tiếng Việt, cho phép đưa tân ngữ/khung phạm vi lên đầu câu mà không cần biến vị ngữ thành dạng bị động."
+        }
+      ],
+      "counter_evidence": [
+        {
+          "citation": "Legal Clauses Scoping ('Đối với tổ chức tín dụng...')",
+          "level": "C",
+          "finding": "Trong văn bản quy phạm pháp luật, cụm 'Đối với [nhóm đối tượng]' ở đầu khoản luật được dùng hợp thức để giới hạn phạm vi điều chỉnh."
+        }
+      ],
+      "diagnostic_specificity_and_limits": {
+        "specificity": "Very High for native Vietnamese stylistic quality",
+        "confounders": ["Văn bản luật", "Bản dịch thô từ tiếng Anh"]
+      },
+      "examples": {
+        "positive_clear": "Đối với vấn đề rủi ro thanh khoản, nó thường được các ngân hàng nhỏ xử lý thông qua việc vay mượn trên thị trường liên ngân hàng.",
+        "positive_subtle": "Xét trên phương diện chi phí vận hành, việc cắt giảm đã được thực hiện bởi ban giám đốc thông qua việc số hóa.",
+        "negative_lookalike": "Đối với khoản vay bằng ngoại tệ, tổ chức tín dụng chỉ được giải ngân cho khách hàng có nguồn thu ngoại tệ từ xuất khẩu. [Quy định pháp lý chuẩn].",
+        "human_natural": "Còn rủi ro thanh khoản, các ngân hàng nhỏ thường xoay xở bằng vốn vay trên thị trường liên ngân hàng.",
+        "exception_preserve": "Các điều khoản phân loại đối tượng áp dụng trong văn bản pháp quy."
+      },
+      "detection_guide": {
+        "structural_trigger": "'Đối với vấn đề / Liên quan đến việc / Xét trên khía cạnh' + [NP_i] + ', nó / chúng được' + [VP] + 'thông qua việc'."
+      },
+      "humanization_decision_rules": [
+        "RULE 1: Cắt bỏ cụm từ rỗng 'Đối với vấn đề / Liên quan đến khía cạnh' và đại từ 'nó'; đưa thẳng danh ngữ lên làm Đề (Topic) và chuyển phần Thuyết về dạng chủ động.",
+        "RULE 2: Chuyển 'được [V] bởi [Tác thể]' thành '[Tác thể] [V]' hoặc cấu trúc Đề - Thuyết không có từ 'bởi'.",
+        "RULE 3: Đổi 'thông qua việc [V]' thành 'nhờ [V]' hoặc 'bằng cách [V]'."
+      ],
+      "before_after_pairs": [
+        {
+          "before": "Đối với vấn đề rủi ro thanh khoản, nó thường được các ngân hàng nhỏ xử lý thông qua việc vay mượn trên thị trường liên ngân hàng.",
+          "after": "Còn rủi ro thanh khoản, các ngân hàng nhỏ thường xoay xở bằng vốn vay trên thị trường liên ngân hàng.",
+          "why_better_explanation": "Khôi phục cấu trúc Đề - Thuyết chuẩn tiếng Việt; xóa bỏ giới từ thừa, đại từ 'nó', bị động 'được... xử lý' và danh hóa 'thông qua việc'."
+        }
+      ],
+      "content_preservation_safeguards": [
+        "Giữ nguyên tiêu điểm thông tin (Topic focus) ở đầu câu để không làm đứt mạch liên kết với câu đứng trước."
+      ],
+      "evaluation_criteria": {
+        "passive_by_agent_calque_count": 0,
+        "topic_comment_naturalness": ">= 4.5/5"
+      },
+      "references": ["Cao Xuân Hạo (1991/2004)", "Nguyễn Hồng Cổn (2009)", "Diệp Quang Ban (2005)"],
+      "open_questions": []
+    },
+    {
+      "id": "LEX-VN-01",
+      "name": "Tắc nghẽn âm tiết Hán – Việt và Danh hóa chuỗi (Sino-Vietnamese Syllabic Congestion)",
+      "source_mapping": ["User_Block_1.Item_6_3"],
+      "linguistic_tier": "LEXICAL_PHRASEOLOGICAL",
+      "operational_definition": "Câu văn tiếng Việt ghép nối liên tiếp >= 4 từ ghép Hán - Việt trừu tượng (>= 8 âm tiết Hán - Việt liên tục) không có động từ thuần Việt hay hư từ làm điểm tựa ngắt nhịp, biến hành động thành chuỗi danh từ tĩnh đặc quánh.",
+      "scope_and_unit": {
+        "level": "Morpho-phonological & Nominal Phrase level",
+        "observation_unit": "Chuỗi âm tiết trong cụm danh từ (NP) và cụm vị ngữ",
+        "observability": "Syllable origin tagging & Nominal phrase length measurement"
+      },
+      "sub_manifestations": [
+        {
+          "sub_id": "LEX-VN-01a",
+          "name": "Chuỗi danh từ Hán - Việt lồng nhau >= 8 âm tiết",
+          "pattern": "'quá trình tối ưu hóa hiệu quả quản trị rủi ro tín dụng chiến lược'"
+        },
+        {
+          "sub_id": "LEX-VN-01b",
+          "name": "Thay động từ đơn bằng [Động từ Hán - Việt rỗng + Danh từ hóa]",
+          "pattern": "Dùng 'thực hiện việc tiết giảm' thay vì 'cắt giảm / bớt'; dùng 'triển khai sự tái cấu trúc' thay vì 'cơ cấu lại'."
+        }
+      ],
+      "mechanisms_and_certainty": {
+        "generative_mechanisms": [
+          "Dịch can (calque) từ các chuỗi Noun Adjuncts / Nominalizations dài trong tiếng Anh học thuật sang chuỗi từ ghép Hán - Việt.",
+          "Đồng nhất độ trang trọng (formality) với mật độ từ Hán - Việt tối đa."
+        ],
+        "certainty_level": "High (Evidence Level C & D)"
+      },
+      "supporting_evidence": [
+        {
+          "citation": "Cao Xuân Hạo (1991) & Hữu Đạt (2011) - Phong cách học tiếng Việt",
+          "level": "C",
+          "finding": "Tiếng Việt ưa kết cấu động từ chuỗi (verb-centric) và sự hòa phối âm luật giữa từ thuần Việt (động, cụ thể) với từ Hán - Việt (tĩnh, khái quát)."
+        }
+      ],
+      "counter_evidence": [
+        {
+          "citation": "Fixed Legal / Institutional Proper Names",
+          "level": "C",
+          "finding": "Các tên gọi định danh pháp lý hoặc cơ quan nhà nước có thể dài > 8 âm tiết Hán - Việt nhưng không được phép tách hay thay từ."
+        }
+      ],
+      "diagnostic_specificity_and_limits": {
+        "specificity": "High for stylistic unnaturalness",
+        "confounders": ["Văn bản hành chính công vụ Việt Nam", "Bản dịch báo cáo tư vấn quốc tế"]
+      },
+      "examples": {
+        "positive_clear": "Việc triển khai thực hiện quy trình chuyển đổi mô hình quản trị rủi ro tập trung giúp tối ưu hóa hiệu suất sử dụng nguồn vốn chủ sở hữu của các tổ chức tín dụng thương mại cổ phần.",
+        "positive_subtle": "Doanh nghiệp cần thực hiện sự tái cấu trúc danh mục dịch vụ một cách toàn diện nhằm đảm bảo sự phát triển bền vững.",
+        "negative_lookalike": "Ngân hàng tuân thủ quy định về tỷ lệ an toàn vốn đối với ngân hàng, chi nhánh ngân hàng nước ngoài. [Tên thông tư pháp quy].",
+        "human_natural": "Chuyển sang mô hình quản trị rủi ro tập trung giúp các ngân hàng cổ phần tận dụng tốt hơn nguồn vốn tự có.",
+        "exception_preserve": "Thuật ngữ chuyên ngành cố định, tên cơ quan, tên văn bản pháp luật."
+      },
+      "detection_guide": {
+        "quantitative_trigger": "Contiguous sequence of >= 4 Sino-Vietnamese compound nouns (>= 8 syllables) without an intervening native verb or preposition."
+      },
+      "humanization_decision_rules": [
+        "RULE 1 (Giải nén danh từ thành động từ): Chuyển các cụm 'sự/việc/quá trình + [Danh động từ Hán-Việt]' thành mệnh đề động từ trực tiếp.",
+        "RULE 2 (Xen kẽ điểm tựa thuần Việt): Giữ nguyên thuật ngữ chuyên ngành Hán - Việt hạt nhân (thanh khoản, nợ xấu, biên lãi ròng), nhưng thay các động từ Hán - Việt chung chung (gia tăng, suy giảm, thực hiện, đảm bảo) bằng động từ tiếng Việt giàu sức gợi (đẩy lên, kéo tụt, bó hẹp, lọc lại, giữ nhịp)."
+      ],
+      "before_after_pairs": [
+        {
+          "before": "Các tổ chức tín dụng cần thực hiện sự tái cấu trúc danh mục dịch vụ một cách toàn diện để đảm bảo sự phát triển bền vững.",
+          "after": "Các ngân hàng buộc phải cơ cấu lại danh mục dịch vụ, lọc bỏ những mảng kém hiệu quả để giữ nhịp tăng trưởng dài hạn.",
+          "why_better_explanation": "Giải phóng cụm danh từ Hán - Việt đặc quánh thành các động từ hành động cụ thể ('cơ cấu lại', 'lọc bỏ', 'giữ nhịp'), tạo nhịp thở cân bằng Hán - Việt và thuần Việt."
+        }
+      ],
+      "content_preservation_safeguards": [
+        "Tuyệt đối không dịch thuần Việt hóa các thuật ngữ chuyên ngành đã chuẩn hóa (ví dụ: giữ nguyên 'thanh khoản', 'vốn chủ sở hữu', 'biên lãi ròng')."
+      ],
+      "evaluation_criteria": {
+        "max_contiguous_abstract_sv_syllables": 7,
+        "verb_centric_clause_ratio": ">= 0.80"
+      },
+      "references": ["Cao Xuân Hạo (1991)", "Hữu Đạt (2011)"],
+      "open_questions": []
+    }
+  ]
+}
