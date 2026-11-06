@@ -1,7 +1,7 @@
 # THIẾT KẾ KỸ THUẬT ĐÃ PHÊ DUYỆT (APPROVED DESIGN SPEC): AI WRITING STYLE AUDITOR
 **Hệ thống Kiểm toán Văn phong Học thuật Khối ngành Kinh tế – Kinh doanh – Tài chính – Ngân hàng – Kế Kiểm – Vận hành**
-- **Ngày phê duyệt**: 2026-11-06
-- **Trạng thái**: Đã phê duyệt (Approved by User)
+- **Ngày phê duyệt**: 2026-11-07
+- **Trạng thái**: Đã phê duyệt (Approved by User — Phương án kiến trúc (b): Python Backend Engine trên Vercel)
 - **Mục tiêu triển khai**: GitHub Repository $\rightarrow$ Import trực tiếp lên **Vercel (`vercel.app`)**
 
 ---
@@ -10,42 +10,35 @@
 - **Người dùng mục tiêu**: Sinh viên đại học và học viên cao học thuộc **toàn bộ khối ngành Kinh tế – Kinh doanh hợp nhất** (bao gồm: *Quản trị kinh doanh, Quản trị nhân sự, Logistics & Hậu cần, Marketing, Tài chính – Ngân hàng, Kế toán – Kiểm toán, Quản trị sản xuất & Vận hành, Kinh tế học*).
 - **Trải nghiệm không cần chọn chuyên ngành**: Hệ thống **hợp nhất toàn bộ từ điển thuật ngữ và quy tắc của cả 8 chuyên ngành Kinh tế** vào một bộ máy duy nhất — sinh viên tải luận văn lên là kiểm toán ngay lập tức mà không cần phải chọn dropdown chuyên ngành.
 - **Chiến lược sản phẩm (Audit-First MVP & Monetization Hook)**:
-  - **Phiên bản hiện tại (Core Audit System)**: Tập trung hoàn thiện 100% luồng **Kiểm toán Văn phong (Audit)** cho file luận văn `.docx` dài 70–90+ trang (hoặc văn bản dán trực tiếp): Bóc tách mục lục Chương/Mục, chạy thuật toán 26 quy tắc, tô sáng chính xác câu/cụm từ mắc lỗi trên giao diện đọc kiểm toán, giải thích chi tiết cơ sở ngôn ngữ học, chấm điểm mức độ biểu hiện thực tế ($CV_L, ISI, OPR, SVCI, SICD, BCR$), hướng dẫn công thức sửa cụ thể cho từng lỗi và **Xuất Báo cáo Kiểm toán (Audit Report HTML/In PDF/JSON)**.
+  - **Phiên bản hiện tại (Core Audit System)**: Tập trung hoàn thiện 100% luồng **Kiểm toán Văn phong (Audit)** cho file luận văn `.docx` dài 70–90+ trang (hoặc văn bản dán trực tiếp): Bóc tách mục lục Chương/Mục, gửi từng chương/mục xuống **Python Backend trên Vercel (`/api/audit`)** để chạy thuật toán 26 quy tắc, tô sáng chính xác câu/cụm từ mắc lỗi trên giao diện đọc kiểm toán, giải thích chi tiết cơ sở ngôn ngữ học, chấm điểm mức độ biểu hiện thực tế ($CV_L, ISI, OPR, SVCI, SICD, BCR$), hướng dẫn công thức sửa cụ thể cho từng lỗi và **Xuất Báo cáo Kiểm toán (Audit Report HTML/In PDF/JSON)**.
   - **Định hướng Tính năng Trả phí (Pro Tier Hook)**: Tính năng *"Sửa trực tiếp trên Web kèm Chấm điểm Real-time & Xuất file `.docx` giữ nguyên định dạng"* được thiết kế sẵn điểm chạm giao diện (nút khóa `[PRO] Chỉnh sửa trực tiếp & Xuất .docx`) để sẵn sàng mở khóa thu phí ở giai đoạn thương mại hóa tiếp theo.
 
 ---
 
-## 2. Mục tiêu, Phi mục tiêu và Phản mục tiêu (Goals, Non-Goals & Anti-Goals)
-### 2.1. Mục tiêu (Goals)
-- **G1 — Tương thích 100% với Vercel (`vercel.app`)**: Cấu trúc dự án chuẩn Vite/React TypeScript kết hợp Vercel Python Serverless Function (`/api/audit.py`, dung lượng $< 5\text{MB}$, không phụ thuộc thư viện nặng quá 250MB) và bộ máy quy tắc đồng nhất (`src/engine/`), đẩy lên GitHub và import vào Vercel là hoạt động ngay.
-- **G2 — Đọc và Kiểm toán mượt mà luận văn `.docx` 70–90+ trang**: Tự động giải nén và phân tích file `.docx` (25.000–45.000+ chữ) thành cây cấu trúc Chương / Mục (`Chương 1`, `1.1`, `1.2`...), tự động nhận diện và lọc bỏ phần *Mục lục, Danh mục chữ viết tắt, Tài liệu tham khảo* để không báo lỗi nhầm.
-- **G3 — Phát hiện, Tô sáng, Chấm điểm Toán học & Giải thích Minh bạch 26 Dấu hiệu**:
-  - Phân tích theo 5 Nhóm Kiểm toán (`RHY` Nhịp văn, `SYN` Cú pháp, `VN-NAT` Bản ngữ Tiếng Việt, `DIS` Đoạn văn đóng hộp & Từ nối, `ARG & FOR` Lập luận & Dấu vết AI).
-  - Hiển thị rõ lý do vì sao bị gắn cờ, trích dẫn quy tắc ngôn ngữ học và đưa ra hướng dẫn sửa cụ thể cho sinh viên.
-- **G4 — Hợp nhất Từ điển Bảo vệ Thuật ngữ 8 Chuyên ngành Kinh tế**: Bảo vệ hơn **600+ cụm thuật ngữ chuyên môn** thuộc *Quản trị, Nhân sự, Logistics/Hậu cần, Marketing, Ngân hàng, Tài chính, Kế toán – Kiểm toán, Quản trị sản xuất* khỏi bị nhận diện nhầm là lỗi tắc nghẽn Hán–Việt hay sáo ngữ AI.
-- **G5 — Xuất Báo cáo Kiểm toán Chuyên nghiệp (Audit Report)**: Hỗ trợ xem, tải xuống bản báo cáo HTML độc lập và chế độ **In / Lưu PDF chuẩn học thuật** (gồm Điểm tổng thể, Biểu đồ 5 trụ cột văn phong, Bảng điểm theo từng Chương/Mục, Chỉ số định lượng $CV_L, OPR, SVCI, SICD$, và Danh sách chi tiết từng câu cần sửa kèm hướng dẫn).
+## 2. Quyết định Công nghệ & Kiến trúc: Phương án (b) — Single-Source Python Audit Engine trên Vercel
 
-### 2.2. Phi mục tiêu trong Giai đoạn Hiện tại (Non-Goals)
-- Chưa mở khóa trình soạn thảo trực tiếp (Live Editor) và xuất file `.docx` đã sửa (được giữ làm tính năng **Pro / Trả phí** hiển thị dưới dạng khóa nâng cấp trên UI).
-- Không bắt người dùng chọn chuyên ngành trước khi kiểm toán.
-
----
-
-## 3. Kiến trúc Hệ thống trên Vercel (System Architecture)
+Để tránh việc phải viết lặp bộ quy tắc 2 lần ở cả TypeScript và Python, hệ thống thống nhất kiến trúc **Phương án (b)**:
+1. **Toàn bộ Bộ Máy Kiểm Toán 26 Quy Tắc & Xử lý NLP Tiếng Việt nằm duy nhất ở Backend Python (`api/`)**:
+   - Sử dụng Python Serverless Function của Vercel (`api/audit.py`) cùng các module lõi trong `api/engine/` (`lexicon.py`, `tokenizer.py`, `rules.py`, `auditor.py`).
+   - Hỗ trợ tách từ tiếng Việt (có thể sử dụng thư viện Python nhẹ như `pyvi` hoặc bộ tách từ Maximum Matching tích hợp sẵn Từ điển Tiếng Việt + Từ điển 8 chuyên ngành Kinh tế), đảm bảo tổng dung lượng gói cài đặt Python nhỏ gọn, hoàn toàn tương thích với giới hạn Serverless Function của Vercel.
+2. **Tầng Frontend (React + TypeScript + Vite + Tailwind CSS)**:
+   - Phụ trách đọc file `.docx` 70–90+ trang trên trình duyệt (qua `mammoth`), tách thành các Chương/Mục (`Chương 1`, `1.1`, `1.2`...) và tự động đánh dấu loại trừ *Mục lục / Danh mục Tài liệu tham khảo*.
+   - Gửi danh sách các Chương/Mục (hoặc từng chương theo batch để không bao giờ vượt giới hạn payload 4.5MB của Vercel) xuống endpoint `POST /api/audit`.
+   - Nhận kết quả JSON từ Backend Python để hiển thị lên **Giao diện Audit Studio 3 Cột**, xuất **Báo cáo Kiểm toán (HTML/PDF/JSON)** và hiển thị cổng nâng cấp **Pro**.
 
 ```mermaid
 flowchart TD
-    A["Sinh viên tải file Luận văn .docx (70-90+ trang)\nhoặc dán văn bản mẫu"] --> B["Docx Parser & Chapter Tree Builder\n(Tách Chương 1..5, Mục 1.1..3.4 & Lọc bỏ Mục lục/TLTK)"]
-    B --> C["Bộ Máy Kiểm Toán 26 Quy Tắc (Rule-Based Auditor)\n+ Từ điển Hợp nhất 8 Ngành Kinh tế (600+ thuật ngữ)"]
-    C <--> D["Vercel Python Serverless API (/api/audit)\n& Client-Side High-Speed Batch Engine"]
-    C --> E["Giao diện Kiểm toán 3 Cột (Audit Studio)\n- Cột 1: Cây Chương/Mục & Điểm từng phần\n- Cột 2: Văn bản Tô sáng theo 5 nhóm màu\n- Cột 3: Chi tiết Lỗi, Công thức Toán học & Hướng dẫn sửa"]
+    A["Sinh viên tải file Luận văn .docx (70-90+ trang)\nhoặc dán văn bản mẫu trên Trình duyệt"] --> B["Frontend Docx Parser (TypeScript)\nTách Chương 1..5, Mục 1.1..3.4 & Lọc bỏ Mục lục/TLTK"]
+    B -- "Gửi từng Chương/Batch qua HTTP POST /api/audit" --> C["Vercel Python Serverless Backend (api/audit.py)\nBộ Máy Kiểm Toán 26 Quy Tắc Duy Nhất (Single Source of Truth)"]
+    C --> D["Python NLP & Economics Lexicon Shield (api/engine/)\n- Tách câu & tách từ tiếng Việt (pyvi / Dictionary MM)\n- Bảo vệ 600+ thuật ngữ 8 ngành Kinh tế\n- Tính 6 chỉ số: CV_L, ISI, OPR, SVCI, SICD, BCR"]
+    D -- "Trả về JSON kết quả kiểm toán & vị trí tô sáng" --> E["Giao diện Kiểm toán 3 Cột (React Audit Studio)\n- Cột 1: Cây Chương/Mục & Điểm từng phần\n- Cột 2: Văn bản Tô sáng theo 5 nhóm màu\n- Cột 3: Chi tiết Lỗi, Công thức Toán học & Hướng dẫn sửa"]
     E --> F["Xuất Báo Cáo Kiểm Toán (Audit Report)\nIn PDF trực tiếp / Tải file HTML & JSON"]
     E -.-> G["[PRO Feature Gate]\nNút 'Chỉnh sửa trực tiếp & Xuất .docx' (Tính năng trả phí)"]
 ```
 
 ---
 
-## 4. Bộ Từ điển Hợp nhất 8 Chuyên ngành Kinh tế (Unified Economics Terminology Shield)
+## 3. Bộ Từ điển Hợp nhất 8 Chuyên ngành Kinh tế (`api/engine/lexicon.py`)
 
 Bộ từ điển hợp nhất (`UNIFIED_ECONOMICS_LEXICON`) tự động bảo vệ các thuật ngữ chuyên ngành thuộc 8 lĩnh vực khi tính toán mật độ Hán–Việt (`LEX-VN-01`), lặp thuật ngữ (`LEX-04`) và danh hóa (`SYN-VN-03`):
 1. **Tài chính – Ngân hàng**: *biên lãi ròng (NIM), tỷ lệ nợ xấu (NPL), tỷ lệ an toàn vốn (CAR), dự phòng rủi ro tín dụng, thanh khoản hệ thống, thị trường liên ngân hàng, lãi suất điều hành, chính sách tiền tệ, tỷ giá hối đoái, cấu trúc vốn, đòn bẩy tài chính, dòng tiền chiết khấu (DCF), giá trị hiện tại ròng (NPV), tỷ suất sinh lời nội bộ (IRR), tiền gửi không kỳ hạn (CASA), phân phối bảo hiểm qua ngân hàng (Bancassurance)...*

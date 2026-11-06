@@ -1,49 +1,216 @@
-# AI Writing Style Auditor Implementation Plan
+# AI Writing Style Auditor Implementation Plan (Phương án B: Python Backend trên Vercel)
 
 > **For agentic workers:** REQUIRED SUB-SKILL: Use superpowers:subagent-driven-development (recommended) or superpowers:executing-plans to implement this plan task-by-task. Steps use checkbox (`- [ ]`) syntax for tracking.
 
-**Goal:** Xây dựng ứng dụng web **AI Writing Style Auditor** triển khai trên Vercel (`vercel.app`), cho phép sinh viên và học viên cao học khối ngành Kinh tế (Quản trị, Nhân sự, Logistics, Marketing, Ngân hàng, Tài chính, Kế toán – Kiểm toán, Quản trị sản xuất) tải lên luận văn `.docx` dài 70–90+ trang để kiểm toán, tô sáng, chấm điểm toán học và giải thích chi tiết 26 dấu hiệu văn phong AI theo thuật toán quy tắc, kèm xuất Báo cáo Kiểm toán (HTML/PDF/JSON) và cổng khóa tính năng trả phí (Pro Live Editor).
+**Goal:** Xây dựng ứng dụng web **AI Writing Style Auditor** triển khai trên Vercel (`vercel.app`) theo **Phương án (b) — Single-Source Python Audit Engine trên Vercel**, cho phép sinh viên và học viên cao học khối ngành Kinh tế (Quản trị, Nhân sự, Logistics, Marketing, Ngân hàng, Tài chính, Kế toán – Kiểm toán, Quản trị sản xuất) tải lên luận văn `.docx` dài 70–90+ trang để tách chương/mục, gửi từng chương xuống Backend Python (`/api/audit`) phân tích 26 dấu hiệu văn phong AI, hiển thị trên giao diện Audit Studio 3 cột và xuất Báo cáo Kiểm toán (HTML/PDF/JSON).
 
-**Architecture:** Ứng dụng sử dụng Vite + React + TypeScript + Tailwind CSS kết hợp Vercel Python Serverless API (`/api/audit.py`) và bộ máy kiểm toán quy tắc đồng nhất (`src/engine/`). Luận văn `.docx` 70–90+ trang được bóc tách thành cây cấu trúc Chương/Mục (tự động lọc bỏ Mục lục và Tài liệu tham khảo), bảo vệ thuật ngữ chuyên ngành bằng từ điển hợp nhất 8 chuyên ngành Kinh tế, chấm điểm định lượng ($CV_L, ISI, OPR, SVCI, SICD, BCR$) và hiển thị trên giao diện Audit Studio 3 cột.
+**Architecture:** Toàn bộ bộ máy kiểm toán 26 quy tắc, từ điển hợp nhất 8 chuyên ngành Kinh tế và xử lý NLP tiếng Việt được đặt duy nhất tại Backend Python (`api/engine/` & `api/audit.py`) chạy trên Vercel Python Serverless Function. Frontend (`src/`, React + TypeScript + Vite + Tailwind CSS) đảm nhiệm bóc tách file `.docx` 70–90+ trang thành từng Chương/Mục, gửi request theo từng chương xuống `/api/audit`, hiển thị kết quả tô sáng 3 cột, xuất Báo cáo Kiểm toán và hiển thị cổng khóa tính năng trả phí (`ProUpgradeModal`).
 
-**Tech Stack:** React 18, TypeScript, Vite, Tailwind CSS, Vitest (testing), Mammoth.js (`.docx` parsing), Lucide React (icons), Python 3.11 (`http.server` / Vercel Serverless Handler cho `/api/audit.py`).
+**Tech Stack:** Python 3.11+ (`pyvi` hoặc bộ tách từ từ điển nhẹ, `pytest`), React 18, TypeScript, Vite, Tailwind CSS, Vitest, Mammoth.js (`.docx` extraction), Lucide React.
 
 **Spec:** `docs/superpowers/specs/2026-11-06-ai-writing-style-auditor-design.md`
 
 ## Global Constraints
 
-- **Vercel Compatibility:** Tổng dung lượng thư mục `api/` và thư viện Python phải $< 10\text{MB}$ (không dùng PyTorch/underthesea nặng quá 250MB của Vercel Serverless).
-- **No Major Selection Dropdown:** Hợp nhất toàn bộ 8 chuyên ngành (*Quản trị kinh doanh, Nhân sự, Logistics/Hậu cần, Marketing, Ngân hàng, Tài chính, Kế toán – Kiểm toán, Quản trị sản xuất*) vào một bộ từ điển bảo vệ thuật ngữ tự động (`UNIFIED_ECONOMICS_LEXICON`).
+- **Single-Source Python Rule Engine (Phương án b):** Toàn bộ 26 quy tắc kiểm toán và tính toán chỉ số toán học ($CV_L, ISI, OPR, SVCI, SICD, BCR$) chỉ viết một lần duy nhất bằng Python trong `api/engine/`, tuyệt đối không nhân bản logic quy tắc sang TypeScript.
+- **Vercel Serverless Compatibility:** Gói phụ thuộc trong `requirements.txt` phải nhẹ ($< 50\text{MB}$), tuyệt đối không dùng PyTorch/underthesea vượt ngưỡng 250MB của Vercel. Khi kiểm toán file `.docx` 70–90+ trang, Frontend gửi theo từng Chương/Batch xuống `POST /api/audit` để mỗi request luôn $< 1\text{MB}$ và phản hồi nhanh.
+- **No Major Selection Dropdown:** Hợp nhất toàn bộ 8 chuyên ngành Kinh tế (*Quản trị kinh doanh, Nhân sự, Logistics/Hậu cần, Marketing, Ngân hàng, Tài chính, Kế toán – Kiểm toán, Quản trị sản xuất*) vào một bộ từ điển bảo vệ thuật ngữ tự động (`UNIFIED_ECONOMICS_LEXICON` trong `api/engine/lexicon.py`).
 - **Audit-First Scope & Pro Gate:** Phiên bản hiện tại chỉ mở tính năng Kiểm toán (Audit) và Xuất Báo cáo Kiểm toán; tính năng *"Chỉnh sửa trực tiếp trên web kèm chấm điểm real-time & Xuất file `.docx`"* được đặt sau cổng tính năng trả phí (`ProUpgradeModal`).
-- **Large Thesis Performance:** Phải phân tách tài liệu `.docx` 70–90+ trang theo từng Chương/Mục để render theo mục đang chọn, đảm bảo không treo DOM khi tải tài liệu $> 30.000$ chữ.
-- **True Mathematical Metrics:** Điểm số phải tính từ công thức định lượng thực tế ($CV_L, ISI, OPR, SVCI, SICD, BCR$) dựa trên `knowledge_base/06_EVALUATION_AND_TESTING_FRAMEWORK.md`.
+- **Mandatory Git Commit & Test Gate (`AGENTS.md`):** Sau mỗi task/thay đổi, bắt buộc phải chạy đầy đủ các bài kiểm thử liên quan (`pytest` cho Python và `vitest` cho Frontend) đảm bảo PASS 100%, sau đó tạo một Git commit tương ứng.
 
 ## Review Focus
 
-1. **Chữ viết tắt và số thập phân tiếng Việt trong luận văn Kinh tế:** Các cụm như `TP.HCM`, `TS. Nguyễn Văn A`, `PGS.TS.`, `Thông tư 02/2023/TT-NHNN`, `14.5%`, `1.250 tỷ đồng` không được làm bộ tách câu (`splitSentences`) cắt nhầm thành câu ngắn 1–2 chữ gây sai lệch chỉ số $CV_L$ (`RHY-01`).
-2. **Bảo vệ thuật ngữ 8 chuyên ngành Kinh tế khỏi báo nhầm `LEX-VN-01`:** Các câu chứa thuật ngữ dài như *"báo cáo tài chính hợp nhất"*, *"rủi ro có sai sót trọng yếu"*, *"quản trị chuỗi cung ứng"*, *"tỷ lệ an toàn vốn tối thiểu"* không được bị tính là chuỗi tắc nghẽn âm tiết Hán–Việt trừu tượng.
-3. **Tự động loại trừ Mục lục và Danh mục Tài liệu tham khảo:** Khi tải file `.docx` luận văn 80 trang, phần *Danh mục tài liệu tham khảo* (chứa hàng trăm dòng tên tác giả, năm, DOI, link) phải được tự động đánh dấu `isExcluded: true` để không bị báo lỗi `RHY-01` hoặc `SYN-01`.
-4. **Đoạn văn ngắn dưới 4 câu:** Chỉ số biến thiên độ dài câu $CV_L$ (`RHY-01`) và đoạn văn đóng hộp 4 bước (`DIS-01`) chỉ kích hoạt trên các đoạn văn có $\ge 4$ câu để tránh dương tính giả trên các đoạn dẫn nhập 1–2 câu.
-5. **Tài liệu `.docx` không dùng thẻ Heading chuẩn của Word:** Nhiều sinh viên in đậm dòng chữ `"CHƯƠNG 1: CƠ SỞ LÝ LUẬN"` bằng thẻ `<p><strong>` thay vì Heading 1; bộ phân tích cấu trúc (`extractSectionsFromHtml`) phải nhận diện được cả thẻ `<h1>..<h3>` lẫn đoạn văn ngắn bắt đầu bằng `CHƯƠNG [1-9]/I..V`, `PHẦN MỞ ĐẦU`, `KẾT LUẬN`, `TÀI LIỆU THAM KHẢO`, hoặc `1.1.`, `2.1.`.
+1. **Chữ viết tắt và số thập phân tiếng Việt trong luận văn Kinh tế:** Bộ tách câu Python (`split_vietnamese_sentences` trong `api/engine/tokenizer.py`) không được cắt nhầm tại `TP.HCM`, `TS.`, `PGS.TS.`, `ThS.`, `TT-NHNN`, `NĐ-CP`, `14.5%`, `1.200 tỷ đồng`.
+2. **Bảo vệ thuật ngữ 8 chuyên ngành Kinh tế khỏi báo nhầm `LEX-VN-01`:** Các cụm thuật ngữ chuyên ngành như *"báo cáo tài chính hợp nhất"*, *"rủi ro có sai sót trọng yếu"*, *"quản trị chuỗi cung ứng"*, *"quản trị sản xuất tinh gọn"*, *"tỷ lệ an toàn vốn tối thiểu"* phải được đánh dấu bảo vệ (`mask_protected_economics_terms`) trước khi đếm chuỗi âm tiết Hán–Việt trừu tượng.
+3. **Đoạn văn ngắn dưới 4 câu:** Chỉ số biến thiên chiều dài câu $CV_L$ (`RHY-01`) và đoạn văn đóng hộp 4 bước (`DIS-01`) chỉ kích hoạt trên các đoạn văn có $\ge 4$ câu.
+4. **Tự động loại trừ Mục lục và Danh mục Tài liệu tham khảo:** Bộ tách chương từ file `.docx` (`src/utils/docxParser.ts`) phải nhận diện cả thẻ Heading lẫn đoạn văn in đậm bắt đầu bằng `CHƯƠNG 1..5`, `MỤC LỤC`, `DANH MỤC TÀI LIỆU THAM KHẢO` và tự động đánh dấu `isExcluded: true` cho Mục lục / Tài liệu tham khảo.
+5. **Tương thích môi trường Dev Local & Vercel Production:** Trong quá trình phát triển local (`npm run dev`), Vite dev server phải cấu hình proxy `/api/audit` sang Python server local (hoặc middleware) để giao diện React gọi `fetch('/api/audit')` giống hệt như khi chạy trên `vercel.app`.
 
 ---
 
 ## File Structure
 
-- `package.json`, `tsconfig.json`, `vite.config.ts`, `tailwind.config.js`, `postcss.config.js`, `index.html`, `vercel.json`: Cấu hình ứng dụng web Vite + React + TypeScript + Vitest và định tuyến Vercel.
-- `src/types/auditor.ts`: Định nghĩa toàn bộ kiểu dữ liệu TypeScript cho hệ thống kiểm toán.
-- `src/engine/economicsLexicon.ts`: Từ điển hợp nhất 8 chuyên ngành Kinh tế (`UNIFIED_ECONOMICS_LEXICON`), từ điển âm tiết Hán–Việt trừu tượng và danh mục quy tắc 26 dấu hiệu.
-- `src/engine/sentenceTokenizer.ts`: Bộ tách đoạn, tách câu tiếng Việt (xử lý viết tắt học hàm học vị, số liệu) và bộ đếm âm tiết/che mặt nạ thuật ngữ Kinh tế.
-- `src/engine/ruleEvaluators.ts`: Thuật toán kiểm toán 26 dấu hiệu (`RHY`, `SYN`, `VN-NAT`, `DIS`, `ARG & FOR`) và tính toán 6 chỉ số định lượng ($CV_L, ISI, OPR, SVCI, SICD, BCR$).
-- `src/engine/documentParser.ts`: Bộ đọc file `.docx` (qua `mammoth`), phân tách cây Chương/Mục (kể cả khi sinh viên không dùng Heading chuẩn) và tự động lọc Mục lục / Tài liệu tham khảo.
-- `src/engine/documentAuditor.ts`: Bộ điều phối kiểm toán toàn văn bản, tính điểm trọng số theo đoạn/chương/toàn bài và cung cấp dữ liệu luận văn mẫu ngành Kinh tế.
-- `api/audit.py`: Vercel Python Serverless Function nhận payload văn bản và trả về kết quả kiểm toán JSON đồng nhất.
-- `src/utils/reportExporter.ts`: Bộ xuất Báo cáo Kiểm toán ra file HTML độc lập, JSON và giao diện In PDF chuẩn học thuật.
-- `src/components/HeaderBar.tsx`, `src/components/ChapterSidebar.tsx`, `src/components/AuditDocumentViewer.tsx`, `src/components/DiagnosticInspector.tsx`, `src/components/ProUpgradeModal.tsx`, `src/App.tsx`: Hệ thống giao diện Audit Studio 3 cột và cổng khóa tính năng trả phí Pro.
+- `api/engine/__init__.py`: Package khởi tạo bộ máy kiểm toán Python.
+- `api/engine/lexicon.py`: Từ điển hợp nhất 8 chuyên ngành Kinh tế (`UNIFIED_ECONOMICS_TERMS`), từ điển âm tiết Hán–Việt trừu tượng và metadata 26 quy tắc.
+- `api/engine/tokenizer.py`: Bộ tách câu tiếng Việt chống cắt nhầm từ viết tắt/số thập phân, tách từ tiếng Việt và che mặt nạ bảo vệ thuật ngữ Kinh tế.
+- `api/engine/rules.py`: Bộ máy kiểm toán 26 quy tắc (`RHY-01`, `SYN-01`..`04`, `SYN-VN-01`..`03`, `LEX-01`..`05`, `LEX-VN-01`, `DIS-01`..`04`, `ARG-01`..`04`, `PRG-01`..`02`, `FMT-01`, `FOR-01`) và tính toán 6 chỉ số định lượng ($CV_L, ISI, OPR, SVCI, SICD, BCR$).
+- `api/engine/auditor.py`: Bộ điều phối kiểm toán cấp Chương/Mục và cấp Toàn tài liệu, kèm dữ liệu luận văn mẫu ngành Kinh tế.
+- `api/audit.py`: Vercel Python Serverless Function (`BaseHTTPRequestHandler`) phục vụ endpoint `POST /api/audit` và `GET /api/audit` (trả về dữ liệu mẫu + danh mục quy tắc).
+- `tests/test_python_engine.py`: Bộ unit test `pytest` kiểm증 toàn bộ bộ máy Python (`tokenizer.py`, `rules.py`, `auditor.py`, `audit.py`).
+- `package.json`, `requirements.txt`, `vercel.json`, `vite.config.ts`, `tsconfig.json`, `tailwind.config.js`, `postcss.config.js`, `index.html`: Cấu hình toàn dự án.
+- `src/types/auditor.ts`: Kiểu dữ liệu TypeScript khớp 1-1 với JSON response từ `api/audit.py`.
+- `src/utils/docxParser.ts`: Bộ đọc file `.docx` 70–90+ trang trên trình duyệt, tách cây Chương/Mục, nhận diện Mục lục/Tài liệu tham khảo và gửi batch xuống `/api/audit`.
+- `src/utils/reportExporter.ts`: Bộ xuất Báo cáo Kiểm toán ra HTML độc lập / In PDF / JSON.
+- `src/components/HeaderBar.tsx`, `src/components/ChapterSidebar.tsx`, `src/components/AuditDocumentViewer.tsx`, `src/components/DiagnosticInspector.tsx`, `src/components/ProUpgradeModal.tsx`, `src/App.tsx`: Giao diện React Audit Studio 3 cột.
 
 ---
 
-### Task 1: Project Scaffolding, Types & Unified 8-Field Economics Lexicon
+### Task 1: Python NLP Tokenizer & Unified 8-Field Economics Lexicon (`api/engine/lexicon.py` & `tokenizer.py`)
+
+**Files:**
+- Create: `requirements.txt`
+- Create: `api/engine/__init__.py`
+- Create: `api/engine/lexicon.py`
+- Create: `api/engine/tokenizer.py`
+- Test: `tests/test_tokenizer.py`
+
+**Interfaces:**
+- Produces:
+  - `api/engine/lexicon.py`: `UNIFIED_ECONOMICS_TERMS: list[str]`, `SINO_VIETNAMESE_ABSTRACT_SYLLABLES: set[str]`, `RULE_METADATA: dict[str, dict]`
+  - `api/engine/tokenizer.py`:
+    - `split_vietnamese_sentences(text: str) -> list[dict]` (each dict: `{"text": str, "start": int, "end": int, "word_count": int}`)
+    - `mask_protected_economics_terms(text: str) -> tuple[str, list[dict]]`
+
+- [ ] **Step 1: Write the failing test in `tests/test_tokenizer.py`**
+
+```python
+from api.engine.tokenizer import split_vietnamese_sentences, mask_protected_economics_terms
+
+def test_split_sentences_preserves_vietnamese_abbreviations_and_decimals():
+    text = (
+        "Theo PGS.TS. Nguyễn Văn A (2025), tại TP.HCM, biên lãi ròng đạt 3.45% "
+        "và nợ xấu ở mức 1.200 tỷ đồng theo Thông tư 02/2023/TT-NHNN. "
+        "Tuy nhiên, rủi ro thanh khoản vẫn hiện hữu."
+    )
+    sentences = split_vietnamese_sentences(text)
+    assert len(sentences) == 2
+    assert "PGS.TS. Nguyễn Văn A" in sentences[0]["text"]
+    assert "3.45%" in sentences[0]["text"]
+    assert sentences[1]["text"] == "Tuy nhiên, rủi ro thanh khoản vẫn hiện hữu."
+
+def test_masks_unified_8_field_economics_terms():
+    sample = (
+        "Doanh nghiệp áp dụng quản trị sản xuất tinh gọn, kiểm soát rủi ro có sai sót trọng yếu "
+        "trên báo cáo tài chính hợp nhất và tối ưu tồn kho an toàn trong quản trị chuỗi cung ứng."
+    )
+    masked_text, spans = mask_protected_economics_terms(sample)
+    matched = [s["term"].lower() for s in spans]
+    assert "quản trị sản xuất tinh gọn" in matched
+    assert "rủi ro có sai sót trọng yếu" in matched
+    assert "báo cáo tài chính hợp nhất" in matched
+    assert "tồn kho an toàn" in matched
+    assert "quản trị chuỗi cung ứng" in matched
+```
+
+- [ ] **Step 2: Run test to verify it fails**
+
+Run: `python -m pytest tests/test_tokenizer.py -v`
+Expected: FAIL with `ModuleNotFoundError: No module named 'api'`
+
+- [ ] **Step 3: Implement `requirements.txt`, `api/engine/__init__.py`, `api/engine/lexicon.py`, and `api/engine/tokenizer.py`**
+
+Implement the unified 8-field Economics lexicon (`Quản trị, Nhân sự, Logistics, Marketing, Ngân hàng, Tài chính, Kế toán – Kiểm toán, Quản trị sản xuất`), 26 rule definitions, and the Vietnamese sentence splitter + longest-match economics term masker.
+
+- [ ] **Step 4: Run test to verify it passes**
+
+Run: `python -m pytest tests/test_tokenizer.py -v`
+Expected: PASS (2 passed)
+
+- [ ] **Step 5: Commit**
+
+```bash
+git add requirements.txt api/engine/__init__.py api/engine/lexicon.py api/engine/tokenizer.py tests/test_tokenizer.py
+git commit -m "feat(engine): add unified 8-field economics lexicon and Vietnamese sentence tokenizer"
+```
+
+---
+
+### Task 2: Single-Source 26-Sign Python Rule Engine & Vercel Serverless API (`api/engine/rules.py`, `auditor.py`, `api/audit.py`)
+
+**Files:**
+- Create: `api/engine/rules.py`
+- Create: `api/engine/auditor.py`
+- Create: `api/audit.py`
+- Test: `tests/test_rules_and_auditor.py`
+
+**Interfaces:**
+- Consumes: `api/engine/lexicon.py`, `api/engine/tokenizer.py`
+- Produces:
+  - `api/engine/rules.py`: `audit_paragraph(text: str, index: int) -> dict`
+  - `api/engine/auditor.py`: `audit_document_sections(title: str, sections: list[dict]) -> dict`, `SAMPLE_THESIS_PAYLOAD: dict`
+  - `api/audit.py`: Vercel Serverless `handler(BaseHTTPRequestHandler)` handling `POST /api/audit` and `GET /api/audit`
+
+- [ ] **Step 1: Write the failing test in `tests/test_rules_and_auditor.py`**
+
+```python
+from api.engine.rules import audit_paragraph
+from api.engine.auditor import audit_document_sections
+
+def test_detects_low_burstiness_boxed_paragraph_and_pendulum_hedging():
+    ai_para = (
+        "Trong bối cảnh biên lãi ròng thu hẹp, việc đa dạng hóa nguồn thu ngoài lãi đóng vai trò then chốt đối với các ngân hàng. "
+        "Cụ thể, các hoạt động dịch vụ thanh toán và kinh doanh ngoại hối đã mang lại nguồn thu ổn định, giúp giảm sự phụ thuộc vào tín dụng. "
+        "Tuy nhiên, mảng phân phối bảo hiểm qua ngân hàng lại đang đối mặt với nhiều thách thức lớn về niềm tin của khách hàng. "
+        "Do đó, các tổ chức tín dụng cần tái cấu trúc danh mục dịch vụ một cách toàn diện để đảm bảo sự phát triển bền vững."
+    )
+    res = audit_paragraph(ai_para, 0)
+    rule_ids = [f["ruleId"] for f in res["flags"]]
+    assert res["metrics"]["cvLength"] < 0.18
+    assert "RHY-01" in rule_ids
+    assert "DIS-01" in rule_ids
+    assert "DIS-03" in rule_ids
+    assert "ARG-02" in rule_ids
+    assert res["aiStyleScore"] > 55
+
+def test_detects_syntactic_isomorphism_and_trailing_clauses():
+    iso_para = (
+        "Trong bối cảnh cạnh tranh gay gắt hiện nay, các ngân hàng thương mại đang đẩy mạnh quá trình số hóa dịch vụ, qua đó nâng cao trải nghiệm cho khách hàng cá nhân. "
+        "Trước những biến động khó lường của vĩ mô, nhiều tổ chức tín dụng cũng chủ động thắt chặt khẩu vị rủi ro, từ đó đảm bảo sự an toàn cho toàn bộ hệ thống. "
+        "Thông qua việc ứng dụng trí tuệ nhân tạo, quy trình thẩm định tín dụng đã được rút ngắn đáng kể, góp phần tối ưu hóa chi phí vận hành của doanh nghiệp."
+    )
+    res = audit_paragraph(iso_para, 0)
+    rule_ids = [f["ruleId"] for f in res["flags"]]
+    assert "SYN-01" in rule_ids
+    assert "SYN-02" in rule_ids
+
+def test_detects_vietnamese_native_calques_and_sino_vietnamese_congestion():
+    calque_para = (
+        "Đối với vấn đề rủi ro thanh khoản, nó thường được các ngân hàng nhỏ xử lý thông qua việc thực hiện quy trình chuyển đổi mô hình quản trị rủi ro tập trung của họ. "
+        "Điều này giúp bảo vệ lợi nhuận của mình."
+    )
+    res = audit_paragraph(calque_para, 0)
+    rule_ids = [f["ruleId"] for f in res["flags"]]
+    assert "SYN-VN-01" in rule_ids
+    assert "SYN-VN-02" in rule_ids
+    assert "SYN-VN-03" in rule_ids
+    assert "LEX-VN-01" in rule_ids
+
+def test_protects_clean_economics_prose_and_short_paragraphs():
+    clean_para = (
+        "Khi kiểm toán báo cáo tài chính hợp nhất năm 2025, kiểm toán viên đánh giá rủi ro có sai sót trọng yếu nằm ở khoản mục hàng tồn kho và dự phòng phải thu khó đòi. "
+        "Nhờ đối chiếu trực tiếp vận đơn đường biển với sổ cái kho ngoại quan, đoàn kiểm toán đã phát hiện chênh lệch 14,2 tỷ đồng ghi nhận sai kỳ kế toán."
+    )
+    res = audit_paragraph(clean_para, 0)
+    rule_ids = [f["ruleId"] for f in res["flags"]]
+    assert "RHY-01" not in rule_ids
+    assert "LEX-VN-01" not in rule_ids
+    assert res["aiStyleScore"] < 20
+```
+
+- [ ] **Step 2: Run test to verify it fails**
+
+Run: `python -m pytest tests/test_rules_and_auditor.py -v`
+Expected: FAIL (`ModuleNotFoundError: No module named 'api.engine.rules'`)
+
+- [ ] **Step 3: Implement `api/engine/rules.py`, `api/engine/auditor.py`, and `api/audit.py`**
+
+Implement all 26 rule evaluators, mathematical metrics ($CV_L, ISI, OPR, SVCI, SICD, BCR$), section/document aggregation, and the Vercel HTTP handler in `api/audit.py`.
+
+- [ ] **Step 4: Run test to verify it passes**
+
+Run: `python -m pytest -v`
+Expected: PASS (all tests in `tests/` pass)
+
+- [ ] **Step 5: Commit**
+
+```bash
+git add api/engine/rules.py api/engine/auditor.py api/audit.py tests/test_rules_and_auditor.py
+git commit -m "feat(api): implement 26-sign Python rule engine and Vercel serverless endpoint"
+```
+
+---
+
+### Task 3: Frontend Scaffolding, Large `.docx` Chapter Parser & Report Exporter (`src/utils/`)
 
 **Files:**
 - Create: `package.json`
@@ -51,285 +218,107 @@
 - Create: `vite.config.ts`
 - Create: `tailwind.config.js`
 - Create: `postcss.config.js`
-- Create: `index.html`
 - Create: `vercel.json`
+- Create: `index.html`
 - Create: `src/types/auditor.ts`
-- Create: `src/engine/economicsLexicon.ts`
-- Create: `src/engine/sentenceTokenizer.ts`
-- Test: `src/engine/__tests__/sentenceTokenizer.test.ts`
+- Create: `src/utils/docxParser.ts`
+- Create: `src/utils/reportExporter.ts`
+- Test: `src/utils/__tests__/docxAndReport.test.ts`
 
 **Interfaces:**
 - Produces:
-  - `src/types/auditor.ts`: `AuditTier`, `SeverityLevel`, `SpanFlag`, `ParagraphMetrics`, `ParagraphAudit`, `SectionAudit`, `DocumentAuditResult`, `RuleDefinition`
-  - `src/engine/economicsLexicon.ts`: `UNIFIED_ECONOMICS_TERMS: string[]`, `SINO_VIETNAMESE_ABSTRACT_WORDS: Set<string>`, `RULE_DEFINITIONS: Record<string, RuleDefinition>`
-  - `src/engine/sentenceTokenizer.ts`:
-    - `splitVietnameseSentences(paragraphText: string): { text: string; start: number; end: number; wordCount: number }[]`
-    - `maskProtectedEconomicsTerms(text: string): { maskedText: string; protectedSpans: { term: string; start: number; end: number }[] }`
+  - `src/utils/docxParser.ts`:
+    - `splitRawTextOrHtmlIntoSections(content: string, isHtml?: boolean): { title: string; paragraphs: string[]; isExcluded: boolean }[]`
+    - `extractSectionsFromDocx(file: File): Promise<{ title: string; paragraphs: string[]; isExcluded: boolean }[]>`
+  - `src/utils/reportExporter.ts`:
+    - `generateStandaloneHtmlReport(audit: DocumentAuditResult): string`
 
-- [ ] **Step 1: Initialize project configuration files and install dependencies**
-
-Create `package.json`, `tsconfig.json`, `vite.config.ts`, `tailwind.config.js`, `postcss.config.js`, `index.html`, `vercel.json` and run `npm install` with React 18, Lucide-React, Mammoth, Tailwind, TypeScript, and Vitest.
-
-- [ ] **Step 2: Write the failing test in `src/engine/__tests__/sentenceTokenizer.test.ts`**
+- [ ] **Step 1: Initialize frontend config files and write failing test in `src/utils/__tests__/docxAndReport.test.ts`**
 
 ```typescript
 import { describe, it, expect } from 'vitest';
-import { splitVietnameseSentences, maskProtectedEconomicsTerms } from '../sentenceTokenizer';
+import { splitRawTextOrHtmlIntoSections } from '../docxParser';
+import { generateStandaloneHtmlReport } from '../reportExporter';
 
-describe('sentenceTokenizer & Economics Lexicon Shield', () => {
-  it('does not split sentences on Vietnamese academic titles, abbreviations, or decimals', () => {
-    const text = 'Theo PGS.TS. Nguyễn Văn A (2025), tại TP.HCM, biên lãi ròng đạt 3.45% và nợ xấu ở mức 1.200 tỷ đồng. Tuy nhiên, rủi ro thanh khoản vẫn hiện hữu.';
-    const sentences = splitVietnameseSentences(text);
-    expect(sentences).toHaveLength(2);
-    expect(sentences[0].text).toContain('PGS.TS. Nguyễn Văn A');
-    expect(sentences[0].text).toContain('3.45%');
-    expect(sentences[1].text).toBe('Tuy nhiên, rủi ro thanh khoản vẫn hiện hữu.');
-  });
-
-  it('masks protected terms across all 8 Economics sub-fields (Banking, Accounting, Logistics, Production, HRM, Marketing)', () => {
-    const sample = 'Doanh nghiệp áp dụng quản trị sản xuất tinh gọn, kiểm soát rủi ro có sai sót trọng yếu trên báo cáo tài chính hợp nhất và tối ưu tồn kho an toàn trong quản trị chuỗi cung ứng.';
-    const { protectedSpans } = maskProtectedEconomicsTerms(sample);
-    const matchedTerms = protectedSpans.map(s => s.term.toLowerCase());
-    expect(matchedTerms).toContain('quản trị sản xuất tinh gọn');
-    expect(matchedTerms).toContain('rủi ro có sai sót trọng yếu');
-    expect(matchedTerms).toContain('báo cáo tài chính hợp nhất');
-    expect(matchedTerms).toContain('tồn kho an toàn');
-    expect(matchedTerms).toContain('quản trị chuỗi cung ứng');
-  });
-});
-```
-
-- [ ] **Step 3: Run test to verify it fails**
-
-Run: `npx vitest run src/engine/__tests__/sentenceTokenizer.test.ts`
-Expected: FAIL (modules `../sentenceTokenizer` not found)
-
-- [ ] **Step 4: Implement `src/types/auditor.ts`, `src/engine/economicsLexicon.ts`, and `src/engine/sentenceTokenizer.ts`**
-
-Implement full TypeScript interfaces in `src/types/auditor.ts`, the 8-subfield unified lexicon + 26 rule definitions in `src/engine/economicsLexicon.ts`, and the abbreviation-safe Vietnamese sentence tokenizer + longest-match economics term masker in `src/engine/sentenceTokenizer.ts`.
-
-- [ ] **Step 5: Run test to verify it passes**
-
-Run: `npx vitest run src/engine/__tests__/sentenceTokenizer.test.ts`
-Expected: PASS (2 passed)
-
----
-
-### Task 2: Deterministic 26-Sign Rule Engine & Mathematical Metrics Calculator
-
-**Files:**
-- Create: `src/engine/ruleEvaluators.ts`
-- Test: `src/engine/__tests__/ruleEvaluators.test.ts`
-
-**Interfaces:**
-- Consumes: `src/types/auditor.ts`, `src/engine/economicsLexicon.ts`, `src/engine/sentenceTokenizer.ts`
-- Produces:
-  - `src/engine/ruleEvaluators.ts`:
-    - `auditParagraph(paragraphText: string, paragraphIndex: number): ParagraphAudit`
-    - `calculateCoefficientOfVariation(lengths: number[]): { cv: number; mean: number; stdDev: number; spread: number }`
-
-- [ ] **Step 1: Write the failing test in `src/engine/__tests__/ruleEvaluators.test.ts`**
-
-```typescript
-import { describe, it, expect } from 'vitest';
-import { auditParagraph } from '../ruleEvaluators';
-
-describe('26-Sign Rule Evaluators & Mathematical Metrics', () => {
-  it('detects RHY-01 (Low Burstiness), DIS-01/02/03 (Boxed Paragraph & Connectives), and SYN-02 (Trailing Superficial Clause)', () => {
-    const aiParagraph =
-      'Trong bối cảnh biên lãi ròng thu hẹp, việc đa dạng hóa nguồn thu ngoài lãi đóng vai trò then chốt đối với các ngân hàng. ' +
-      'Cụ thể, các hoạt động dịch vụ thanh toán và kinh doanh ngoại hối đã mang lại nguồn thu ổn định, giúp giảm sự phụ thuộc vào tín dụng. ' +
-      'Tuy nhiên, mảng phân phối bảo hiểm qua ngân hàng lại đang đối mặt với nhiều thách thức lớn về niềm tin của khách hàng. ' +
-      'Do đó, các tổ chức tín dụng cần tái cấu trúc danh mục dịch vụ một cách toàn diện để đảm bảo sự phát triển bền vững.';
-
-    const result = auditParagraph(aiParagraph, 0);
-    const ruleIds = result.flags.map(f => f.ruleId);
-
-    expect(result.metrics.cvLength).toBeLessThan(0.18);
-    expect(ruleIds).toContain('RHY-01');
-    expect(ruleIds).toContain('DIS-01');
-    expect(ruleIds).toContain('DIS-03');
-    expect(ruleIds).toContain('ARG-02');
-    expect(result.aiStyleScore).toBeGreaterThan(55);
-  });
-
-  it('detects SYN-01 (Syntactic Isomorphism) across 3 consecutive 3-part sentences', () => {
-    const isomorphicText =
-      'Trong bối cảnh cạnh tranh gay gắt hiện nay, các ngân hàng thương mại đang đẩy mạnh quá trình số hóa dịch vụ, qua đó nâng cao trải nghiệm cho khách hàng cá nhân. ' +
-      'Trước những biến động khó lường của vĩ mô, nhiều tổ chức tín dụng cũng chủ động thắt chặt khẩu vị rủi ro, từ đó đảm bảo sự an toàn cho toàn bộ hệ thống. ' +
-      'Thông qua việc ứng dụng trí tuệ nhân tạo, quy trình thẩm định tín dụng đã được rút ngắn đáng kể, góp phần tối ưu hóa chi phí vận hành của doanh nghiệp.';
-
-    const result = auditParagraph(isomorphicText, 0);
-    const ruleIds = result.flags.map(f => f.ruleId);
-    expect(ruleIds).toContain('SYN-01');
-    expect(ruleIds).toContain('SYN-02');
-  });
-
-  it('detects SYN-VN-01 (Zero-anaphora deficit), SYN-VN-02 (Topic-Comment loss), SYN-VN-03 (Passive/Nominalization), and LEX-VN-01 (Sino-Vietnamese congestion)', () => {
-    const calqueText =
-      'Đối với vấn đề rủi ro thanh khoản, nó thường được các ngân hàng nhỏ xử lý thông qua việc thực hiện quy trình chuyển đổi mô hình quản trị rủi ro tập trung của họ. ' +
-      'Điều này giúp bảo vệ lợi nhuận của mình.';
-
-    const result = auditParagraph(calqueText, 0);
-    const ruleIds = result.flags.map(f => f.ruleId);
-    expect(ruleIds).toContain('SYN-VN-01');
-    expect(ruleIds).toContain('SYN-VN-02');
-    expect(ruleIds).toContain('SYN-VN-03');
-    expect(ruleIds).toContain('LEX-VN-01');
-  });
-
-  it('does NOT trigger RHY-01 on short 2-sentence paragraphs and does NOT falsely flag protected Accounting/Logistics terms as LEX-VN-01', () => {
-    const cleanHumanParagraph =
-      'Khi kiểm toán báo cáo tài chính hợp nhất năm 2025, kiểm toán viên đánh giá rủi ro có sai sót trọng yếu nằm ở khoản mục hàng tồn kho và dự phòng phải thu khó đòi. ' +
-      'Nhờ đối chiếu trực tiếp vận đơn đường biển với sổ cái kho ngoại quan, đoàn kiểm toán đã phát hiện chênh lệch 14,2 tỷ đồng ghi nhận sai kỳ kế toán.';
-
-    const result = auditParagraph(cleanHumanParagraph, 0);
-    const ruleIds = result.flags.map(f => f.ruleId);
-    expect(ruleIds).not.toContain('RHY-01');
-    expect(ruleIds).not.toContain('LEX-VN-01');
-    expect(result.aiStyleScore).toBeLessThan(20);
-  });
-});
-```
-
-- [ ] **Step 2: Run test to verify it fails**
-
-Run: `npx vitest run src/engine/__tests__/ruleEvaluators.test.ts`
-Expected: FAIL (`../ruleEvaluators` not found)
-
-- [ ] **Step 3: Implement `src/engine/ruleEvaluators.ts`**
-
-Implement the complete 26-rule detection engine and mathematical metrics ($CV_L, ISI, OPR, SVCI, SICD, BCR$) with exact character span offsets (`start`, `end`), matched excerpt, detailed Vietnamese diagnostic explanation, and rule-based transformation guidance.
-
-- [ ] **Step 4: Run test to verify it passes**
-
-Run: `npx vitest run src/engine/__tests__/ruleEvaluators.test.ts`
-Expected: PASS (4 passed)
-
----
-
-### Task 3: Large `.docx` Thesis Structure Parser, Section Filter & Document Auditor
-
-**Files:**
-- Create: `src/engine/documentParser.ts`
-- Create: `src/engine/documentAuditor.ts`
-- Create: `api/audit.py`
-- Test: `src/engine/__tests__/documentAuditor.test.ts`
-
-**Interfaces:**
-- Consumes: `src/types/auditor.ts`, `src/engine/ruleEvaluators.ts`
-- Produces:
-  - `src/engine/documentParser.ts`:
-    - `parseStructuredSectionsFromTextOrHtml(rawInput: string, isHtml?: boolean): { title: string; paragraphs: string[]; isExcludedByDefault: boolean }[]`
-    - `parseDocxFileToSections(file: File): Promise<{ title: string; paragraphs: string[]; isExcludedByDefault: boolean }[]>`
-  - `src/engine/documentAuditor.ts`:
-    - `auditStructuredDocument(title: string, rawSections: { title: string; paragraphs: string[]; isExcludedByDefault: boolean }[]): DocumentAuditResult`
-    - `recalculateDocumentTotals(doc: DocumentAuditResult): DocumentAuditResult`
-    - `SAMPLE_ECONOMICS_THESIS_SECTIONS`: Bộ dữ liệu luận văn mẫu đa chuyên ngành Kinh tế (Ngân hàng, Logistics, Quản trị, Kế toán) để kiểm thử và demo ngay trên giao diện.
-
-- [ ] **Step 1: Write the failing test in `src/engine/__tests__/documentAuditor.test.ts`**
-
-```typescript
-import { describe, it, expect } from 'vitest';
-import { parseStructuredSectionsFromTextOrHtml } from '../documentParser';
-import { auditStructuredDocument } from '../documentAuditor';
-
-describe('Document Parser & Multi-Chapter Thesis Auditor', () => {
-  it('splits thesis chapters even when headings are plain bold paragraphs (CHƯƠNG 1, 1.1) and auto-excludes References/TOC', () => {
+describe('Thesis .docx Section Splitter & Audit Report Exporter', () => {
+  it('splits plain or bold chapter headings (CHƯƠNG 1, 1.1) and auto-excludes MỤC LỤC and TÀI LIỆU THAM KHẢO', () => {
     const rawThesis = [
       'MỤC LỤC',
       'Chương 1: Cơ sở lý luận ........................ 1',
-      'CHƯƠNG 1: CƠ SỞ LÝ LUẬN VỀ QUẢN TRỊ CHUỖI CUNG ỨNG VÀ TÀI CHÍNH',
-      'Trong bối cảnh toàn cầu hóa hiện nay, quản trị chuỗi cung ứng đóng vai trò là yếu tố then chốt của doanh nghiệp.',
-      '1.1. Khái niệm và vai trò của tồn kho an toàn',
-      'Đối với vấn đề tồn kho an toàn, nó thường được các doanh nghiệp sản xuất thực hiện thông qua việc dự trữ nguyên vật liệu.',
+      'CHƯƠNG 1: CƠ SỞ LÝ LUẬN VỀ QUẢN TRỊ CHUỖI CUNG ỨNG',
+      'Đoạn văn phân tích cơ sở lý luận về tồn kho an toàn và vận tải đa phương thức.',
+      '1.1. Khái niệm quản trị sản xuất tinh gọn',
+      'Đoạn văn phân tích hoạch định nguồn lực doanh nghiệp.',
       'DANH MỤC TÀI LIỆU THAM KHẢO',
-      '1. Nguyễn Văn A (2024), Quản trị học, NXB Kinh tế Quốc dân.',
-      '2. Trần Thị B (2025), Kế toán kiểm toán nâng cao, NXB Tài chính.'
+      '1. Nguyễn Văn A (2024), Quản trị học, NXB Kinh tế Quốc dân.'
     ].join('\n\n');
 
-    const sections = parseStructuredSectionsFromTextOrHtml(rawThesis, false);
-    expect(sections.length).toBeGreaterThanOrEqual(4);
-
-    const tocSection = sections.find(s => s.title.toUpperCase().includes('MỤC LỤC'));
-    const refSection = sections.find(s => s.title.toUpperCase().includes('TÀI LIỆU THAM KHẢO'));
-    expect(tocSection?.isExcludedByDefault).toBe(true);
-    expect(refSection?.isExcludedByDefault).toBe(true);
-
-    const auditResult = auditStructuredDocument('Luận văn Thạc sĩ Kinh tế mẫu', sections);
-    expect(auditResult.overallScore).toBeGreaterThan(0);
-    // Excluded sections must not contribute flags to total active flags
-    const refAudit = auditResult.sections.find(s => s.title.toUpperCase().includes('TÀI LIỆU THAM KHẢO'));
-    expect(refAudit?.isExcluded).toBe(true);
+    const sections = splitRawTextOrHtmlIntoSections(rawThesis, false);
+    expect(sections.length).toBe(4);
+    expect(sections[0].isExcluded).toBe(true);
+    expect(sections[1].isExcluded).toBe(false);
+    expect(sections[3].isExcluded).toBe(true);
   });
 });
 ```
 
 - [ ] **Step 2: Run test to verify it fails**
 
-Run: `npx vitest run src/engine/__tests__/documentAuditor.test.ts`
-Expected: FAIL (`../documentParser` not found)
+Run: `npx vitest run src/utils/__tests__/docxAndReport.test.ts`
+Expected: FAIL (`../docxParser` not found)
 
-- [ ] **Step 3: Implement `src/engine/documentParser.ts`, `src/engine/documentAuditor.ts`, and `api/audit.py`**
+- [ ] **Step 3: Implement `src/types/auditor.ts`, `src/utils/docxParser.ts`, `src/utils/reportExporter.ts`, and Vite Python API middleware**
 
-Implement the heading-aware & regex-fallback chapter splitter, automatic TOC/Reference detector, cross-paragraph macro-argumentation checks (`ARG-01` equal paragraph length distribution, `ARG-04` Challenges & Future Prospects section check), document score aggregator, and Vercel Python serverless endpoint `api/audit.py`.
+Configure `vite.config.ts` so `/api/audit` invokes Python `api/audit.py` seamlessly during local development and `vercel.json` routes `/api/(.*)` to `api/audit.py` in production.
 
 - [ ] **Step 4: Run test to verify it passes**
 
-Run: `npx vitest run src/engine/__tests__/documentAuditor.test.ts`
+Run: `npx vitest run src/utils/__tests__/docxAndReport.test.ts`
 Expected: PASS
+
+- [ ] **Step 5: Commit**
+
+```bash
+git add package.json tsconfig.json vite.config.ts tailwind.config.js postcss.config.js vercel.json index.html src/types/auditor.ts src/utils/
+git commit -m "feat(frontend): add .docx chapter splitter, HTML/PDF report exporter, and Vercel routing"
+```
 
 ---
 
-### Task 4: Audit Studio 3-Column UI, Report Exporter & Pro Feature Gate
+### Task 4: 3-Column Audit Studio UI, End-to-End Integration & Pro Feature Gate (`src/components/` & `src/App.tsx`)
 
 **Files:**
-- Create: `src/utils/reportExporter.ts`
+- Create: `src/index.css`
+- Create: `src/main.tsx`
 - Create: `src/components/HeaderBar.tsx`
 - Create: `src/components/ChapterSidebar.tsx`
 - Create: `src/components/AuditDocumentViewer.tsx`
 - Create: `src/components/DiagnosticInspector.tsx`
 - Create: `src/components/ProUpgradeModal.tsx`
 - Create: `src/App.tsx`
-- Create: `src/main.tsx`
-- Create: `src/index.css`
-- Test: `src/utils/__tests__/reportExporter.test.ts`
+- Test: `src/components/__tests__/AppIntegration.test.tsx`
 
-**Interfaces:**
-- Consumes: `src/types/auditor.ts`, `src/engine/documentParser.ts`, `src/engine/documentAuditor.ts`
-- Produces:
-  - `src/utils/reportExporter.ts`: `generateStandaloneHtmlReport(audit: DocumentAuditResult): string`
-  - Complete interactive React Web App in `src/App.tsx`
+- [ ] **Step 1: Write the failing test in `src/components/__tests__/AppIntegration.test.tsx`**
 
-- [ ] **Step 1: Write the failing test in `src/utils/__tests__/reportExporter.test.ts`**
-
-```typescript
-import { describe, it, expect } from 'vitest';
-import { auditStructuredDocument, SAMPLE_ECONOMICS_THESIS_SECTIONS } from '../../engine/documentAuditor';
-import { generateStandaloneHtmlReport } from '../reportExporter';
-
-describe('Audit Report Exporter', () => {
-  it('generates a complete standalone HTML Audit Certificate containing overall score, 5-tier breakdown, and flagged excerpts', () => {
-    const doc = auditStructuredDocument('Luận văn Kinh tế mẫu', SAMPLE_ECONOMICS_THESIS_SECTIONS);
-    const html = generateStandaloneHtmlReport(doc);
-    expect(html).toContain('<!DOCTYPE html>');
-    expect(html).toContain('BÁO CÁO KIỂM TOÁN VĂN PHONG HỌC THUẬT');
-    expect(html).toContain(String(doc.overallScore));
-    expect(html).toContain('SYN-01');
-  });
-});
-```
+Verify that the 3-column layout renders the section tree, highlighted spans, rule inspector details, report export buttons, and opens `ProUpgradeModal` when clicking the `[PRO] Chỉnh sửa trực tiếp & Xuất .docx` button.
 
 - [ ] **Step 2: Run test to verify it fails**
 
-Run: `npx vitest run src/utils/__tests__/reportExporter.test.ts`
-Expected: FAIL (`../reportExporter` not found)
+Run: `npx vitest run src/components/__tests__/AppIntegration.test.tsx`
+Expected: FAIL
 
-- [ ] **Step 3: Implement `src/utils/reportExporter.ts` and the 3-Column React Audit Studio Components**
+- [ ] **Step 3: Implement the 3-Column Audit Studio components and `src/App.tsx`**
 
-Implement `reportExporter.ts`, `HeaderBar.tsx`, `ChapterSidebar.tsx`, `AuditDocumentViewer.tsx` (with non-overlapping span highlighter, tier filtering, and paragraph metric badges), `DiagnosticInspector.tsx` (with detailed rule rationale, quantitative formula display, before/after examples, and Pro Live-Edit hook), `ProUpgradeModal.tsx`, and `App.tsx`.
+Implement `HeaderBar.tsx`, `ChapterSidebar.tsx`, `AuditDocumentViewer.tsx`, `DiagnosticInspector.tsx`, `ProUpgradeModal.tsx`, and `App.tsx` (with chunked chapter-by-chapter progress bar when auditing 70–90+ page `.docx` files via `/api/audit`).
 
-- [ ] **Step 4: Run all unit tests and production build verification**
+- [ ] **Step 4: Run all Python & Frontend tests and verify production build**
 
-Run: `npx vitest run && npm run build`
-Expected: All test suites PASS and `vite build` succeeds with zero TypeScript or bundler errors.
+Run: `python -m pytest -v && npx vitest run && npm run build`
+Expected: All `pytest` and `vitest` suites PASS; `vite build` succeeds cleanly.
+
+- [ ] **Step 5: Commit**
+
+```bash
+git add src/
+git commit -m "feat(ui): complete 3-column Audit Studio UI, batch .docx auditing, and Pro upgrade gate"
+```

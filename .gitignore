@@ -1,9 +1,29 @@
+# Dependencies
 node_modules/
+.venv/
+venv/
+env/
+
+# Build outputs
 dist/
+build/
 .vercel/
+
+# Python cache & test artifacts
+__pycache__/
+*.py[cod]
+*$py.class
+.pytest_cache/
+.coverage
+htmlcov/
+
+# Environment variables
 .env
 .env.*
 !.env.example
-__pycache__/
-*.pyc
+
+# IDE & OS files
+.vscode/
+.idea/
 .DS_Store
+Thumbs.db
