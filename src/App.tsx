@@ -207,8 +207,8 @@ export const App: React.FC = () => {
         throw new Error('Empty docx sections');
       }
 
-      // Send chapters in batches of 8 to stay well under serverless payload limits
-      const BATCH_SIZE = 8;
+      // Send chapters in batches of 20 so entire thesis chapters stay together
+      const BATCH_SIZE = 20;
       const mergedSections: DocumentAuditResult['sections'] = [];
       const mergedFindings: DocumentAuditResult['findings'] = [];
       let totalWords = 0;
@@ -274,12 +274,23 @@ export const App: React.FC = () => {
         (f) => f.severity === 'suggestion'
       ).length;
       const activeSecs = mergedSections.filter((s) => !s.isExcluded);
-      const overallAiStyleScore = activeSecs.length
-        ? Math.round(
-            activeSecs.reduce((acc, s) => acc + s.aiStyleScore, 0) /
-              activeSecs.length
-          )
-        : 0;
+      const nonEmptyActiveSecs = activeSecs.filter(
+        (s) => (s.wordCount || 0) > 0 && s.paragraphs.length > 0
+      );
+      const totalActiveWords = nonEmptyActiveSecs.reduce(
+        (acc, s) => acc + Math.max(1, s.wordCount || 0),
+        0
+      );
+      const overallAiStyleScore =
+        totalActiveWords > 0
+          ? Math.round(
+              nonEmptyActiveSecs.reduce(
+                (acc, s) =>
+                  acc + s.aiStyleScore * Math.max(1, s.wordCount || 0),
+                0
+              ) / totalActiveWords
+            )
+          : 0;
 
       const finalResult: DocumentAuditResult = {
         title: selectedFile.name,

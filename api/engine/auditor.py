@@ -1,10 +1,16 @@
 """
 Section-Level & Document-Level Academic Writing Auditor + Sample Economics Thesis Payload.
+Includes Cross-Paragraph Discourse Auditing (ARG-01 multi-paragraph ordinal uniformity,
+SYN-01b paragraph-initial syntactic isomorphism, DIS-03 cross-paragraph connective chains,
+section-wide BCR calculation) and Length-Weighted Prose Score Aggregation.
 """
 
-from typing import Any, Dict, List
+import math
+import re
+from typing import Any, Dict, List, Optional, Tuple
 from api.engine.lexicon import RULE_METADATA, UNIFIED_ECONOMICS_TERMS
-from api.engine.rules import audit_paragraph
+from api.engine.rules import _make_flag, audit_paragraph
+from api.engine.tokenizer import has_academic_citation, has_quantitative_evidence
 
 
 SAMPLE_THESIS_PAYLOAD: Dict[str, Any] = {
@@ -77,6 +83,182 @@ SAMPLE_THESIS_PAYLOAD: Dict[str, Any] = {
     ],
 }
 
+# Cross-paragraph discourse regexes
+_ORDINAL_PARA_OPENER_RE = re.compile(
+    r"^(?:Thứ\s+(?:nhất|hai|ba|tư|năm)|(?:Một|Hai|Ba|Bốn|Năm)\s+là)\s*[,:]",
+    re.IGNORECASE | re.UNICODE,
+)
+
+_PARA_FRAME_OPENER_RE = re.compile(
+    r"^(?:Thông\s+qua\s+việc|Bằng\s+việc|Bằng\s+cách|Dựa\s+trên|Trên\s+cơ\s+sở|Về\s+mặt|Về\s+phương\s+diện|Xét\s+về|Xét\s+trên\s+phương\s+diện|Đối\s+với|Trong\s+bối\s+cảnh|Trước\s+những|Cùng\s+với\s+sự)\s+[^,]{3,60},",
+    re.IGNORECASE | re.UNICODE,
+)
+
+_PARA_CONNECTIVE_OPENER_RE = re.compile(
+    r"^(?:Hơn\s+nữa|Bên\s+cạnh\s+đó|Ngoài\s+ra|Thêm\s+vào\s+đó|Đồng\s+thời|Mặt\s+khác|Không\s+những\s+vậy|Tuy\s+nhiên|Do\s+đó|Vì\s+vậy)\s*,",
+    re.IGNORECASE | re.UNICODE,
+)
+
+
+def _append_cross_para_flag(
+    p_res: Dict[str, Any],
+    rule_id: str,
+    start: int,
+    end: int,
+    custom_suggestion: Optional[str] = None,
+) -> None:
+    """Safely appends a cross-paragraph flag to a paragraph result and updates its score."""
+    for existing in p_res["flags"]:
+        if existing["ruleId"] == rule_id and not (
+            end <= existing["start"] or start >= existing["end"]
+        ):
+            return
+    flag_index = len(p_res["flags"]) + 1
+    new_flg = _make_flag(
+        rule_id=rule_id,
+        para_index=p_res["index"],
+        flag_index=flag_index,
+        start=start,
+        end=end,
+        full_text=p_res["text"],
+        sentence_text=p_res["text"][start:end],
+        custom_suggestion=custom_suggestion,
+    )
+    p_res["flags"].append(new_flg)
+    weights = {"critical": 35, "warning": 18, "suggestion": 12}
+    p_res["aiStyleScore"] = min(100, p_res["aiStyleScore"] + weights.get(new_flg["severity"], 12))
+
+
+def _run_cross_paragraph_discourse_pass(para_results: List[Dict[str, Any]]) -> None:
+    """
+    Executes multi-paragraph discourse analysis across a section's paragraphs:
+    1. Cross-paragraph ARG-01: 3+ paragraphs starting with 'Thứ nhất / Thứ hai / Thứ ba'
+       with uniform word counts (CV < 0.22) and low empirical evidence.
+    2. Cross-paragraph SYN-01 (SYN-01b): 3+ consecutive paragraphs opening with the same
+       adverbial/prepositional template frame.
+    3. Cross-paragraph DIS-03: 3+ consecutive paragraphs opening with mechanical connectives.
+    4. Section-level BCR (Boxed Closure Rate) aggregation across multi-sentence prose paragraphs.
+    """
+    n_paras = len(para_results)
+    if n_paras < 2:
+        return
+
+    # 1. Cross-paragraph ARG-01 (Ordinal Paragraph Sequences)
+    ordinal_indices: List[int] = []
+    for idx, p_res in enumerate(para_results):
+        if _ORDINAL_PARA_OPENER_RE.match(p_res["text"].strip()):
+            ordinal_indices.append(idx)
+
+    if len(ordinal_indices) >= 3:
+        lengths = [para_results[i]["wordCount"] for i in ordinal_indices if para_results[i]["wordCount"] > 0]
+        if len(lengths) >= 3:
+            mean_l = sum(lengths) / len(lengths)
+            std_l = math.sqrt(sum((l - mean_l) ** 2 for l in lengths) / len(lengths))
+            cv_para = (std_l / mean_l) if mean_l > 0 else 1.0
+            emp_count = sum(
+                1
+                for i in ordinal_indices
+                if has_quantitative_evidence(para_results[i]["text"])
+                or has_academic_citation(para_results[i]["text"])
+            )
+            if cv_para < 0.22 and emp_count < (len(ordinal_indices) / 2.0):
+                for i in ordinal_indices:
+                    txt = para_results[i]["text"]
+                    m_ord = _ORDINAL_PARA_OPENER_RE.match(txt.strip())
+                    e_pos = m_ord.end() if m_ord else min(40, len(txt))
+                    _append_cross_para_flag(
+                        para_results[i],
+                        "ARG-01",
+                        0,
+                        e_pos,
+                        custom_suggestion=(
+                            "Các đoạn luận điểm 'Thứ nhất / Thứ hai / Thứ ba' đang có độ dài quá đồng đều "
+                            "và thiếu số liệu thực nghiệm; hãy bổ sung dẫn chứng định lượng cho luận điểm trọng tâm."
+                        ),
+                    )
+
+    # 2. Cross-paragraph SYN-01b (3+ consecutive paragraphs opening with adverbial frames)
+    run_frame: List[Tuple[int, re.Match]] = []
+    for idx, p_res in enumerate(para_results):
+        m_fr = _PARA_FRAME_OPENER_RE.match(p_res["text"])
+        if m_fr:
+            run_frame.append((idx, m_fr))
+        else:
+            if len(run_frame) >= 3:
+                for p_i, match_obj in run_frame:
+                    _append_cross_para_flag(
+                        para_results[p_i],
+                        "SYN-01",
+                        match_obj.start(),
+                        match_obj.end(),
+                        custom_suggestion=(
+                            "Ba đoạn văn liên tiếp đều mở đầu bằng cùng một khuôn trạng ngữ; "
+                            "hãy đảo chủ ngữ kinh tế hoặc số liệu thực tế lên đầu đoạn."
+                        ),
+                    )
+            run_frame = []
+    if len(run_frame) >= 3:
+        for p_i, match_obj in run_frame:
+            _append_cross_para_flag(
+                para_results[p_i],
+                "SYN-01",
+                match_obj.start(),
+                match_obj.end(),
+            )
+
+    # 3. Cross-paragraph DIS-03 (3+ consecutive paragraphs opening with mechanical connectives)
+    run_conn: List[Tuple[int, re.Match]] = []
+    for idx, p_res in enumerate(para_results):
+        m_cn = _PARA_CONNECTIVE_OPENER_RE.match(p_res["text"])
+        if m_cn:
+            run_conn.append((idx, m_cn))
+        else:
+            if len(run_conn) >= 3:
+                for p_i, match_obj in run_conn:
+                    _append_cross_para_flag(
+                        para_results[p_i],
+                        "DIS-03",
+                        match_obj.start(),
+                        match_obj.end(),
+                    )
+            run_conn = []
+    if len(run_conn) >= 3:
+        for p_i, match_obj in run_conn:
+            _append_cross_para_flag(
+                para_results[p_i],
+                "DIS-03",
+                match_obj.start(),
+                match_obj.end(),
+            )
+
+    # 4. Section-level BCR (Boxed Closure Rate) across multi-sentence prose paragraphs
+    multi_sent_paras = [p for p in para_results if p["sentenceCount"] >= 3]
+    if len(multi_sent_paras) >= 3:
+        boxed_count = sum(1 for p in multi_sent_paras if p["metrics"].get("bcr", 0.0) >= 1.0)
+        section_bcr = round(boxed_count / len(multi_sent_paras), 4)
+        for p in multi_sent_paras:
+            if p["metrics"].get("bcr", 0.0) > 0:
+                p["metrics"]["bcr"] = max(p["metrics"]["bcr"], section_bcr)
+
+
+def _compute_section_score(para_results: List[Dict[str, Any]]) -> int:
+    """
+    Computes length-weighted section AI Style Score (0-100), ignoring short non-prose
+    fragments (< 10 words, such as stray labels or captions) when genuine prose paragraphs exist.
+    """
+    if not para_results:
+        return 0
+
+    prose_paras = [p for p in para_results if p["wordCount"] >= 10]
+    target_paras = prose_paras if prose_paras else para_results
+
+    total_w = sum(max(1, p["wordCount"]) for p in target_paras)
+    if total_w <= 0:
+        return 0
+
+    weighted_sum = sum(p["aiStyleScore"] * max(1, p["wordCount"]) for p in target_paras)
+    return min(100, round(weighted_sum / total_w))
+
 
 def audit_document_sections(title: str, sections: List[Dict[str, Any]]) -> Dict[str, Any]:
     """
@@ -109,7 +291,11 @@ def audit_document_sections(title: str, sections: List[Dict[str, Any]]) -> Dict[
         raw_paragraphs: List[str] = (
             [str(p) for p in raw_paragraphs_input if p is not None and str(p).strip()]
             if isinstance(raw_paragraphs_input, list)
-            else ([str(raw_paragraphs_input)] if isinstance(raw_paragraphs_input, str) and raw_paragraphs_input.strip() else [])
+            else (
+                [str(raw_paragraphs_input)]
+                if isinstance(raw_paragraphs_input, str) and raw_paragraphs_input.strip()
+                else []
+            )
         )
 
         if is_excluded:
@@ -160,8 +346,13 @@ def audit_document_sections(title: str, sections: List[Dict[str, Any]]) -> Dict[
             total_sentences += p_res["sentenceCount"]
             for term in p_res["protectedTerms"]:
                 protected_terms_set.add(term)
+            para_results.append(p_res)
 
-            # Assign globally unique finding IDs for UI navigation
+        # Execute Cross-Paragraph Discourse Pass on the section's paragraphs
+        _run_cross_paragraph_discourse_pass(para_results)
+
+        # Collect all paragraph flags and assign globally unique finding IDs for UI navigation
+        for p_idx, p_res in enumerate(para_results):
             for flg in p_res["flags"]:
                 flg["id"] = f"f{global_finding_seq}"
                 flg["sectionId"] = sec_id
@@ -173,13 +364,7 @@ def audit_document_sections(title: str, sections: List[Dict[str, Any]]) -> Dict[
                 sec_flags.append(flg)
                 all_flags.append(flg)
 
-            para_results.append(p_res)
-
-        sec_score = (
-            round(sum(p["aiStyleScore"] for p in para_results) / len(para_results))
-            if para_results
-            else 0
-        )
+        sec_score = _compute_section_score(para_results)
 
         audited_sections.append(
             {
@@ -201,11 +386,14 @@ def audit_document_sections(title: str, sections: List[Dict[str, Any]]) -> Dict[
     suggestion_count = sum(1 for f in all_flags if f["severity"] == "suggestion")
 
     active_sections = [s for s in audited_sections if not s["isExcluded"]]
-    overall_score = (
-        round(sum(s["aiStyleScore"] for s in active_sections) / len(active_sections))
-        if active_sections
-        else 0
-    )
+    non_empty_active = [s for s in active_sections if s["wordCount"] > 0 and len(s["paragraphs"]) > 0]
+    if non_empty_active:
+        total_active_w = sum(max(1, s["wordCount"]) for s in non_empty_active)
+        overall_score = round(
+            sum(s["aiStyleScore"] * max(1, s["wordCount"]) for s in non_empty_active) / total_active_w
+        )
+    else:
+        overall_score = 0
 
     return {
         "title": safe_title,

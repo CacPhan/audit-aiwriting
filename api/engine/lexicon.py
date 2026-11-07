@@ -1,179 +1,361 @@
 """
-Unified 8-Field Economics Lexicon, Sino-Vietnamese Abstract Syllable Inventory,
-and 26 AI Writing Style Rule Definitions.
+Unified 8-Field Economics Lexicon (expanded with Econometrics, Quantitative Research & Legal terms),
+Cleaned Sino-Vietnamese Abstract Syllable Inventory, Entity Synonym Cycle Groups,
+26 AI Writing Style Rule Definitions, and Contextual Rewrite Suggestion Engine.
 """
 
-from typing import Dict, List, Set, Any
+import re
+from typing import Any, Dict, List, Set, Tuple
 
-# 1. UNIFIED 8-FIELD ECONOMICS & BUSINESS LEXICON
+# 1. UNIFIED 8-FIELD ECONOMICS, ECONOMETRICS & BUSINESS LEXICON
 # Covers: Quản trị kinh doanh, Quản trị nhân sự, Logistics & Hậu cần, Marketing,
-# Ngân hàng, Tài chính, Kế toán – Kiểm toán, Quản trị sản xuất & Vận hành.
+# Ngân hàng, Tài chính, Kế toán – Kiểm toán, Quản trị sản xuất & Vận hành,
+# plus Kinh tế lượng (SPSS/AMOS/SmartPLS/Stata/EViews) & Pháp lý kinh tế.
 UNIFIED_ECONOMICS_TERMS: List[str] = sorted(
     list(
         {
-            # Tài chính – Ngân hàng
+            # --- Tài chính – Ngân hàng ---
             "biên lãi ròng",
+            "thu nhập lãi thuần",
+            "tỷ lệ thu nhập lãi cận biên",
             "tỷ lệ nợ xấu",
+            "nợ xấu nội bảng",
+            "xử lý nợ xấu",
+            "nợ có khả năng mất vốn",
+            "nợ dưới tiêu chuẩn",
+            "nợ cần chú ý",
+            "nợ nghi ngờ",
+            "nợ quá hạn",
             "tỷ lệ an toàn vốn tối thiểu",
             "tỷ lệ an toàn vốn",
+            "hệ số an toàn vốn tối thiểu",
+            "hệ số an toàn vốn",
             "dự phòng rủi ro tín dụng",
             "trích lập dự phòng rủi ro",
             "thanh khoản hệ thống",
             "rủi ro thanh khoản",
+            "rủi ro tín dụng",
+            "rủi ro lãi suất",
+            "rủi ro tỷ giá",
+            "rủi ro hoạt động",
+            "rủi ro thị trường",
+            "rủi ro đạo đức",
+            "rủi ro hệ thống",
+            "quản trị rủi ro tín dụng",
+            "quản trị rủi ro thanh khoản",
+            "quản trị rủi ro",
             "thị trường liên ngân hàng",
             "lãi suất điều hành",
+            "chính sách tiền tệ quốc gia",
             "chính sách tiền tệ",
+            "chính sách tài khóa",
+            "chính sách tín dụng",
             "tỷ giá hối đoái",
+            "cấu trúc vốn tối ưu",
             "cấu trúc vốn",
             "đòn bẩy tài chính",
+            "đòn bẩy hoạt động",
             "dòng tiền chiết khấu",
             "giá trị hiện tại ròng",
             "tỷ suất sinh lời nội bộ",
+            "tỷ suất hoàn vốn nội bộ",
             "tỷ suất sinh lời trên tổng tài sản",
+            "tỷ suất sinh lời trên tài sản",
             "tỷ suất sinh lời trên vốn chủ sở hữu",
+            "tỷ suất sinh lời trên doanh thu",
+            "tỷ suất sinh lời",
+            "khả năng sinh lời",
+            "khả năng thanh toán ngắn hạn",
+            "khả năng thanh toán nhanh",
+            "khả năng thanh toán tức thời",
+            "khả năng thanh toán",
             "tiền gửi không kỳ hạn",
+            "tiền gửi thanh toán",
+            "tiền gửi tiết kiệm",
+            "tiền gửi có kỳ hạn",
             "phân phối bảo hiểm qua ngân hàng",
             "ngân hàng thương mại cổ phần",
+            "ngân hàng thương mại nhà nước",
             "ngân hàng thương mại",
+            "ngân hàng nông nghiệp và phát triển nông thôn",
+            "ngân hàng chính sách xã hội",
+            "ngân hàng trung ương",
+            "ngân hàng nhà nước việt nam",
+            "ngân hàng nhà nước",
+            "ngân hàng số",
+            "ngân hàng điện tử",
+            "tổ chức tín dụng phi ngân hàng",
             "tổ chức tín dụng",
+            "quỹ tín dụng nhân dân",
             "thẩm định tín dụng",
+            "quy trình cấp tín dụng",
+            "chất lượng tín dụng",
+            "hiệu quả hoạt động tín dụng",
+            "hạn mức tín dụng",
+            "tăng trưởng tín dụng",
+            "dư nợ tín dụng",
+            "tín dụng bán lẻ",
+            "tín dụng xanh",
+            "tài chính xanh",
+            "tài chính toàn diện",
             "khẩu vị rủi ro",
             "tài sản có rủi ro",
+            "tài sản bảo đảm",
+            "tài sản thế chấp",
+            "bảo lãnh ngân hàng",
+            "tín dụng chứng từ",
+            "thanh toán quốc tế",
+            "thanh toán không dùng tiền mặt",
             "định danh điện tử",
-            "ngân hàng trung ương",
-            "ngân hàng nhà nước",
             "dự trữ bắt buộc",
+            "nghiệp vụ thị trường mở",
+            "tái cấp vốn",
+            "tái chiết khấu",
             "thu nhập ngoài lãi",
             "vốn lưu động ròng",
             "quản trị vốn lưu động ròng",
             "quản trị vốn lưu động",
+            "vốn chủ sở hữu",
+            "vốn điều lệ",
+            "vốn đầu tư trực tiếp nước ngoài",
             "chi phí sử dụng vốn bình quân gia quyền",
+            "chi phí sử dụng vốn",
+            "chi phí huy động vốn",
+            "tình hình huy động vốn",
+            "cơ cấu nguồn vốn huy động",
+            "huy động vốn",
             "chi phí đại diện",
+            "lý thuyết đại diện",
+            "bất cân xứng thông tin",
             "thị trường chứng khoán",
+            "thị trường vốn",
+            "thị trường tiền tệ",
+            "thị trường tài chính",
             "trái phiếu doanh nghiệp",
+            "trái phiếu chính phủ",
+            "cổ phiếu phổ thông",
             "danh mục đầu tư",
             "định giá tài sản vốn",
-            "rủi ro hệ thống",
             "phái sinh tài chính",
             "chính sách cổ tức",
             "dòng tiền tự do",
-            # Kế toán – Kiểm toán
+            # --- Kế toán – Kiểm toán ---
             "báo cáo tài chính hợp nhất",
             "báo cáo tài chính",
             "bảng cân đối kế toán",
             "báo cáo kết quả hoạt động kinh doanh",
+            "kết quả hoạt động sản xuất kinh doanh",
+            "kết quả hoạt động kinh doanh",
             "báo cáo lưu chuyển tiền tệ",
+            "thuyết minh báo cáo tài chính",
             "chuẩn mực kế toán việt nam",
+            "chuẩn mực kế toán quốc tế",
             "chuẩn mực báo cáo tài chính quốc tế",
+            "chuẩn mực kiểm toán việt nam",
+            "hệ thống kiểm soát nội bộ",
             "kiểm soát nội bộ",
             "rủi ro có sai sót trọng yếu",
             "sai sót trọng yếu",
+            "trọng yếu và rủi ro kiểm toán",
+            "rủi ro kiểm toán",
+            "rủi ro tiềm tàng",
+            "rủi ro kiểm soát",
+            "rủi ro phát hiện",
             "bằng chứng kiểm toán",
+            "hồ sơ kiểm toán",
             "ý kiến kiểm toán chấp nhận toàn phần",
+            "ý kiến kiểm toán ngoại trừ",
             "khấu hao tài sản cố định",
             "tài sản cố định hữu hình",
             "tài sản cố định vô hình",
+            "tài sản cố định",
+            "tài sản ngắn hạn",
+            "tài sản dài hạn",
+            "nợ phải trả",
             "khoản phải thu khách hàng",
             "dự phòng phải thu khó đòi",
             "khoản phải thu",
             "hàng tồn kho",
             "giá vốn hàng bán",
+            "doanh thu thuần về bán hàng và cung cấp dịch vụ",
+            "lợi nhuận sau thuế thu nhập doanh nghiệp",
+            "lợi nhuận trước thuế",
+            "lợi nhuận sau thuế",
+            "lợi nhuận gộp",
             "chi phí trả trước",
             "kế toán quản trị",
+            "kế toán tài chính",
+            "tính giá thành sản phẩm",
             "kiểm toán độc lập",
             "kiểm toán nội bộ",
+            "kiểm toán nhà nước",
             "ghi nhận doanh thu",
             "kỳ kế toán",
             "sổ cái",
-            # Quản trị sản xuất & Vận hành
+            # --- Quản trị sản xuất & Vận hành ---
             "quản trị sản xuất tinh gọn",
+            "sản xuất tinh gọn",
             "hoạch định nguồn lực doanh nghiệp",
+            "hệ thống hoạch định nguồn lực doanh nghiệp",
             "quản lý chất lượng toàn diện",
+            "quản trị chất lượng toàn diện",
+            "hệ thống quản lý chất lượng",
             "bảo trì năng suất toàn diện",
             "cân bằng chuyền",
             "định mức nguyên vật liệu",
+            "hoạch định nhu cầu nguyên vật liệu",
             "năng lực sản xuất",
+            "công suất thiết kế",
             "điểm hòa vốn",
             "thời gian chu kỳ",
             "tỷ lệ phế phẩm",
             "kiểm soát chất lượng bằng thống kê",
             "sản xuất tức thời",
             "điều độ sản xuất",
+            "bố trí mặt bằng sản xuất",
             "quản trị vận hành",
+            "quản trị sản xuất và tác nghiệp",
             "hiệu suất thiết bị tổng thể",
             "tự động hóa quy trình",
-            # Logistics & Hậu cần
+            "năng suất nhân tố tổng hợp",
+            # --- Logistics & Hậu cần ---
             "quản trị chuỗi cung ứng",
             "chuỗi cung ứng lạnh",
             "chuỗi cung ứng xanh",
             "chuỗi cung ứng",
             "tồn kho an toàn",
+            "quản trị hàng tồn kho",
+            "vòng quay hàng tồn kho",
             "thời gian chờ",
             "vận tải đa phương thức",
             "trung tâm phân phối",
             "kho ngoại quan",
             "dịch vụ logistics bên thứ ba",
+            "dịch vụ logistics",
+            "chi phí logistics",
             "truy xuất nguồn gốc",
             "chi phí lưu kho",
             "thông quan hàng hóa",
+            "thủ tục hải quan điện tử",
             "luồng hàng hải",
             "vận đơn đường biển",
             "cảng cạn",
             "giao nhận hàng hóa quốc tế",
+            "xuất nhập khẩu",
+            "điều kiện thương mại quốc tế",
             "tối ưu hóa tuyến đường",
             "logistics ngược",
-            # Quản trị kinh doanh, Nhân sự & Marketing
+            # --- Quản trị kinh doanh, Nhân sự & Marketing ---
+            "lợi thế cạnh tranh bền vững",
             "lợi thế cạnh tranh",
+            "năng lực cạnh tranh cốt lõi",
+            "năng lực cạnh tranh",
+            "chuỗi giá trị toàn cầu",
             "chuỗi giá trị",
             "năng lực cốt lõi",
             "quản trị chiến lược",
             "quản trị doanh nghiệp",
+            "cơ cấu tổ chức bộ máy quản lý",
+            "cơ cấu tổ chức",
+            "hội đồng quản trị",
+            "ban kiểm soát",
+            "ban giám đốc",
+            "văn hóa doanh nghiệp",
+            "đạo đức kinh doanh",
             "trách nhiệm xã hội của doanh nghiệp",
+            "phát triển bền vững",
+            "doanh nghiệp nhỏ và vừa",
+            "doanh nghiệp vừa và nhỏ",
             "quản trị nguồn nhân lực",
+            "phát triển nguồn nhân lực",
+            "nguồn nhân lực chất lượng cao",
             "đánh giá thực hiện công việc",
             "thu hút và giữ chân nhân tài",
             "đãi ngộ toàn diện",
+            "chế độ đãi ngộ",
+            "tiền lương và phúc lợi",
+            "thù lao lao động",
+            "động lực làm việc của nhân viên",
+            "động lực làm việc",
+            "tạo động lực lao động",
+            "sự gắn kết của nhân viên",
+            "cam kết gắn bó với tổ chức",
             "gắn kết nhân viên",
+            "sự hài lòng trong công việc",
             "đào tạo và phát triển nguồn nhân lực",
+            "tuyển dụng và đào tạo",
             "hoạch định nguồn nhân lực",
             "khung năng lực",
             "định biên nhân sự",
+            "bản mô tả công việc",
+            "phân tích công việc",
             "thương hiệu nhà tuyển dụng",
             "quan hệ lao động",
+            "năng suất lao động",
             "phân khúc thị trường",
+            "thị trường mục tiêu",
             "định vị thương hiệu",
+            "nhận diện thương hiệu",
+            "nhận thức thương hiệu",
+            "hình ảnh thương hiệu",
+            "tài sản thương hiệu",
+            "giá trị thương hiệu",
             "hành vi người tiêu dùng",
+            "quyết định mua hàng",
+            "ý định mua hàng",
             "truyền thông marketing tích hợp",
             "trải nghiệm khách hàng",
+            "sự hài lòng của khách hàng",
+            "chất lượng dịch vụ chăm sóc khách hàng",
+            "chăm sóc khách hàng",
+            "chất lượng dịch vụ",
+            "giá trị cảm nhận của khách hàng",
             "giá trị vòng đời khách hàng",
-            "nhận diện thương hiệu",
-            "tài sản thương hiệu",
             "lòng trung thành của khách hàng",
+            "sự trung thành của khách hàng",
             "tiếp thị kỹ thuật số",
+            "marketing kỹ thuật số",
             "hành trình khách hàng",
             "nghiên cứu thị trường",
             "kênh phân phối",
             "xúc tiến thương mại",
             "mua bán và sáp nhập",
-            "dữ liệu bảng",
-            "ý nghĩa thống kê",
-            "mô hình thực nghiệm",
-            "năng lực cạnh tranh",
             "quản trị quan hệ khách hàng",
             "khách hàng cá nhân",
             "khách hàng doanh nghiệp",
-            "tín dụng bán lẻ",
-            "dư nợ tín dụng",
-            "nợ quá hạn",
-            "huy động vốn",
-            "tiền gửi thanh toán",
-            "tiền gửi tiết kiệm",
             "chuyển đổi số",
-            "tài chính toàn diện",
-            "ngân hàng nông nghiệp và phát triển nông thôn",
-            "kết quả hoạt động kinh doanh",
-            "cơ cấu tổ chức",
-            "phát triển nguồn nhân lực",
+            # --- Kinh tế lượng, Thống kê & Phương pháp nghiên cứu ---
+            "phân tích nhân tố khám phá",
+            "phân tích nhân tố khẳng định",
+            "mô hình cấu trúc tuyến tính",
+            "mô hình phương trình cấu trúc",
+            "phân tích hồi quy tuyến tính bội",
+            "phân tích hồi quy đa biến",
+            "hồi quy tuyến tính",
+            "phương pháp bình phương nhỏ nhất",
+            "mô hình tác động cố định",
+            "mô hình tác động ngẫu nhiên",
+            "phương pháp moment tổng quát",
+            "kiểm định độ tin cậy thang đo",
+            "hệ số tương quan biến tổng",
+            "kiểm định giả thuyết nghiên cứu",
+            "mức ý nghĩa thống kê",
+            "ý nghĩa thống kê",
+            "thống kê mô tả",
+            "phân tích tương quan",
+            "đa cộng tuyến",
+            "phương sai sai số thay đổi",
+            "tự tương quan",
+            "phương sai trích",
+            "hệ số tải nhân tố",
+            "dữ liệu bảng",
+            "mô hình thực nghiệm",
+            "biến phụ thuộc",
+            "biến độc lập",
+            "biến kiểm soát",
+            "biến trung gian",
+            "biến điều tiết",
+            "biến quan sát",
         }
     ),
     key=lambda s: len(s),
@@ -182,6 +364,8 @@ UNIFIED_ECONOMICS_TERMS: List[str] = sorted(
 
 
 # 2. SINO-VIETNAMESE ABSTRACT SYLLABLES (Used for LEX-VN-01 Congestion Detection)
+# Cleaned of pure Vietnamese / basic concrete words (ngân, hàng, rủi, ro, tiêu, dùng, số, lượng, chất, mức, độ, lợi, ích, nhân, lực)
+# so that only genuine bureaucratic/abstract Sino-Vietnamese syllable chains are flagged.
 SINO_VIETNAMESE_ABSTRACT_SYLLABLES: Set[str] = {
     "thực", "hiện", "quy", "trình", "chuyển", "đổi", "mô", "hình", "quản", "trị",
     "tập", "trung", "triển", "khai", "tối", "ưu", "hóa", "hiệu", "suất", "cấu",
@@ -189,23 +373,86 @@ SINO_VIETNAMESE_ABSTRACT_SYLLABLES: Set[str] = {
     "cảnh", "toàn", "diện", "đồng", "bộ", "phát", "triển", "bền", "vững", "tăng",
     "cường", "thúc", "đẩy", "nâng", "cao", "đảm", "bảo", "duy", "trì", "thiết",
     "lập", "định", "hướng", "vận", "hành", "tích", "hợp", "tương", "tác", "điều",
-    "tiết", "kiểm", "soát", "phân", "bổ", "nguồn", "lực", "giải", "pháp", "cơ",
-    "chế", "chính", "sách", "tác", "động", "ảnh", "hưởng", "biến", "động", "vĩ",
-    "mô", "tiềm", "năng", "thách", "thức", "triển", "vọng", "hiện", "đại", "công",
-    "nghệ", "kỹ", "thuật", "số", "lượng", "chất", "lượng", "tiêu", "chuẩn", "nguyên",
-    "tắc", "mục", "tiêu", "yêu", "cầu", "nhiệm", "vụ", "chức", "năng", "vai",
-    "trò", "vị", "thế", "giá", "trị", "lợi", "ích", "kết", "quả", "thành",
-    "tựu", "tiến", "trình", "giai", "đoạn", "xu", "hướng", "trạng", "thái", "tính",
-    "chất", "mức", "độ", "phạm", "vi", "quy", "mô", "năng", "lực", "hoạt",
-    "động", "tổ", "chức", "doanh", "nghiệp", "thị", "trường", "kinh", "tế", "tài",
-    "chính", "ngân", "hàng", "tín", "dụng", "đầu", "tư", "sản", "xuất", "phân",
-    "phối", "tiêu", "dùng", "thương", "mại", "dịch", "vụ", "nhân", "sự", "kế",
-    "toán", "kiểm", "rủi", "ro", "thanh", "khoản", "lợi", "nhuận", "chi", "phí",
-    "tiết", "giảm", "tái",
+    "tiết", "kiểm", "soát", "phân", "bổ", "nguồn", "giải", "pháp", "cơ",
+    "chế", "chính", "sách", "tác", "động", "biến", "vĩ",
+    "tiềm", "năng", "thách", "thức", "triển", "vọng", "hiện", "đại",
+    "tiêu", "chuẩn", "nguyên", "tắc", "mục", "nhiệm", "vụ", "chức",
+    "vị", "thế", "thành", "tựu", "tiến", "giai", "đoạn", "xu", "hướng", "trạng", "thái",
+    "phạm", "vi", "tổ", "chức", "hoàn", "thiện", "củng", "cố", "xác",
+    "giám", "sát", "phối", "liên", "kết", "tổng", "thể", "khách", "quan", "chủ",
+    "tất", "yếu", "đa", "chiều", "sâu", "sắc", "triệt", "để", "linh", "hoạt",
+    "chuyên", "nghiệp", "minh", "bạch", "hài", "hòa", "xuyên", "suốt", "trọng", "tâm",
+    "đột", "phá", "tiên", "phong", "cốt", "lõi", "nền", "tảng", "kiến", "tạo",
+    "tiết", "giảm", "tái", "thích", "ứng",
 }
 
 
-# 3. 26 STANDARDIZED AI WRITING STYLE RULES METADATA
+# 3. ENTITY SYNONYM CYCLING GROUPS ACROSS 8 ECONOMICS FIELDS (For LEX-04)
+SYNONYM_CYCLE_GROUPS: List[List[str]] = [
+    # 1. Ngân hàng / Tổ chức tín dụng
+    [
+        r"ngân\s+hàng(?:\s+này|\s+đó|\s+trên)?",
+        r"tổ\s+chức\s+tín\s+dụng(?:\s+này|\s+đó|\s+trên)?",
+        r"định\s+chế\s+tài\s+chính(?:\s+này|\s+đó|\s+trên)?",
+        r"nhà\s+băng(?:\s+này|\s+đó|\s+trên)?",
+        r"đơn\s+vị\s+cấp\s+vốn(?:\s+này|\s+đó)?",
+    ],
+    # 2. Doanh nghiệp / Công ty / Tập đoàn
+    [
+        r"doanh\s+nghiệp(?:\s+này|\s+đó|\s+trên)",
+        r"công\s+ty(?:\s+này|\s+đó|\s+trên)",
+        r"tập\s+đoàn(?:\s+này|\s+đó|\s+trên)",
+        r"đơn\s+vị\s+kinh\s+doanh(?:\s+này|\s+đó|\s+trên)?",
+        r"tổ\s+chức\s+kinh\s+tế(?:\s+này|\s+đó|\s+trên)?",
+        r"chủ\s+thể\s+kinh\s+doanh(?:\s+này|\s+đó)?",
+        r"pháp\s+nhân\s+thương\s+mại(?:\s+này|\s+đó)?",
+    ],
+    # 3. Khách hàng / Người tiêu dùng
+    [
+        r"khách\s+hàng(?:\s+này|\s+đó)?",
+        r"người\s+tiêu\s+dùng",
+        r"người\s+mua\s+hàng",
+        r"thượng\s+đế",
+        r"đối\s+tượng\s+phục\s+vụ",
+        r"người\s+thụ\s+hưởng\s+dịch\s+vụ",
+    ],
+    # 4. Nhân sự / Lao động
+    [
+        r"người\s+lao\s+động",
+        r"đội\s+ngũ\s+nhân\s+sự",
+        r"lực\s+lượng\s+nhân\s+viên",
+        r"cán\s+bộ\s+công\s+nhân\s+viên",
+        r"tài\s+sản\s+con\s+người",
+        r"đội\s+ngũ\s+cán\s+bộ",
+    ],
+    # 5. Nhà đầu tư / Cổ đông
+    [
+        r"nhà\s+đầu\s+tư(?:\s+này|\s+đó)?",
+        r"cổ\s+đông",
+        r"chủ\s+sở\s+hữu\s+vốn",
+        r"nhà\s+rót\s+vốn",
+        r"các\s+bên\s+góp\s+vốn",
+    ],
+    # 6. Thị trường / Thương trường
+    [
+        r"thị\s+trường(?:\s+này|\s+đó)",
+        r"sân\s+chơi\s+kinh\s+tế",
+        r"thương\s+trường",
+        r"môi\s+trường\s+cạnh\s+tranh(?:\s+này|\s+đó)?",
+        r"không\s+gian\s+thương\s+mại",
+    ],
+    # 7. Chuỗi cung ứng / Mạng lưới hậu cần
+    [
+        r"chuỗi\s+cung\s+ứng(?:\s+này|\s+đó)?",
+        r"mạng\s+lưới\s+hậu\s+cần",
+        r"hệ\s+thống\s+phân\s+phối(?:\s+này|\s+đó)?",
+        r"dòng\s+chảy\s+hàng\s+hóa",
+        r"mạch\s+máu\s+lưu\s+thông",
+    ],
+]
+
+
+# 4. 26 STANDARDIZED AI WRITING STYLE RULES METADATA
 RULE_METADATA: Dict[str, Dict[str, Any]] = {
     "LEX-01": {
         "id": "LEX-01",
@@ -494,3 +741,99 @@ RULE_METADATA: Dict[str, Dict[str, Any]] = {
         "userSuggestion": "Xóa hoàn toàn chuỗi ký hiệu hệ thống bị rò rỉ và đối chiếu lại thông tin bài báo gốc trước khi đưa vào danh mục tài liệu tham khảo.",
     },
 }
+
+
+def build_contextual_suggestion(rule_id: str, matched_text: str, sentence_text: str = "") -> str:
+    """
+    Contextual Rewrite Engine:
+    Generates a concrete, span-specific Vietnamese academic editorial rewrite
+    based on the exact matched text and surrounding sentence context.
+    """
+    base_suggestion = RULE_METADATA.get(rule_id, {}).get("userSuggestion", "")
+    clean_match = matched_text.strip().strip('"')
+    if not clean_match:
+        return base_suggestion
+
+    # 1. SYN-VN-03: Passive calque ("được/bị [V] bởi [Agent]") & nominalization
+    if rule_id == "SYN-VN-03":
+        m_pas = re.search(
+            r"\b(?:được|bị)\s+([a-zA-ZÀ-ỹ\s]{2,30}?)\s+bởi\s+([a-zA-ZÀ-ỹ\s]{2,40})",
+            clean_match,
+            re.IGNORECASE,
+        )
+        if m_pas:
+            verb_part = m_pas.group(1).strip().lower()
+            agent_part = m_pas.group(2).strip()
+            return (
+                f"Đổi trực tiếp cụm bị động dịch máy «{m_pas.group(0).strip()}» sang chủ động tiếng Việt: "
+                f"«{agent_part} {verb_part}» hoặc «do {agent_part} {verb_part}»."
+            )
+        m_nom = re.search(
+            r"thông\s+qua\s+việc\s+thực\s+hiện\s+(?:quy\s+trình\s+)?([a-zA-ZÀ-ỹ\s]{3,40})",
+            clean_match,
+            re.IGNORECASE,
+        )
+        if m_nom:
+            action = m_nom.group(1).strip()
+            return f"Rút gọn cụm danh hóa «{clean_match}» thành: «nhờ {action}» hoặc «khi triển khai {action}»."
+
+    # 2. SYN-VN-01: Redundant pronouns ("của họ", "của mình", "nó thường", "điều này")
+    elif rule_id == "SYN-VN-01":
+        lower_m = clean_match.lower()
+        if "của họ" in lower_m or "của mình" in lower_m or "của nó" in lower_m:
+            return f"Xóa trực tiếp định ngữ sở hữu dịch máy «{clean_match}» vì chủ thể đã rõ trong câu."
+        if "nó" in lower_m:
+            return f"Lược bỏ đại từ «{clean_match}» và nối trực tiếp vị ngữ vào danh từ chủ đề đứng trước."
+        if "điều này" in lower_m or "việc này" in lower_m:
+            return f"Thay đại từ mơ hồ «{clean_match}» bằng danh từ chỉ định cụ thể (ví dụ: «Cơ chế này», «Biến động trên») hoặc nối với câu trước bằng «, qua đó»."
+
+    # 3. SYN-VN-02: Topic-comment loss ("Đối với vấn đề X, nó...")
+    elif rule_id == "SYN-VN-02":
+        m_top = re.match(
+            r"^(?:Đối\s+với\s+vấn\s+đề|Liên\s+quan\s+đến\s+khía\s+cạnh|Xét\s+trên\s+phương\s+diện)\s+([^,]+),\s*(?:nó\s+)?",
+            clean_match,
+            re.IGNORECASE,
+        )
+        if m_top:
+            topic = m_top.group(1).strip()
+            return f"Đưa thẳng chủ đề «{topic.capitalize()}» lên đầu câu làm chủ ngữ trực tiếp và bỏ phần đệm «Đối với vấn đề... nó»."
+
+    # 4. LEX-02: Copula avoidance ("đóng vai trò như là", "giữ vị thế là")
+    elif rule_id == "LEX-02":
+        return f"Thay cụm động từ vòng vo «{clean_match}» bằng hệ từ trực diện: «là», «chiếm» hoặc «gồm»."
+
+    # 5. LEX-01: AI Vocabulary & Clichés
+    elif rule_id == "LEX-01":
+        cliche_map = {
+            "bức tranh toàn cảnh": "thống kê tổng hợp / thực trạng tổng thể",
+            "tấm thảm đa sắc": "cơ cấu đa dạng",
+            "sự giao thoa phức tạp": "mối tương quan / sự kết hợp",
+            "bối cảnh không ngừng biến đổi": "giai đoạn biến động lãi suất / thị trường",
+            "đóng vai trò": "quyết định trực tiếp đến / tác động đến",
+            "khai phá tiềm năng": "khai thác hiệu quả nguồn lực",
+            "kiến tạo hệ sinh thái": "xây dựng mạng lưới dịch vụ",
+            "góc nhìn đa chiều": "phân tích đa biến / đánh giá từ nhiều khía cạnh",
+        }
+        lower_m = clean_match.lower()
+        for k, v in cliche_map.items():
+            if k in lower_m:
+                return f"Thay cụm sáo ngữ «{clean_match}» bằng thuật ngữ học thuật cụ thể: «{v}»."
+
+    # 6. SYN-02: Trailing participial clause
+    elif rule_id == "SYN-02":
+        return (
+            f"Cắt bỏ mệnh đề đuôi «{clean_match[:60]}{'...' if len(clean_match) > 60 else ''}» "
+            f"hoặc tách thành câu riêng nêu rõ mức tăng/giảm định lượng cụ thể."
+        )
+
+    # 7. SYN-04: Rule of Three
+    elif rule_id == "SYN-04":
+        return (
+            f"Rút gọn cụm ba vế «{clean_match}»: chỉ giữ lại 1 thuật ngữ đo lường được sát nhất với chỉ tiêu kinh tế đang phân tích."
+        )
+
+    # 8. DIS-03: Mechanical sentence-initial connective
+    elif rule_id == "DIS-03":
+        return f"Xóa từ nối đầu câu «{clean_match}» hoặc chuyển thành phụ từ nội câu («cũng», «vẫn», «đồng thời») sau chủ ngữ."
+
+    return base_suggestion

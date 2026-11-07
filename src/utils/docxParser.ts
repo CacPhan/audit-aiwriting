@@ -8,10 +8,16 @@ const COVER_PREAMBLE_REGEX =
   /^(?:BỘ\s+GIÁO\s+DỤC\s+VÀ\s+ĐÀO\s+TẠO|ĐẠI\s+HỌC\s+KINH\s+TẾ|TRƯỜNG\s+ĐẠI\s+HỌC|HỌC\s+VIỆN\s+|KHÓA\s+LUẬN\s+TỐT\s+NGHIỆP|KHOÁ\s+LUẬN\s+TỐT\s+NGHIỆP|LUẬN\s+VĂN\s+THẠC\s+SĨ|CHUYÊN\s+ĐỀ\s+THỰC\s+TẬP|BÁO\s+CÁO\s+TỔNG\s+HỢP)/i;
 
 const CHAPTER_OR_SECTION_HEADING_REGEX =
-  /^(?:CHƯƠNG\s*(?:\d+|[IVXLC]+)(?:\b|(?=[A-ZÀ-ỸĐ:]))|PHẦN\s+(?:MỞ\s+ĐẦU|KẾT\s+LUẬN|\d+|[IVXLC]+)|MỞ\s+ĐẦU\b|LỜI\s+MỞ\s+ĐẦU\b|KẾT\s+LUẬN(?:\s+VÀ\s+KHUYẾN\s+NGHỊ|\s+CHUNG)?\b|\d+\.\d+(?:\.\d+)?\.?\s+\S+|[1-9]\.\s+[A-ZÀ-ỸĐ]{2,}(?:\s+[A-ZÀ-ỸĐ0-9,–\-()]+)+$)/i;
+  /^(?:CHƯƠNG\s*(?:\d+|[IVXLC]+)(?:\b|(?=[A-ZÀ-ỸĐ:]))|PHẦN\s+(?:MỞ\s+ĐẦU|KẾT\s+LUẬN|\d+|[IVXLC]+)|MỞ\s+ĐẦU\b|LỜI\s+MỞ\s+ĐẦU\b|KẾT\s+LUẬN(?:\s+VÀ\s+KHUYẾN\s+NGHỊ|\s+CHUNG)?\b|\d+\.\d+\.?(?!\d)\s+\S+|[1-9]\.\s+[A-ZÀ-ỸĐ]{2,}(?:\s+[A-ZÀ-ỸĐ0-9,–\-()]+)+$)/i;
 
 const TOP_LEVEL_UPPER_HEADING_REGEX =
   /^[1-9]\.\s+[A-ZÀ-ỸĐ]{2,}(?:\s+[A-ZÀ-ỸĐ0-9,–\-()]+)+$/;
+
+const DEEP_SUBHEADING_LINE_REGEX =
+  /^\d+\.\d+\.\d+(?:\.\d+)*\.?\s+[^\n]{2,130}$/;
+
+const TABLE_OR_FIGURE_METADATA_REGEX =
+  /^(?:(?:Bảng|Hình|Biểu\s+đồ|Sơ\s+đồ|Hộp)\s+\d+(?:[.,]\d+)*\s*[:.\-–]?|(?:Nguồn|Trích\s+nguồn|Đơn\s+vị(?:\s+tính)?|Ghi\s+chú)\s*[:])/i;
 
 const TOC_DOT_LEADER_REGEX = /(?:\.{3,}|…+)\s*(?:\d+|[ivxlcdm]+)?\s*$/i;
 const TOC_TAB_PAGE_REGEX = /\t+\s*(?:\d+|[ivxlcdm]+)\s*$/i;
@@ -48,6 +54,22 @@ function isTocEntryLine(line: string, insideIndexSection = false): boolean {
   return false;
 }
 
+function isNonProseMetadataOrSubheading(line: string): boolean {
+  const cleaned = normalizeText(line).trim();
+  if (!cleaned) return true;
+  if (cleaned.length <= 160 && TABLE_OR_FIGURE_METADATA_REGEX.test(cleaned)) {
+    return true;
+  }
+  if (
+    cleaned.length <= 130 &&
+    DEEP_SUBHEADING_LINE_REGEX.test(cleaned) &&
+    !/[.!?]$/.test(cleaned)
+  ) {
+    return true;
+  }
+  return false;
+}
+
 function isChapterOrSubHeading(
   line: string,
   isExplicitHeadingTag = false,
@@ -71,13 +93,24 @@ function isChapterOrSubHeading(
     return false;
   }
 
+  // Deep subheadings (1.1.1, 2.1.2.1) stay inside their parent 1.1 / 2.1 section
+  if (DEEP_SUBHEADING_LINE_REGEX.test(cleaned)) {
+    return false;
+  }
+
   // Check if it is a top-level uppercase numbered chapter (e.g., "1. LỊCH SỬ HÌNH THÀNH...")
   if (/^[1-9]\.\s+/.test(cleaned) && !/^\d+\.\d+/.test(cleaned)) {
     return TOP_LEVEL_UPPER_HEADING_REGEX.test(cleaned);
   }
 
   if (CHAPTER_OR_SECTION_HEADING_REGEX.test(cleaned)) return true;
-  if (isExplicitHeadingTag && cleaned.length <= 140) return true;
+  if (
+    isExplicitHeadingTag &&
+    cleaned.length <= 140 &&
+    !TABLE_OR_FIGURE_METADATA_REGEX.test(cleaned)
+  ) {
+    return true;
+  }
   return false;
 }
 
@@ -116,14 +149,20 @@ export function splitRawTextOrHtmlIntoSections(
     const doc = parser.parseFromString(normalizedContent, 'text/html');
     const elements = doc.body.querySelectorAll('h1, h2, h3, h4, p, li');
     elements.forEach((el) => {
+      // 1. Eliminate table cell leakage: never extract <p> or <li> inside <table>
+      if (el.closest('table')) return;
+      const tag = el.tagName.toLowerCase();
+      // 2. Eliminate <li> + nested <p> double extraction
+      if (tag === 'p' && el.closest('li')) return;
+
       const rawTxt = normalizeText(el.textContent || '');
       const hasTabPage = TOC_TAB_PAGE_REGEX.test(rawTxt);
       const txt = rawTxt.replace(/[ \f\v]+/g, ' ').trim();
       if (!txt) return;
-      const tag = el.tagName.toLowerCase();
       const isHeading =
-        (tag === 'h1' || tag === 'h2' || tag === 'h3' || tag === 'h4') &&
-        !hasTabPage;
+        (tag === 'h1' || tag === 'h2') &&
+        !hasTabPage &&
+        !DEEP_SUBHEADING_LINE_REGEX.test(txt);
       blocks.push({ text: txt, isHeadingTag: isHeading });
     });
   } else {
@@ -136,7 +175,7 @@ export function splitRawTextOrHtmlIntoSections(
     });
   }
 
-  const sections: ParsedThesisSection[] = [];
+  const rawSections: ParsedThesisSection[] = [];
   let currentSection: ParsedThesisSection | null = null;
   let insideIndexSection = false;
   let insideBibOrAppendix = false;
@@ -166,7 +205,7 @@ export function splitRawTextOrHtmlIntoSections(
           normalizedHeading
         );
 
-      const secIndex = sections.length + 1;
+      const secIndex = rawSections.length + 1;
       currentSection = {
         id: `sec-${secIndex}`,
         title: normalizedHeading,
@@ -177,7 +216,7 @@ export function splitRawTextOrHtmlIntoSections(
         paragraphs: [],
         isExcluded: excluded,
       };
-      sections.push(currentSection);
+      rawSections.push(currentSection);
     } else {
       if (!currentSection) {
         const isCoverPreamble = COVER_PREAMBLE_REGEX.test(text);
@@ -193,25 +232,66 @@ export function splitRawTextOrHtmlIntoSections(
           paragraphs: [],
           isExcluded: isCoverPreamble,
         };
-        sections.push(currentSection);
+        rawSections.push(currentSection);
       }
-      currentSection.paragraphs.push(text.replace(/\t+/g, ' ').trim());
+
+      const cleanedLine = text.replace(/\t+/g, ' ').trim();
+      // Filter out Table/Figure captions, Source attributions, and deep subheadings (1.1.1) from audited prose
+      if (currentSection.isExcluded || !isNonProseMetadataOrSubheading(cleanedLine)) {
+        currentSection.paragraphs.push(cleanedLine);
+      }
     }
   });
 
-  // If there are multiple sections and the first section was an implicit non-heading preamble,
-  // mark it as cover page (isExcluded: true) if followed by formal thesis front-matter/chapters.
   if (
-    sections.length > 1 &&
-    sections[0].title === 'Chương 1: Nội dung bản thảo'
+    rawSections.length > 1 &&
+    rawSections[0].title === 'Chương 1: Nội dung bản thảo'
   ) {
-    sections[0].title = 'Trang bìa & Thông tin chung';
-    sections[0].shortTitle = 'Trang bìa';
-    sections[0].sectionLabel = 'Mục loại trừ · Trang bìa';
-    sections[0].isExcluded = true;
+    rawSections[0].title = 'Trang bìa & Thông tin chung';
+    rawSections[0].shortTitle = 'Trang bìa';
+    rawSections[0].sectionLabel = 'Mục loại trừ · Trang bìa';
+    rawSections[0].isExcluded = true;
   }
 
-  return sections;
+  // Post-processing:
+  // 1. Fold 0-paragraph chapter outline bullets (e.g., "Chương 1: ...", "Chương 2: ...") back into MỞ ĐẦU
+  // 2. Consolidate 0-paragraph parent headings (e.g., "1. LỊCH SỬ..." immediately followed by "1.1...")
+  const consolidated: ParsedThesisSection[] = [];
+  for (let i = 0; i < rawSections.length; i++) {
+    const sec = rawSections[i];
+    if (sec.isExcluded) {
+      consolidated.push(sec);
+      continue;
+    }
+
+    if (sec.paragraphs.length === 0) {
+      const prev = consolidated[consolidated.length - 1];
+      const next = rawSections[i + 1];
+      // If inside/right after MỞ ĐẦU and this is an empty "Chương X: ..." outline bullet
+      if (
+        prev &&
+        !prev.isExcluded &&
+        /^Chương\s+\d+\s*:/i.test(sec.title) &&
+        (!next || /^Chương\s+\d+/i.test(next.title))
+      ) {
+        prev.paragraphs.push(sec.title);
+        continue;
+      }
+      // If followed by a non-excluded child section, attach parent title context to child's sectionLabel
+      if (next && !next.isExcluded) {
+        next.sectionLabel = `${buildShortTitle(sec.title, i + 1)} · ${next.shortTitle}`;
+        continue;
+      }
+    }
+
+    consolidated.push(sec);
+  }
+
+  // Re-index section IDs sequentially
+  return consolidated.map((sec, idx) => ({
+    ...sec,
+    id: `sec-${idx + 1}`,
+  }));
 }
 
 export async function extractSectionsFromDocx(

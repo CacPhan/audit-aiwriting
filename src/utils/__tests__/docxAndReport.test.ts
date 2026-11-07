@@ -74,7 +74,38 @@ describe('Thesis .docx Section Splitter & Audit Report Exporter', () => {
           expect(sec.isExcluded).toBe(true);
         }
       }
+
+      // Verify zero 0-paragraph ghost sections among audited sections
+      for (const auditedSec of auditedSections) {
+        expect(auditedSec.paragraphs.length).toBeGreaterThan(0);
+      }
     }
+  });
+
+  it('filters out HTML <table> cells, deduplicates <li><p>, filters captions/sources, and consolidates empty parent headings', () => {
+    const htmlWithTableAndNestedList = `
+      <h1>1. KẾT QUẢ HOẠT ĐỘNG KINH DOANH</h1>
+      <h2>1.1. Tình hình huy động vốn</h2>
+      <p>Bảng 1.1: Tình hình huy động vốn giai đoạn 2022 - 2024</p>
+      <table>
+        <tr><td><p>Chỉ tiêu</p></td><td><p>2023</p></td><td><p>2024</p></td></tr>
+        <tr><td><p>Tổng nguồn vốn</p></td><td><p>17.929</p></td><td><p>19.729</p></td></tr>
+      </table>
+      <p>Nguồn: Phòng Kế hoạch Tài chính</p>
+      <p>Tổng nguồn vốn huy động của chi nhánh tăng trưởng ổn định trong giai đoạn nghiên cứu.</p>
+      <ul>
+        <li><p>Tiền gửi tiết kiệm dân cư chiếm tỷ trọng lớn nhất trong tổng nguồn vốn.</p></li>
+      </ul>
+    `;
+    const sections = splitRawTextOrHtmlIntoSections(htmlWithTableAndNestedList, true);
+    const active = sections.filter((s) => !s.isExcluded);
+    expect(active.length).toBe(1);
+    expect(active[0].title).toContain('1.1. Tình hình huy động vốn');
+    expect(active[0].sectionLabel).toContain('1. KẾT QUẢ');
+    // Table cells ("17.929", "19.729"), Bảng caption, and Nguồn line must be excluded; <li><p> must not duplicate
+    expect(active[0].paragraphs.length).toBe(2);
+    expect(active[0].paragraphs[0]).toContain('Tổng nguồn vốn huy động của chi nhánh');
+    expect(active[0].paragraphs[1]).toContain('Tiền gửi tiết kiệm dân cư');
   });
 
   it('generates a complete standalone HTML audit report with severity summary, reasons, and editorial suggestions', () => {

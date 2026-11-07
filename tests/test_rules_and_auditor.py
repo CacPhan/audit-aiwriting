@@ -237,3 +237,107 @@ def test_requirements_txt_is_lightweight_for_vercel_serverless_limit():
     ]
     for lib in forbidden_heavy_libs:
         assert lib not in content, f"Heavy dependency '{lib}' found in requirements.txt"
+
+
+def test_clause_bounded_sino_vietnamese_never_bridges_across_punctuation():
+    # Previously, commas and sentence-ending periods were stripped without resetting the syllable run counter,
+    # causing false positives across commas ("cầu, giá trị, mức độ hoạt động") and periods ("hoạt động. Doanh").
+    comma_and_period_text = (
+        "Khảo sát đánh giá nhu cầu, giá trị, mức độ hoạt động. "
+        "Doanh nghiệp tập trung kiểm soát chất lượng dịch vụ tại chi nhánh."
+    )
+    res = audit_paragraph(comma_and_period_text, 0)
+    flagged_ids = [f["ruleId"] for f in res["flags"]]
+    assert "LEX-VN-01" not in flagged_ids
+
+
+def test_multi_match_collection_catches_all_occurrences_in_paragraph():
+    multi_issue_para = (
+        "Cụ thể, mô hình này đóng vai trò như là nền tảng cốt lõi (contentReference[oaicite:1]{index=1}). "
+        "Tuy nhiên, quy trình kia cũng hoạt động như một công cụ hỗ trợ (contentReference[oaicite:2]{index=2}). "
+        "Do đó, hệ thống mới giữ vị thế là trụ cột vận hành. "
+        "Hơn nữa, việc áp dụng đã hoàn tất."
+    )
+    res = audit_paragraph(multi_issue_para, 0)
+    for01_flags = [f for f in res["flags"] if f["ruleId"] == "FOR-01"]
+    lex02_flags = [f for f in res["flags"] if f["ruleId"] == "LEX-02"]
+    dis03_flags = [f for f in res["flags"] if f["ruleId"] == "DIS-03"]
+
+    assert len(for01_flags) >= 2
+    assert len(lex02_flags) >= 3
+    assert len(dis03_flags) >= 4
+
+
+def test_econometric_legal_and_outline_exemptions_prevent_false_positives():
+    # 1. Econometric reporting paragraph (EFA, Cronbach's Alpha, OLS, hypothesis tests)
+    econometric_para = (
+        "Thang đo Sự hài lòng của khách hàng được cấu thành bởi 4 biến quan sát với hệ số Cronbach's Alpha đạt 0.845. "
+        "Kết quả phân tích nhân tố khám phá EFA cho thấy tổng phương sai trích được giải thích bởi 5 nhân tố đạt 68,42% tại mức KMO = 0.812 (Sig. = 0.000). "
+        "Trong mô hình hồi quy OLS, biến độc lập Chất lượng dịch vụ được đo lường bởi 5 thang đo thành phần và có tác động thuận chiều ở mức ý nghĩa thống kê 1%. "
+        "Giả thuyết H1 được chấp nhận với hệ số hồi quy chuẩn hóa beta = 0.364 và VIF = 1.42."
+    )
+    eco_res = audit_paragraph(econometric_para, 0)
+    eco_rules = [f["ruleId"] for f in eco_res["flags"]]
+    assert "SYN-VN-03" not in eco_rules
+    assert "RHY-01" not in eco_rules
+
+    # 2. Thesis chapter outline paragraph in MỞ ĐẦU
+    outline_para = (
+        "Ngoài phần mở đầu, kết luận và danh mục tài liệu tham khảo, khóa luận được kết cấu thành 3 chương: "
+        "Chương 1 trình bày cơ sở lý luận về chất lượng dịch vụ chăm sóc khách hàng tại ngân hàng thương mại. "
+        "Chương 2 phân tích thực trạng chất lượng dịch vụ chăm sóc khách hàng tại Ngân hàng TMCP Đông Nam Á. "
+        "Chương 3 đề xuất giải pháp nâng cao chất lượng dịch vụ chăm sóc khách hàng trong giai đoạn tới."
+    )
+    out_res = audit_paragraph(outline_para, 0)
+    out_rules = [f["ruleId"] for f in out_res["flags"]]
+    assert "RHY-01" not in out_rules
+    assert "DIS-01" not in out_rules
+
+
+def test_general_triad_detector_syn04_and_multi_field_synonym_cycling_lex04():
+    triad_and_cycle_para = (
+        "Trong quá trình vận hành, doanh nghiệp này đã triển khai kế hoạch, hoàn thiện cơ chế và kiểm soát hệ thống, "
+        "đồng thời định hướng chiến lược, củng cố cấu trúc và thúc đẩy hiệu suất. "
+        "Nhờ đó, đơn vị kinh doanh trên đã giúp pháp nhân thương mại này nâng cao thị phần."
+    )
+    res = audit_paragraph(triad_and_cycle_para, 0)
+    rule_ids = [f["ruleId"] for f in res["flags"]]
+    assert "SYN-04" in rule_ids
+    assert "LEX-04" in rule_ids
+
+
+def test_jaccard_echoic_conclusion_dis02_and_contextual_rewrite_suggestions():
+    echoic_para = (
+        "Việc nâng cao hiệu quả quản trị rủi ro tín dụng tại chi nhánh ngân hàng thương mại đòi hỏi sự kiểm soát chặt chẽ quy trình thẩm định hồ sơ vay vốn. "
+        "Cán bộ tín dụng cần đối chiếu dòng tiền thực tế của khách hàng với lịch trả nợ định kỳ. "
+        "Bộ phận quản lý rủi ro thực hiện rà soát độc lập các khoản vay có dấu hiệu suy giảm khả năng trả nợ. "
+        "Tóm lại, việc nâng cao hiệu quả quản trị rủi ro tín dụng tại chi nhánh ngân hàng thương mại đòi hỏi sự kiểm soát chặt chẽ quy trình thẩm định."
+    )
+    res = audit_paragraph(echoic_para, 0)
+    rule_ids = [f["ruleId"] for f in res["flags"]]
+    assert "DIS-02" in rule_ids
+
+    # Check contextual rewrite suggestion on SYN-VN-03 passive calque
+    passive_para = "Quyết định phê duyệt hạn mức đã được thực hiện bởi hội đồng tín dụng trung ương."
+    pas_res = audit_paragraph(passive_para, 0)
+    syn_vn03_flags = [f for f in pas_res["flags"] if f["ruleId"] == "SYN-VN-03"]
+    assert len(syn_vn03_flags) == 1
+    assert "hội đồng tín dụng trung ương thực hiện" in syn_vn03_flags[0]["suggestion"].lower()
+
+
+def test_cross_paragraph_discourse_pass_detects_multi_paragraph_arg01_syn01b_and_dis03():
+    sections = [
+        {
+            "id": "sec-cross",
+            "title": "Chương 3: Giải pháp",
+            "isExcluded": False,
+            "paragraphs": [
+                "Thứ nhất, đơn vị cần rà soát lại quy trình phối hợp nội bộ giữa các phòng ban chức năng nhằm hạn chế tình trạng chồng chéo nghiệp vụ trong quá trình xử lý hồ sơ.",
+                "Thứ hai, chi nhánh cần tăng cường công tác kiểm tra định kỳ đối với các bộ phận giao dịch trực tiếp nhằm phát hiện sớm những sai sót phát sinh trong quy trình vận hành.",
+                "Thứ ba, ban lãnh đạo cần chú trọng hoàn thiện hệ thống đánh giá mức độ hoàn thành công việc của từng vị trí nhân sự nhằm khuyến khích tinh thần làm việc chủ động.",
+            ],
+        }
+    ]
+    res = audit_document_sections("Cross_Paragraph_Test.docx", sections)
+    arg01_findings = [f for f in res["findings"] if f["ruleId"] == "ARG-01"]
+    assert len(arg01_findings) == 3
