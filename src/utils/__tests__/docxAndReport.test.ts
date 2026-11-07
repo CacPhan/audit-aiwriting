@@ -5,7 +5,11 @@ import {
   extractSectionsFromDocx,
   splitRawTextOrHtmlIntoSections,
 } from '../docxParser';
-import { generateStandaloneHtmlReport } from '../reportExporter';
+import {
+  generateStandaloneHtmlReport,
+  generateTurnitinStyleHtmlReport,
+  printAuditDocument,
+} from '../reportExporter';
 
 function loadDocxFixtureAsFile(filename: string): File {
   const filePath = path.resolve(process.cwd(), 'tests', 'fixtures', filename);
@@ -108,44 +112,91 @@ describe('Thesis .docx Section Splitter & Audit Report Exporter', () => {
     expect(active[0].paragraphs[1]).toContain('Tiền gửi tiết kiệm dân cư');
   });
 
-  it('generates a complete standalone HTML audit report with severity summary, reasons, and editorial suggestions', () => {
+  it('generates both standalone Summary HTML and Turnitin Feedback Studio Full-Manuscript Highlighted HTML and injects clean print iframe', () => {
     const sampleAudit: any = {
       title: 'Luan_van_Thac_si_Tai_chinh.docx',
-      sections: [],
+      totalWords: 1250,
+      totalSentences: 48,
+      overallScore: 68,
+      protectedTermsCount: 5,
+      sections: [
+        {
+          id: 'sec-1',
+          sectionLabel: 'CHƯƠNG 1',
+          title: 'Chương 1: Cơ sở lý luận',
+          shortTitle: 'Chương 1',
+          isExcluded: false,
+          wordCount: 120,
+          sentenceCount: 5,
+          overallScore: 70,
+          metrics: {},
+          paragraphs: [
+            {
+              index: 0,
+              text: 'Trong bối cảnh hội nhập hiện nay, hoạt động tín dụng giữ vai trò nền tảng.',
+              wordCount: 15,
+              sentenceCount: 1,
+              overallScore: 70,
+              metrics: {},
+              flags: [
+                {
+                  id: 'f1',
+                  sectionId: 'sec-1',
+                  paragraphIndex: 0,
+                  category: 'lexical',
+                  severity: 'warning',
+                  severityLabel: 'Nên sửa',
+                  title: 'Cụm từ mở đầu rập khuôn',
+                  matchedText: 'Trong bối cảnh hội nhập hiện nay',
+                  excerpt: '"Trong bối cảnh hội nhập hiện nay"',
+                  reason: 'Mở đầu sáo rỗng thường gặp.',
+                  suggestion: 'Đi thẳng vào thời kỳ và đơn vị nghiên cứu.',
+                  start: 0,
+                  end: 32,
+                  status: 'pending',
+                },
+              ],
+            },
+          ],
+        },
+      ],
       findings: [
         {
           id: 'f1',
-          ruleId: 'FOR-01',
-          severity: 'critical',
-          severityLabel: 'Cần sửa ngay',
-          title: 'Trích dẫn chứa ký hiệu hệ thống',
-          excerpt: '"contentReference[oaicite:0]"',
-          reason: 'Xuất hiện chuỗi ký hiệu hệ thống khi sao chép.',
-          suggestion: 'Xóa chuỗi ký hiệu và kiểm tra lại nguồn.',
-          chapterTitle: 'Chương 3: Kết quả nghiên cứu',
+          sectionId: 'sec-1',
+          paragraphIndex: 0,
+          category: 'lexical',
+          severity: 'warning',
+          severityLabel: 'Nên sửa',
+          title: 'Cụm từ mở đầu rập khuôn',
+          matchedText: 'Trong bối cảnh hội nhập hiện nay',
+          excerpt: '"Trong bối cảnh hội nhập hiện nay"',
+          reason: 'Mở đầu sáo rỗng thường gặp.',
+          suggestion: 'Đi thẳng vào thời kỳ và đơn vị nghiên cứu.',
+          start: 0,
+          end: 32,
           status: 'pending',
         },
       ],
-      summary: {
-        totalWords: 1250,
-        totalSentences: 48,
-        totalSections: 4,
-        auditedSections: 4,
-        totalFlags: 1,
-        criticalCount: 1,
-        warningCount: 0,
-        suggestionCount: 0,
-        overallAiStyleScore: 35,
-        protectedTermsMatched: ['quản trị chuỗi cung ứng'],
-      },
     };
 
     const html = generateStandaloneHtmlReport(sampleAudit);
     expect(html).toContain('<!DOCTYPE html>');
     expect(html).toContain('Luan_van_Thac_si_Tai_chinh.docx');
-    expect(html).toContain('Trích dẫn chứa ký hiệu hệ thống');
-    expect(html).toContain('Cần sửa ngay');
-    expect(html).toContain('Xuất hiện chuỗi ký hiệu hệ thống khi sao chép.');
-    expect(html).toContain('Xóa chuỗi ký hiệu và kiểm tra lại nguồn.');
+    expect(html).toContain('Cụm từ mở đầu rập khuôn');
+    expect(html).toContain('Nên sửa');
+
+    const turnitinHtml = generateTurnitinStyleHtmlReport(sampleAudit);
+    expect(turnitinHtml).toContain('feedback studio');
+    expect(turnitinHtml).toContain('class="t-hl"');
+    expect(turnitinHtml).toContain('class="t-badge"');
+    expect(turnitinHtml).toContain('>1</sup>Trong bối cảnh hội nhập hiện nay</a>');
+    expect(turnitinHtml).toContain('id="turnitin-note-1"');
+
+    // Verify printAuditDocument injects #audit-print-iframe with clean HTML content
+    printAuditDocument(sampleAudit, 'turnitin');
+    const printIframe = document.getElementById('audit-print-iframe') as HTMLIFrameElement;
+    expect(printIframe).toBeTruthy();
+    expect(printIframe.contentDocument?.body.innerHTML).toContain('feedback studio');
   });
 });

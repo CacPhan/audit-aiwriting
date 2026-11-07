@@ -114,10 +114,10 @@ export const AuditDocumentViewer: React.FC<AuditDocumentViewerProps> = ({
   return (
     <section
       id="workspace-col-center"
-      className={`${colSpanClass} proximity-card rounded-3xl p-6 sm:p-8 bg-[var(--manuscript-bg)] space-y-5`}
+      className={`${colSpanClass} lg:h-full lg:max-h-full lg:overflow-hidden flex flex-col proximity-card rounded-3xl p-5 sm:p-7 bg-[var(--manuscript-bg)]`}
     >
       {/* Viewer Top Bar */}
-      <div className="flex flex-wrap items-center justify-between gap-3 pb-4 border-b border-[var(--border-subtle)]">
+      <div className="shrink-0 flex flex-wrap items-center justify-between gap-3 pb-4 border-b border-[var(--border-subtle)]">
         <div>
           <span
             id="viewer-section-label"
@@ -175,7 +175,7 @@ export const AuditDocumentViewer: React.FC<AuditDocumentViewerProps> = ({
       <article
         id="manuscript-content"
         style={{ fontSize: largeFont ? '17px' : '15px' }}
-        className="space-y-5 leading-[1.88] text-[var(--text-main)] min-h-[360px]"
+        className="flex-1 min-h-0 overflow-y-auto overscroll-contain workspace-scroll-area py-4 pr-2 space-y-5 leading-[1.88] text-[var(--text-main)]"
       >
         {section.isExcluded && (
           <div className="p-4 rounded-2xl bg-slate-500/10 border border-[var(--border-subtle)] text-xs text-[var(--text-muted)]">
@@ -203,7 +203,7 @@ export const AuditDocumentViewer: React.FC<AuditDocumentViewerProps> = ({
       </article>
 
       {/* Accessible Underline Legend */}
-      <div className="pt-4 border-t border-[var(--border-subtle)] flex flex-wrap items-center gap-4 text-xs text-[var(--text-muted)]">
+      <div className="shrink-0 pt-3.5 border-t border-[var(--border-subtle)] flex flex-wrap items-center gap-4 text-xs text-[var(--text-muted)]">
         <span className="inline-flex items-center gap-1.5">
           <span
             className="inline-block w-4 border-b-2 border-red-500"

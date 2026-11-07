@@ -38,7 +38,7 @@ export const DiagnosticInspector: React.FC<DiagnosticInspectorProps> = ({
   return (
     <aside
       id="workspace-col-right"
-      className={`lg:col-span-4 space-y-4 lg:sticky lg:top-20 ${
+      className={`lg:col-span-4 lg:h-full lg:max-h-full lg:overflow-y-auto overscroll-contain workspace-scroll-area lg:pr-1 space-y-4 ${
         collapsed ? 'lg:hidden' : ''
       }`}
     >

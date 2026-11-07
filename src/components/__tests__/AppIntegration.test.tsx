@@ -131,7 +131,7 @@ describe('AI Style Auditor Multi-Screen SaaS, UI Jargon Non-Disclosure & E2E Flo
     expect(screen.getByText(/Tổng quan kết quả rà soát/i)).toBeTruthy();
     expect(screen.getByText('1 / 7')).toBeTruthy();
 
-    // 9. Open Report Preview Modal and close with Escape key
+    // 9. Open Report Preview Modal, switch to Turnitin Feedback Studio tab, and close with Escape key
     const openReportBtn = screen.getAllByRole('button', {
       name: /Xem trước Báo cáo/i,
     })[0];
@@ -139,6 +139,19 @@ describe('AI Style Auditor Multi-Screen SaaS, UI Jargon Non-Disclosure & E2E Flo
     expect(
       screen.getByText(/Báo cáo Kiểm toán Văn phong Học thuật/i)
     ).toBeTruthy();
+    const turnitinTabBtn = container.querySelector(
+      '#tab-turnitin-studio'
+    ) as HTMLButtonElement;
+    expect(turnitinTabBtn).toBeTruthy();
+    fireEvent.click(turnitinTabBtn);
+    expect(container.querySelector('#turnitin-studio-preview')).toBeTruthy();
+    expect(container.querySelectorAll('.turnitin-hl').length).toBeGreaterThan(
+      0
+    );
+    expect(
+      container.querySelectorAll('.turnitin-badge').length
+    ).toBeGreaterThan(0);
+
     fireEvent.keyDown(window, { key: 'Escape' });
     expect(container.querySelector('#report-modal')).toBeNull();
 

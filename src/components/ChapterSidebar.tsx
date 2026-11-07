@@ -41,7 +41,9 @@ export const ChapterSidebar: React.FC<ChapterSidebarProps> = ({
   return (
     <aside
       id="workspace-col-left"
-      className={`lg:col-span-3 space-y-4 ${collapsed ? 'lg:hidden' : ''}`}
+      className={`lg:col-span-3 lg:h-full lg:max-h-full lg:overflow-y-auto overscroll-contain workspace-scroll-area lg:pr-1 space-y-4 ${
+        collapsed ? 'lg:hidden' : ''
+      }`}
     >
       {/* Document Chapters */}
       <div className="proximity-card rounded-2xl p-4 space-y-3">

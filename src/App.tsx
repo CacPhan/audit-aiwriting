@@ -11,7 +11,9 @@ import { DiagnosticInspector } from './components/DiagnosticInspector';
 import {
   ProUpgradeModal,
   ReportPreviewModal,
+  ReportPreviewTab,
 } from './components/ProUpgradeModal';
+import { downloadTurnitinStyleHtmlReport } from './utils/reportExporter';
 
 function formatBytes(bytes: number): string {
   if (!bytes || bytes <= 0) return '1.42 MB';
@@ -43,6 +45,8 @@ export const App: React.FC = () => {
 
   // Modals State
   const [isReportModalOpen, setIsReportModalOpen] = useState(false);
+  const [reportInitialTab, setReportInitialTab] =
+    useState<ReportPreviewTab>('summary');
   const [isProModalOpen, setIsProModalOpen] = useState(false);
 
   // Refs for visual effects (Spotlight, Mascot Pupils, File Input)
@@ -880,10 +884,13 @@ export const App: React.FC = () => {
           SCREEN 02: WORKSPACE (Dedicated 3-Column SaaS Application View)
           ==================================================================== */}
       {currentScreen === 'workspace' && activeSection && (
-        <main id="screen-workspace" className="app-screen flex-1">
-          <div className="max-w-[1440px] mx-auto px-4 sm:px-6 lg:px-8 py-5 space-y-4">
+        <main
+          id="screen-workspace"
+          className="app-screen flex-1 lg:h-[calc(100vh-76px)] lg:max-h-[calc(100vh-76px)] lg:overflow-hidden flex flex-col"
+        >
+          <div className="max-w-[1440px] w-full mx-auto px-4 sm:px-6 lg:px-8 py-4 flex-1 min-h-0 flex flex-col gap-4">
             {/* A. Workspace Header / Application Bar */}
-            <div className="proximity-card rounded-2xl px-4 py-3 flex flex-wrap items-center justify-between gap-3">
+            <div className="shrink-0 proximity-card rounded-2xl px-4 py-3 flex flex-wrap items-center justify-between gap-3">
               <div className="flex flex-wrap items-center gap-2.5 min-w-0">
                 <button
                   type="button"
@@ -942,7 +949,20 @@ export const App: React.FC = () => {
                 </button>
                 <button
                   type="button"
-                  onClick={() => setIsReportModalOpen(true)}
+                  onClick={() => {
+                    setReportInitialTab('turnitin');
+                    setIsReportModalOpen(true);
+                  }}
+                  className="inline-flex items-center gap-1.5 px-3.5 py-1.5 rounded-xl text-xs font-semibold border border-cyan-500/40 bg-cyan-500/15 text-cyan-300 hover:bg-cyan-500/25 transition-all"
+                >
+                  <span>Bản thảo Bôi màu (Turnitin)</span>
+                </button>
+                <button
+                  type="button"
+                  onClick={() => {
+                    setReportInitialTab('summary');
+                    setIsReportModalOpen(true);
+                  }}
                   className="magnetic-icon inline-flex items-center gap-1.5 px-3.5 py-1.5 rounded-xl text-xs font-semibold text-white bg-gradient-to-r from-blue-600 to-cyan-500 shadow-sm"
                 >
                   <span>Xem trước Báo cáo</span>
@@ -950,10 +970,10 @@ export const App: React.FC = () => {
               </div>
             </div>
 
-            {/* B. Three-Column Workspace Grid */}
+            {/* B. Three-Column Workspace Grid (Locked height, 3 independent scrollbars) */}
             <div
               id="workspace-grid"
-              className="grid lg:grid-cols-12 gap-5 items-start"
+              className="flex-1 min-h-0 grid lg:grid-cols-12 gap-5 items-stretch lg:overflow-hidden"
             >
               <ChapterSidebar
                 sections={auditData.sections}
@@ -1016,7 +1036,7 @@ export const App: React.FC = () => {
                 </p>
               </div>
 
-              <div className="flex items-center gap-2.5">
+              <div className="flex flex-wrap items-center gap-2.5">
                 <button
                   type="button"
                   onClick={() => navigateToScreen('workspace')}
@@ -1026,7 +1046,20 @@ export const App: React.FC = () => {
                 </button>
                 <button
                   type="button"
-                  onClick={() => setIsReportModalOpen(true)}
+                  onClick={() => {
+                    setReportInitialTab('turnitin');
+                    setIsReportModalOpen(true);
+                  }}
+                  className="px-4 py-2 rounded-xl text-xs font-semibold border border-cyan-500/40 bg-cyan-500/15 text-cyan-300 hover:bg-cyan-500/25 transition-all"
+                >
+                  Xem Bản thảo Bôi màu (Turnitin)
+                </button>
+                <button
+                  type="button"
+                  onClick={() => {
+                    setReportInitialTab('summary');
+                    setIsReportModalOpen(true);
+                  }}
                   className="magnetic-icon px-4 py-2 rounded-xl text-xs font-bold text-white bg-gradient-to-r from-blue-600 to-cyan-500 shadow-md"
                 >
                   Xem trước Báo cáo
@@ -1188,7 +1221,7 @@ export const App: React.FC = () => {
                   </span>
                 </div>
 
-                <div className="space-y-2.5 text-xs sm:text-sm">
+                <div className="space-y-2.5 text-xs sm:text-sm max-h-[320px] overflow-y-auto workspace-scroll-area pr-1">
                   {auditData.sections.map((sec) => {
                     const secFindings = auditData.findings.filter(
                       (f) => f.sectionId === sec.id
@@ -1221,23 +1254,45 @@ export const App: React.FC = () => {
               </div>
             </section>
 
-            {/* Report Preview Summary Banner */}
-            <section className="proximity-card rounded-3xl p-6 flex flex-col sm:flex-row items-center justify-between gap-5">
-              <div className="space-y-1 text-center sm:text-left">
+            {/* Report Preview & Turnitin Full-Manuscript Export Banner */}
+            <section className="proximity-card rounded-3xl p-6 flex flex-col lg:flex-row items-center justify-between gap-5">
+              <div className="space-y-1 text-center lg:text-left">
                 <h2 className="font-display font-bold text-lg">
-                  Báo cáo kiểm toán tổng hợp
+                  Báo cáo Kiểm toán &amp; Bản thảo Bôi màu (Turnitin Feedback Studio)
                 </h2>
-                <p className="text-xs sm:text-sm text-[var(--text-muted)] max-w-xl">
-                  Xem toàn bộ danh sách các đoạn văn cần lưu ý, nguyên nhân chi tiết và phương án biên tập đề xuất trên một trang tổng hợp.
+                <p className="text-xs sm:text-sm text-[var(--text-muted)] max-w-2xl">
+                  Xem toàn bộ nội dung luận văn đã được bôi màu trực tiếp kèm số thứ tự chú giải theo phong cách Turnitin Feedback Studio, hoặc tải xuống báo cáo tổng hợp định dạng HTML / PDF / JSON.
                 </p>
               </div>
-              <button
-                type="button"
-                onClick={() => setIsReportModalOpen(true)}
-                className="magnetic-icon px-6 py-3 rounded-2xl font-display font-bold text-xs sm:text-sm text-white bg-gradient-to-r from-blue-600 to-cyan-500 shadow-lg shrink-0"
-              >
-                Mở bản xem trước Báo cáo
-              </button>
+              <div className="flex flex-wrap items-center justify-center gap-3 shrink-0">
+                <button
+                  type="button"
+                  onClick={() => downloadTurnitinStyleHtmlReport(auditData)}
+                  className="px-4 py-3 rounded-2xl font-display font-bold text-xs sm:text-sm border border-cyan-500/40 bg-cyan-500/15 text-cyan-300 hover:bg-cyan-500/25 transition-all"
+                >
+                  Tải Bản thảo Bôi màu (.html)
+                </button>
+                <button
+                  type="button"
+                  onClick={() => {
+                    setReportInitialTab('turnitin');
+                    setIsReportModalOpen(true);
+                  }}
+                  className="magnetic-icon px-5 py-3 rounded-2xl font-display font-bold text-xs sm:text-sm text-white bg-gradient-to-r from-cyan-600 to-blue-600 shadow-lg"
+                >
+                  Xem Bản thảo Bôi màu
+                </button>
+                <button
+                  type="button"
+                  onClick={() => {
+                    setReportInitialTab('summary');
+                    setIsReportModalOpen(true);
+                  }}
+                  className="magnetic-icon px-5 py-3 rounded-2xl font-display font-bold text-xs sm:text-sm text-white bg-gradient-to-r from-blue-600 to-indigo-600 shadow-lg"
+                >
+                  Mở Báo cáo Tổng hợp
+                </button>
+              </div>
             </section>
           </div>
         </main>
@@ -1248,6 +1303,7 @@ export const App: React.FC = () => {
         isOpen={isReportModalOpen}
         onClose={() => setIsReportModalOpen(false)}
         audit={auditData}
+        initialTab={reportInitialTab}
       />
 
       <ProUpgradeModal
