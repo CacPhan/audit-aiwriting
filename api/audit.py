@@ -5,17 +5,28 @@ Also runnable as a CLI helper for local Vite development middleware.
 
 from http.server import BaseHTTPRequestHandler
 import json
+from pathlib import Path
 import sys
 from typing import Any, Dict
+
+_PROJECT_ROOT = str(Path(__file__).resolve().parent.parent)
+if _PROJECT_ROOT not in sys.path:
+    sys.path.insert(0, _PROJECT_ROOT)
+
 from api.engine.auditor import SAMPLE_THESIS_PAYLOAD, audit_document_sections
 from api.engine.lexicon import RULE_METADATA
 
 
-def evaluate_audit_request(payload: Dict[str, Any]) -> Dict[str, Any]:
+def evaluate_audit_request(payload: Any) -> Dict[str, Any]:
     """Evaluates a JSON payload containing `{title, sections}` and returns the full audit result."""
+    if not isinstance(payload, dict):
+        payload = {}
     title = payload.get("title") or SAMPLE_THESIS_PAYLOAD["title"]
-    sections = payload.get("sections")
-    if not sections or not isinstance(sections, list):
+    if "sections" in payload and isinstance(payload["sections"], list):
+        sections = payload["sections"]
+    elif "sections" in payload and payload["sections"] is None:
+        sections = []
+    else:
         sections = SAMPLE_THESIS_PAYLOAD["sections"]
     return audit_document_sections(title, sections)
 
@@ -54,8 +65,8 @@ class handler(BaseHTTPRequestHandler):
 
 
 if __name__ == "__main__":
-    # Supports local Vite dev server bridge via stdin/stdout JSON
-    raw_in = sys.stdin.read()
+    # Supports local Vite dev server bridge via stdin/stdout JSON (UTF-8 safe on Windows & Unix)
+    raw_in = sys.stdin.buffer.read().decode("utf-8")
     req_data = json.loads(raw_in) if raw_in.strip() else SAMPLE_THESIS_PAYLOAD
     out = evaluate_audit_request(req_data)
     sys.stdout.buffer.write(json.dumps(out, ensure_ascii=False).encode("utf-8"))

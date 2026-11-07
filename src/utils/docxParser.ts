@@ -2,30 +2,90 @@ import mammoth from 'mammoth';
 import { DocumentAuditResult, ParsedThesisSection } from '../types/auditor';
 
 const EXCLUDED_HEADING_REGEX =
-  /^(?:MỤC\s+LỤC|DANH\s+MỤC\s+(?:TÀI\s+LIỆU\s+THAM\s+KHẢO|BẢNG\s+BIỂU|HÌNH\s+VẼ|SƠ\s+ĐỒ|TỪ\s+VIẾT\s+TẮT|CHỮ\s+VIẾT\s+TẮT)|TÀI\s+LIỆU\s+THAM\s+KHẢO|PHỤ\s+LỤC|LỜI\s+CAM\s+ĐOAN|LỜI\s+CẢM\s+ƠN)\b/i;
+  /^(?:TRANG\s+BÌA|BÌA\s+LUẬN\s+VĂN|MỤC\s+LỤC|DANH\s+MỤC\s+(?:CÁC\s+)?(?:TÀI\s+LIỆU\s+THAM\s+KHẢO|BẢNG(?:\s+BIỂU|\s+SỐ\s+LIỆU)?|HÌNH(?:\s+VẼ|\s+ẢNH)?|BIỂU\s+ĐỒ|SƠ\s+ĐỒ|TỪ\s+VIẾT\s+TẮT|CHỮ\s+VIẾT\s+TẮT|KÝ\s+HIỆU)|TÀI\s+LIỆU\s+THAM\s+KHẢO|PHỤ\s+LỤC(?:\s*\d+|\b)|LỜI\s+CAM\s+ĐOAN|LỜI\s+CẢM\s+ƠN|LỜI\s+CÁM\s+ƠN)/i;
+
+const COVER_PREAMBLE_REGEX =
+  /^(?:BỘ\s+GIÁO\s+DỤC\s+VÀ\s+ĐÀO\s+TẠO|ĐẠI\s+HỌC\s+KINH\s+TẾ|TRƯỜNG\s+ĐẠI\s+HỌC|HỌC\s+VIỆN\s+|KHÓA\s+LUẬN\s+TỐT\s+NGHIỆP|KHOÁ\s+LUẬN\s+TỐT\s+NGHIỆP|LUẬN\s+VĂN\s+THẠC\s+SĨ|CHUYÊN\s+ĐỀ\s+THỰC\s+TẬP|BÁO\s+CÁO\s+TỔNG\s+HỢP)/i;
 
 const CHAPTER_OR_SECTION_HEADING_REGEX =
-  /^(?:CHƯƠNG\s+\d+|PHẦN\s+(?:MỞ\s+ĐẦU|KẾT\s+LUẬN|\d+|[IVX]+)|LỜI\s+MỞ\s+ĐẦU|KẾT\s+LUẬN(?:\s+VÀ\s+KHUYẾN\s+NGHỊ)?|\d+\.\d+(?:\.\d+)?\.?\s+\S+)/i;
+  /^(?:CHƯƠNG\s*(?:\d+|[IVXLC]+)(?:\b|(?=[A-ZÀ-ỸĐ:]))|PHẦN\s+(?:MỞ\s+ĐẦU|KẾT\s+LUẬN|\d+|[IVXLC]+)|MỞ\s+ĐẦU\b|LỜI\s+MỞ\s+ĐẦU\b|KẾT\s+LUẬN(?:\s+VÀ\s+KHUYẾN\s+NGHỊ|\s+CHUNG)?\b|\d+\.\d+(?:\.\d+)?\.?\s+\S+|[1-9]\.\s+[A-ZÀ-ỸĐ]{2,}(?:\s+[A-ZÀ-ỸĐ0-9,–\-()]+)+$)/i;
 
-const TOC_DOT_LEADER_REGEX = /\.{4,}\s*\d*\s*$/;
+const TOP_LEVEL_UPPER_HEADING_REGEX =
+  /^[1-9]\.\s+[A-ZÀ-ỸĐ]{2,}(?:\s+[A-ZÀ-ỸĐ0-9,–\-()]+)+$/;
+
+const TOC_DOT_LEADER_REGEX = /(?:\.{3,}|…+)\s*(?:\d+|[ivxlcdm]+)?\s*$/i;
+const TOC_TAB_PAGE_REGEX = /\t+\s*(?:\d+|[ivxlcdm]+)\s*$/i;
+const TOC_TRAILING_PAGE_IN_INDEX_REGEX =
+  /^(?:CHƯƠNG\s*\d+|PHẦN\s+|MỞ\s+ĐẦU|LỜI\s+|KẾT\s+LUẬN|TÀI\s+LIỆU\s+THAM\s+KHẢO|PHỤ\s+LỤC|DANH\s+MỤC|\d+(?:\.\d+)+\.?|Bảng\s+\d+|Hình\s+\d+|Biểu\s+đồ\s+\d+|Sơ\s+đồ\s+\d+).*?\s+(?:\d{1,3}|[ivxlcdm]{1,6})$/i;
+
+function normalizeText(input: string): string {
+  return (input || '').normalize('NFC');
+}
 
 function isExcludedHeading(line: string): boolean {
-  const cleaned = line.trim().replace(/^[*#\-\s]+|[*#\s]+$/g, '');
+  const cleaned = normalizeText(line)
+    .trim()
+    .replace(/^[*#\-\s]+|[*#\s]+$/g, '');
   return EXCLUDED_HEADING_REGEX.test(cleaned);
 }
 
-function isChapterOrSubHeading(line: string, isExplicitHeadingTag = false): boolean {
-  const cleaned = line.trim();
-  if (!cleaned || cleaned.length > 160) return false;
-  if (TOC_DOT_LEADER_REGEX.test(cleaned)) return false;
+function isTocEntryLine(line: string, insideIndexSection = false): boolean {
+  const normalized = normalizeText(line).trim();
+  if (TOC_DOT_LEADER_REGEX.test(normalized)) return true;
+  if (TOC_TAB_PAGE_REGEX.test(normalized)) return true;
+  if (
+    insideIndexSection &&
+    TOC_TRAILING_PAGE_IN_INDEX_REGEX.test(normalized)
+  ) {
+    return true;
+  }
+  if (
+    insideIndexSection &&
+    /^(?:Bảng|Hình|Biểu\s+đồ|Sơ\s+đồ)\s+\d+/i.test(normalized)
+  ) {
+    return true;
+  }
+  return false;
+}
+
+function isChapterOrSubHeading(
+  line: string,
+  isExplicitHeadingTag = false,
+  insideIndexSection = false,
+  insideBibliographyOrAppendix = false
+): boolean {
+  const cleaned = normalizeText(line).trim();
+  if (!cleaned || cleaned.length > 180) return false;
+  if (isTocEntryLine(cleaned, insideIndexSection)) return false;
   if (isExcludedHeading(cleaned)) return true;
+
+  // Inside Bibliography or Appendix, do not split on numbered references like "1. Nguyễn Văn A..."
+  if (insideBibliographyOrAppendix) {
+    if (
+      /^(?:CHƯƠNG\s*(?:\d+|[IVXLC]+)|PHẦN\s+(?:MỞ\s+ĐẦU|KẾT\s+LUẬN)|MỞ\s+ĐẦU\b|LỜI\s+MỞ\s+ĐẦU\b|KẾT\s+LUẬN\b)/i.test(
+        cleaned
+      )
+    ) {
+      return true;
+    }
+    return false;
+  }
+
+  // Check if it is a top-level uppercase numbered chapter (e.g., "1. LỊCH SỬ HÌNH THÀNH...")
+  if (/^[1-9]\.\s+/.test(cleaned) && !/^\d+\.\d+/.test(cleaned)) {
+    return TOP_LEVEL_UPPER_HEADING_REGEX.test(cleaned);
+  }
+
   if (CHAPTER_OR_SECTION_HEADING_REGEX.test(cleaned)) return true;
-  if (isExplicitHeadingTag && cleaned.length <= 120) return true;
+  if (isExplicitHeadingTag && cleaned.length <= 140) return true;
   return false;
 }
 
 function buildShortTitle(fullTitle: string, idx: number): string {
-  const trimmed = fullTitle.trim();
+  const trimmed = normalizeText(fullTitle)
+    .replace(/^(CHƯƠNG\s*\d+)(?=[A-ZÀ-ỸĐ])/i, '$1: ')
+    .replace(/^(PHỤ\s+LỤC\s*\d+)(?=[A-ZÀ-ỸĐ])/i, '$1: ')
+    .trim();
   if (trimmed.length <= 36) return trimmed;
   const colonParts = trimmed.split(':');
   if (colonParts.length > 1 && colonParts[0].length <= 28) {
@@ -39,7 +99,8 @@ export function splitRawTextOrHtmlIntoSections(
   content: string,
   isHtml = false
 ): ParsedThesisSection[] {
-  if (!content || !content.trim()) {
+  const normalizedContent = normalizeText(content);
+  if (!normalizedContent || !normalizedContent.trim()) {
     return [];
   }
 
@@ -52,17 +113,21 @@ export function splitRawTextOrHtmlIntoSections(
 
   if (isHtml && typeof DOMParser !== 'undefined') {
     const parser = new DOMParser();
-    const doc = parser.parseFromString(content, 'text/html');
+    const doc = parser.parseFromString(normalizedContent, 'text/html');
     const elements = doc.body.querySelectorAll('h1, h2, h3, h4, p, li');
     elements.forEach((el) => {
-      const txt = (el.textContent || '').replace(/\s+/g, ' ').trim();
+      const rawTxt = normalizeText(el.textContent || '');
+      const hasTabPage = TOC_TAB_PAGE_REGEX.test(rawTxt);
+      const txt = rawTxt.replace(/[ \f\v]+/g, ' ').trim();
       if (!txt) return;
       const tag = el.tagName.toLowerCase();
-      const isHeading = tag === 'h1' || tag === 'h2' || tag === 'h3' || tag === 'h4';
+      const isHeading =
+        (tag === 'h1' || tag === 'h2' || tag === 'h3' || tag === 'h4') &&
+        !hasTabPage;
       blocks.push({ text: txt, isHeadingTag: isHeading });
     });
   } else {
-    const rawChunks = content
+    const rawChunks = normalizedContent
       .split(/\r?\n\s*\r?\n|\r?\n/)
       .map((line) => line.trim())
       .filter(Boolean);
@@ -73,49 +138,105 @@ export function splitRawTextOrHtmlIntoSections(
 
   const sections: ParsedThesisSection[] = [];
   let currentSection: ParsedThesisSection | null = null;
+  let insideIndexSection = false;
+  let insideBibOrAppendix = false;
 
   blocks.forEach((block) => {
     const { text, isHeadingTag } = block;
 
-    if (isChapterOrSubHeading(text, isHeadingTag)) {
+    if (
+      isChapterOrSubHeading(
+        text,
+        isHeadingTag,
+        insideIndexSection,
+        insideBibOrAppendix
+      )
+    ) {
       const excluded = isExcludedHeading(text);
+      const normalizedHeading = normalizeText(text)
+        .replace(/^(CHƯƠNG\s*\d+)(?=[A-ZÀ-ỸĐ])/i, '$1: ')
+        .replace(/^(PHỤ\s+LỤC\s*\d+)(?=[A-ZÀ-ỸĐ])/i, '$1: ')
+        .replace(/\t+/g, ' ')
+        .trim();
+
+      insideIndexSection =
+        /^(?:MỤC\s+LỤC|DANH\s+MỤC\s+)/i.test(normalizedHeading);
+      insideBibOrAppendix =
+        /^(?:DANH\s+MỤC\s+TÀI\s+LIỆU\s+THAM\s+KHẢO|TÀI\s+LIỆU\s+THAM\s+KHẢO|PHỤ\s+LỤC)/i.test(
+          normalizedHeading
+        );
+
       const secIndex = sections.length + 1;
       currentSection = {
         id: `sec-${secIndex}`,
-        title: text,
-        shortTitle: buildShortTitle(text, secIndex),
-        sectionLabel: excluded ? `Mục loại trừ · Phần ${secIndex}` : `Phần ${secIndex} · Bản thảo`,
+        title: normalizedHeading,
+        shortTitle: buildShortTitle(normalizedHeading, secIndex),
+        sectionLabel: excluded
+          ? `Mục loại trừ · Phần ${secIndex}`
+          : `Phần ${secIndex} · Bản thảo`,
         paragraphs: [],
         isExcluded: excluded,
       };
       sections.push(currentSection);
     } else {
       if (!currentSection) {
+        const isCoverPreamble = COVER_PREAMBLE_REGEX.test(text);
         currentSection = {
           id: 'sec-1',
-          title: 'Chương 1: Nội dung bản thảo',
-          shortTitle: 'Chương 1: Bản thảo',
-          sectionLabel: 'Chương 1 · Bản thảo',
+          title: isCoverPreamble
+            ? 'Trang bìa & Thông tin chung'
+            : 'Chương 1: Nội dung bản thảo',
+          shortTitle: isCoverPreamble ? 'Trang bìa' : 'Chương 1: Bản thảo',
+          sectionLabel: isCoverPreamble
+            ? 'Mục loại trừ · Trang bìa'
+            : 'Chương 1 · Bản thảo',
           paragraphs: [],
-          isExcluded: false,
+          isExcluded: isCoverPreamble,
         };
         sections.push(currentSection);
       }
-      currentSection.paragraphs.push(text);
+      currentSection.paragraphs.push(text.replace(/\t+/g, ' ').trim());
     }
   });
+
+  // If there are multiple sections and the first section was an implicit non-heading preamble,
+  // mark it as cover page (isExcluded: true) if followed by formal thesis front-matter/chapters.
+  if (
+    sections.length > 1 &&
+    sections[0].title === 'Chương 1: Nội dung bản thảo'
+  ) {
+    sections[0].title = 'Trang bìa & Thông tin chung';
+    sections[0].shortTitle = 'Trang bìa';
+    sections[0].sectionLabel = 'Mục loại trừ · Trang bìa';
+    sections[0].isExcluded = true;
+  }
 
   return sections;
 }
 
-export async function extractSectionsFromDocx(file: File): Promise<ParsedThesisSection[]> {
-  const arrayBuffer = await file.arrayBuffer();
-  const result = await mammoth.convertToHtml({ arrayBuffer });
+export async function extractSectionsFromDocx(
+  file: File
+): Promise<ParsedThesisSection[]> {
+  let arrayBuffer: ArrayBuffer;
+  if (typeof file.arrayBuffer === 'function') {
+    arrayBuffer = await file.arrayBuffer();
+  } else {
+    arrayBuffer = await new Response(file).arrayBuffer();
+  }
+
+  const mammothInput: { arrayBuffer: ArrayBuffer; buffer?: Buffer } = {
+    arrayBuffer,
+  };
+  if (typeof Buffer !== 'undefined') {
+    mammothInput.buffer = Buffer.from(arrayBuffer);
+  }
+
+  const result = await mammoth.convertToHtml(mammothInput as any);
   const sections = splitRawTextOrHtmlIntoSections(result.value, true);
   if (sections.length > 0) {
     return sections;
   }
-  const rawTextResult = await mammoth.extractRawText({ arrayBuffer });
+  const rawTextResult = await mammoth.extractRawText(mammothInput as any);
   return splitRawTextOrHtmlIntoSections(rawTextResult.value, false);
 }
 

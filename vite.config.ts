@@ -59,6 +59,16 @@ function pythonAuditApiPlugin() {
 
 export default defineConfig({
   plugins: [react() as any, pythonAuditApiPlugin()],
+  build: {
+    rollupOptions: {
+      output: {
+        manualChunks: {
+          'vendor-react': ['react', 'react-dom'],
+          'vendor-mammoth': ['mammoth'],
+        },
+      },
+    },
+  },
   test: {
     environment: 'jsdom',
     globals: true,

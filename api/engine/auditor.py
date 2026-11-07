@@ -83,6 +83,7 @@ def audit_document_sections(title: str, sections: List[Dict[str, Any]]) -> Dict[
     Audits all non-excluded sections of a thesis/manuscript and aggregates
     findings, severity counts, and document-level statistics.
     """
+    safe_title = str(title).strip() if title else "Ban_thao_hoc_thuat.docx"
     audited_sections: List[Dict[str, Any]] = []
     all_flags: List[Dict[str, Any]] = []
     total_words = 0
@@ -90,13 +91,26 @@ def audit_document_sections(title: str, sections: List[Dict[str, Any]]) -> Dict[
     protected_terms_set = set()
     global_finding_seq = 1
 
-    for sec_idx, sec in enumerate(sections):
-        sec_id = sec.get("id") or f"sec-{sec_idx + 1}"
-        sec_title = sec.get("title") or f"Chương {sec_idx + 1}"
-        short_title = sec.get("shortTitle") or sec_title.split(":")[0].strip() if ":" in sec_title else sec_title
-        section_label = sec.get("sectionLabel") or f"Phần {sec_idx + 1} · Bản thảo"
+    if not isinstance(sections, list):
+        sections = []
+
+    for sec_idx, raw_sec in enumerate(sections):
+        sec = raw_sec if isinstance(raw_sec, dict) else {}
+        sec_id = str(sec.get("id") or f"sec-{sec_idx + 1}")
+        sec_title = str(sec.get("title") or f"Chương {sec_idx + 1}")
+        short_title = (
+            str(sec.get("shortTitle"))
+            if sec.get("shortTitle")
+            else (sec_title.split(":")[0].strip() if ":" in sec_title else sec_title)
+        )
+        section_label = str(sec.get("sectionLabel") or f"Phần {sec_idx + 1} · Bản thảo")
         is_excluded = bool(sec.get("isExcluded", False))
-        raw_paragraphs: List[str] = sec.get("paragraphs") or []
+        raw_paragraphs_input = sec.get("paragraphs")
+        raw_paragraphs: List[str] = (
+            [str(p) for p in raw_paragraphs_input if p is not None and str(p).strip()]
+            if isinstance(raw_paragraphs_input, list)
+            else ([str(raw_paragraphs_input)] if isinstance(raw_paragraphs_input, str) and raw_paragraphs_input.strip() else [])
+        )
 
         if is_excluded:
             audited_sections.append(
@@ -194,7 +208,7 @@ def audit_document_sections(title: str, sections: List[Dict[str, Any]]) -> Dict[
     )
 
     return {
-        "title": title,
+        "title": safe_title,
         "sections": audited_sections,
         "findings": all_flags,
         "summary": {

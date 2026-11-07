@@ -1,8 +1,31 @@
 import io
 import json
+import os
+import time
+import zipfile
+import xml.etree.ElementTree as ET
+from pathlib import Path
+from api.engine.lexicon import RULE_METADATA
 from api.engine.rules import audit_paragraph
 from api.engine.auditor import audit_document_sections, SAMPLE_THESIS_PAYLOAD
-from api.audit import evaluate_audit_request
+from api.audit import evaluate_audit_request, handler
+
+
+def _extract_paragraphs_from_docx_file(docx_path: Path, max_paragraphs: int = 120):
+    """Lightweight helper using stdlib zipfile + xml to extract paragraphs from real .docx files."""
+    with zipfile.ZipFile(docx_path, "r") as zf:
+        xml_bytes = zf.read("word/document.xml")
+    root = ET.fromstring(xml_bytes)
+    ns = {"w": "http://schemas.openxmlformats.org/wordprocessingml/2006/main"}
+    paragraphs = []
+    for p in root.findall(".//w:p", ns):
+        texts = [t.text for t in p.findall(".//w:t", ns) if t.text]
+        line = "".join(texts).strip()
+        if line:
+            paragraphs.append(line)
+            if len(paragraphs) >= max_paragraphs:
+                break
+    return paragraphs
 
 
 def test_detects_low_burstiness_boxed_paragraph_and_pendulum_hedging():
@@ -20,6 +43,45 @@ def test_detects_low_burstiness_boxed_paragraph_and_pendulum_hedging():
     assert "DIS-03" in rule_ids
     assert "ARG-02" in rule_ids
     assert res["aiStyleScore"] > 55
+
+
+def test_rhy01_and_dis01_never_trigger_on_short_paragraphs_under_4_sentences():
+    # Even if a 1, 2, or 3-sentence paragraph has identical sentence lengths and connective openers,
+    # RHY-01 and DIS-01 must NEVER trigger when sentence count < 4.
+    one_sent = "Cụ thể, ngân hàng thương mại đã điều chỉnh lãi suất huy động vốn trong quý đầu năm."
+    two_sents = (
+        "Cụ thể, ngân hàng thương mại đã điều chỉnh lãi suất huy động vốn. "
+        "Tuy nhiên, chi phí huy động vốn đầu vào vẫn ở mức khá cao."
+    )
+    three_sents = (
+        "Cụ thể, ngân hàng thương mại đã điều chỉnh lãi suất huy động vốn. "
+        "Tuy nhiên, chi phí huy động vốn đầu vào vẫn ở mức khá cao. "
+        "Do đó, biên lãi ròng cần được kiểm soát chặt để phát triển bền vững."
+    )
+
+    for idx, short_para in enumerate([one_sent, two_sents, three_sents], start=1):
+        res = audit_paragraph(short_para, idx)
+        assert res["sentenceCount"] == idx
+        flagged_ids = [f["ruleId"] for f in res["flags"]]
+        assert "RHY-01" not in flagged_ids, f"RHY-01 falsely triggered on {idx}-sentence paragraph"
+        assert "DIS-01" not in flagged_ids, f"DIS-01 falsely triggered on {idx}-sentence paragraph"
+
+
+def test_all_26_rules_map_strictly_to_3_user_facing_severity_levels():
+    valid_mappings = {
+        "critical": "Cần sửa ngay",
+        "warning": "Nên sửa",
+        "suggestion": "Gợi ý",
+    }
+    assert len(RULE_METADATA) == 26
+    for rule_id, meta in RULE_METADATA.items():
+        sev = meta["severity"]
+        label = meta["severityLabel"]
+        assert sev in valid_mappings, f"Invalid severity '{sev}' in {rule_id}"
+        assert label == valid_mappings[sev], f"Mismatched severityLabel '{label}' for {rule_id}"
+        assert meta["userTitle"].strip()
+        assert meta["userReason"].strip()
+        assert meta["userSuggestion"].strip()
 
 
 def test_detects_syntactic_isomorphism_and_trailing_clauses():
@@ -79,11 +141,99 @@ def test_detects_forensic_artifacts_and_additional_signs():
     assert "SYN-04" in rule_ids
 
 
-def test_audit_document_sections_and_serverless_evaluator():
-    result = evaluate_audit_request(SAMPLE_THESIS_PAYLOAD)
-    assert result["title"] == SAMPLE_THESIS_PAYLOAD["title"]
-    assert len(result["sections"]) >= 4
-    assert result["summary"]["totalFlags"] > 0
-    assert "criticalCount" in result["summary"]
-    assert "warningCount" in result["summary"]
-    assert "suggestionCount" in result["summary"]
+def test_audit_endpoint_handles_empty_missing_and_malformed_payloads_safely():
+    # 1. Empty dict falls back to sample payload safely
+    fallback_res = evaluate_audit_request({})
+    assert len(fallback_res["sections"]) == 4
+
+    # 2. Explicit empty sections list returns 0 sections and 0 findings without error
+    empty_res = evaluate_audit_request({"title": "Empty_Doc.docx", "sections": []})
+    assert empty_res["title"] == "Empty_Doc.docx"
+    assert empty_res["sections"] == []
+    assert empty_res["findings"] == []
+    assert empty_res["summary"]["totalWords"] == 0
+    assert empty_res["summary"]["totalFlags"] == 0
+
+    # 3. Missing fields inside sections & empty/None paragraphs
+    partial_res = evaluate_audit_request(
+        {
+            "title": "",
+            "sections": [
+                {},
+                {"title": "MỤC LỤC", "isExcluded": True, "paragraphs": ["Chương 1 .... 1"]},
+                {"title": "Chương 1", "paragraphs": ["", None, "   ", "Đoạn văn kiểm thử ngắn."]},
+            ],
+        }
+    )
+    assert partial_res["summary"]["totalSections"] == 3
+    assert partial_res["summary"]["auditedSections"] == 2
+    assert partial_res["sections"][1]["isExcluded"] is True
+
+
+def test_audit_endpoint_processes_all_3_real_uploaded_theses_fast():
+    fixtures_dir = Path(__file__).parent / "fixtures"
+    docx_files = [
+        fixtures_dir / "kltn_thai_son_11233561.docx",
+        fixtures_dir / "kltn_ngoc_anh_11220218.docx",
+        fixtures_dir / "bao_cao_phan_duy_cac_11233373.docx",
+    ]
+    for docx_path in docx_files:
+        assert docx_path.exists(), f"Missing fixture {docx_path}"
+        paragraphs = _extract_paragraphs_from_docx_file(docx_path, max_paragraphs=120)
+        assert len(paragraphs) > 30
+
+        payload = {
+            "title": docx_path.name,
+            "sections": [
+                {
+                    "id": "sec-cover",
+                    "title": "Trang bìa & Mục lục",
+                    "isExcluded": True,
+                    "paragraphs": paragraphs[:15],
+                },
+                {
+                    "id": "sec-ch1",
+                    "title": "Chương 1: Cơ sở lý luận",
+                    "isExcluded": False,
+                    "paragraphs": paragraphs[15:65],
+                },
+                {
+                    "id": "sec-ch2",
+                    "title": "Chương 2: Thực trạng hoạt động",
+                    "isExcluded": False,
+                    "paragraphs": paragraphs[65:120],
+                },
+            ],
+        }
+
+        t0 = time.perf_counter()
+        result = evaluate_audit_request(payload)
+        elapsed = time.perf_counter() - t0
+
+        assert elapsed < 1.5, f"Audit took too long ({elapsed:.2f}s) for {docx_path.name}"
+        assert result["title"] == docx_path.name
+        assert result["summary"]["totalSections"] == 3
+        assert result["summary"]["auditedSections"] == 2
+        assert result["summary"]["totalWords"] > 500
+        assert len(result["summary"]["protectedTermsMatched"]) > 0
+
+
+def test_requirements_txt_is_lightweight_for_vercel_serverless_limit():
+    req_path = Path(__file__).resolve().parent.parent / "requirements.txt"
+    assert req_path.exists()
+    content = req_path.read_text(encoding="utf-8").lower()
+    forbidden_heavy_libs = [
+        "torch",
+        "tensorflow",
+        "transformers",
+        "spacy",
+        "scipy",
+        "pandas",
+        "scikit-learn",
+        "underthesea",
+        "pyvi",
+        "nltk",
+        "flair",
+    ]
+    for lib in forbidden_heavy_libs:
+        assert lib not in content, f"Heavy dependency '{lib}' found in requirements.txt"

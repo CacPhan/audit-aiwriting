@@ -4,6 +4,7 @@ Designed for lightweight Vercel Serverless execution (<5MB, zero heavy NLP depen
 """
 
 import re
+import unicodedata
 from typing import Dict, List, Tuple, Any
 from api.engine.lexicon import UNIFIED_ECONOMICS_TERMS
 
@@ -71,9 +72,10 @@ _DOT_PLACEHOLDER = "\uE000"
 
 def count_vietnamese_words(text: str) -> int:
     """Counts Vietnamese syllables/tokens (separated by whitespace, stripping punctuation-only tokens)."""
+    norm = unicodedata.normalize("NFC", text or "")
     tokens = [
         tok.strip(".,;:!?()[]{}'\"“”‘’—–-")
-        for tok in text.strip().split()
+        for tok in norm.strip().split()
     ]
     return sum(1 for t in tokens if t)
 
@@ -82,11 +84,12 @@ def split_vietnamese_sentences(text: str) -> List[Dict[str, Any]]:
     """
     Splits Vietnamese academic prose into sentences with character offsets and word counts,
     preserving academic titles (PGS.TS., TS., ThS.), geographic names (TP.HCM),
-    legal codes (02/2023/TT-NHNN), DOIs, and decimal/thousand numbers (3.45%, 1.200).
+    legal codes (02/2023/TT-NHNN, NĐ-CP), DOIs, and decimal/thousand numbers (3.45%, 14,5%, 1.200).
     """
     if not text or not text.strip():
         return []
 
+    text = unicodedata.normalize("NFC", text)
     working = list(text)
 
     def _mask_dots_in_match(match: re.Match) -> None:
@@ -175,6 +178,7 @@ def mask_protected_economics_terms(text: str) -> Tuple[str, List[Dict[str, Any]]
     if not text:
         return "", []
 
+    text = unicodedata.normalize("NFC", text)
     chars = list(text)
     occupied = [False] * len(text)
     spans: List[Dict[str, Any]] = []

@@ -207,8 +207,8 @@ export const App: React.FC = () => {
         throw new Error('Empty docx sections');
       }
 
-      // Send chapters in batches of 3 to stay well under Vercel 4.5MB payload limit on 70-90+ page theses
-      const BATCH_SIZE = 3;
+      // Send chapters in batches of 8 to stay well under serverless payload limits
+      const BATCH_SIZE = 8;
       const mergedSections: DocumentAuditResult['sections'] = [];
       const mergedFindings: DocumentAuditResult['findings'] = [];
       let totalWords = 0;

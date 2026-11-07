@@ -5,6 +5,7 @@ Single-Source 26-Sign Python Rule Engine & 6 Quantitative Metrics Calculator
 
 import math
 import re
+import unicodedata
 from typing import Any, Dict, List, Optional, Tuple
 from api.engine.lexicon import (
     RULE_METADATA,
@@ -118,6 +119,7 @@ def audit_paragraph(text: str, index: int = 0) -> Dict[str, Any]:
             "aiStyleScore": 0,
         }
 
+    text = unicodedata.normalize("NFC", text)
     sentences = split_vietnamese_sentences(text)
     masked_text, protected_spans = mask_protected_economics_terms(text)
     total_words = max(1, count_vietnamese_words(text))
