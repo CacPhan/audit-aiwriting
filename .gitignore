@@ -8,6 +8,7 @@ env/
 dist/
 build/
 .vercel/
+*.tsbuildinfo
 
 # Python cache & test artifacts
 __pycache__/
