@@ -1,0 +1,435 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+/* ==========================================================================
+   1. DUAL-THEME DESIGN TOKENS (Synced with ai-writing-style-auditor-ui.html)
+   ========================================================================== */
+:root,
+:root[data-theme="dark"] {
+  color-scheme: dark;
+  --bg-base: #060913;
+  --bg-elevated: #0b1021;
+  --bg-card: rgba(15, 23, 42, 0.68);
+  --bg-card-hover: rgba(23, 35, 64, 0.84);
+  --bg-glass: rgba(15, 23, 42, 0.78);
+  --bg-pill: rgba(30, 41, 59, 0.75);
+  --text-main: #f8fafc;
+  --text-muted: #94a3b8;
+  --text-soft: #64748b;
+  --border-subtle: rgba(148, 163, 184, 0.14);
+  --border-strong: rgba(56, 189, 248, 0.35);
+  --accent-primary: #3b82f6;
+  --accent-secondary: #06b6d4;
+  --accent-emerald: #10b981;
+  --accent-violet: #8b5cf6;
+  --accent-warm: #f97316;
+  --glow-1: rgba(59, 130, 246, 0.18);
+  --glow-2: rgba(6, 182, 212, 0.14);
+  --glow-3: rgba(139, 92, 246, 0.14);
+  --pattern-stroke: rgba(148, 163, 184, 0.065);
+  --pattern-dot: rgba(56, 189, 248, 0.13);
+  --spotlight-color: rgba(56, 189, 248, 0.09);
+  --shadow-elevated: 0 24px 48px -12px rgba(2, 6, 23, 0.75), 0 0 40px -10px rgba(59, 130, 246, 0.15);
+  --manuscript-bg: rgba(10, 15, 29, 0.88);
+  --focus-ring: #38bdf8;
+}
+
+:root[data-theme="light"] {
+  color-scheme: light;
+  --bg-base: #fffaf5;
+  --bg-elevated: #f6ede6;
+  --bg-card: rgba(255, 255, 255, 0.88);
+  --bg-card-hover: rgba(255, 255, 255, 0.98);
+  --bg-glass: rgba(255, 250, 245, 0.88);
+  --bg-pill: #ffe8d9;
+  --text-main: #231811;
+  --text-muted: #6e5a4f;
+  --text-soft: #968073;
+  --border-subtle: rgba(187, 62, 13, 0.14);
+  --border-strong: rgba(217, 72, 15, 0.42);
+  --accent-primary: #d9480f;
+  --accent-secondary: #2563eb;
+  --accent-emerald: #15803d;
+  --accent-violet: #6d28d9;
+  --accent-warm: #d9480f;
+  --glow-1: rgba(255, 138, 76, 0.22);
+  --glow-2: rgba(59, 130, 246, 0.12);
+  --glow-3: rgba(16, 185, 129, 0.12);
+  --pattern-stroke: rgba(122, 46, 11, 0.06);
+  --pattern-dot: rgba(217, 72, 15, 0.15);
+  --spotlight-color: rgba(217, 72, 15, 0.075);
+  --shadow-elevated: 0 20px 40px -15px rgba(42, 26, 18, 0.12), 0 0 32px -8px rgba(217, 72, 15, 0.10);
+  --manuscript-bg: #ffffff;
+  --focus-ring: #d9480f;
+}
+
+* {
+  box-sizing: border-box;
+}
+
+body {
+  background-color: var(--bg-base);
+  color: var(--text-main);
+  font-family: 'Be Vietnam Pro', 'Plus Jakarta Sans', system-ui, sans-serif;
+  overflow-x: hidden;
+  transition: background-color 0.4s cubic-bezier(0.22, 1, 0.36, 1), color 0.3s ease;
+}
+
+a:focus-visible,
+button:focus-visible,
+input:focus-visible,
+[tabindex]:focus-visible {
+  outline: 2px solid var(--focus-ring);
+  outline-offset: 2px;
+}
+
+/* ==========================================================================
+   2. MULTI-LAYERED BACKGROUND & SPOTLIGHT
+   ========================================================================== */
+.bg-canvas {
+  position: fixed;
+  inset: 0;
+  z-index: -1;
+  pointer-events: none;
+  overflow: hidden;
+}
+
+.bg-grid-pattern {
+  position: absolute;
+  inset: 0;
+  background-image:
+    radial-gradient(circle at 1px 1px, var(--pattern-dot) 1.25px, transparent 0),
+    linear-gradient(to right, var(--pattern-stroke) 1px, transparent 1px),
+    linear-gradient(to bottom, var(--pattern-stroke) 1px, transparent 1px);
+  background-size: 32px 32px, 64px 64px, 64px 64px;
+  background-position: 0 0, -1px -1px, -1px -1px;
+  mask-image: radial-gradient(ellipse 90% 85% at 50% 35%, #000 45%, transparent 100%);
+  -webkit-mask-image: radial-gradient(ellipse 90% 85% at 50% 35%, #000 45%, transparent 100%);
+}
+
+.bg-cross-motif {
+  position: absolute;
+  inset: 0;
+  opacity: 0.45;
+  background-image: url("data:image/svg+xml,%3Csvg width='128' height='128' viewBox='0 0 128 128' xmlns='http://www.w3.org/2000/svg'%3E%3Cg fill='none' stroke='%2364748b' stroke-opacity='0.16' stroke-width='1'%3E%3Cpath d='M64 58v12M58 64h12M0 0l6 6M128 0l-6 6'/%3E%3C/g%3E%3C/svg%3E");
+}
+
+.ambient-orb {
+  position: absolute;
+  border-radius: 9999px;
+  filter: blur(110px);
+  pointer-events: none;
+  transition: background 0.6s ease;
+}
+.orb-1 {
+  width: 560px;
+  height: 560px;
+  top: -120px;
+  left: -140px;
+  background: var(--glow-1);
+  animation: floatOrb 14s ease-in-out infinite;
+}
+.orb-2 {
+  width: 500px;
+  height: 500px;
+  top: 18%;
+  right: -140px;
+  background: var(--glow-2);
+  animation: floatOrb 18s ease-in-out 2s infinite reverse;
+}
+.orb-3 {
+  width: 620px;
+  height: 620px;
+  bottom: -180px;
+  left: 28%;
+  background: var(--glow-3);
+  animation: floatOrb 16s ease-in-out 4s infinite;
+}
+
+.cursor-spotlight {
+  position: fixed;
+  inset: 0;
+  pointer-events: none;
+  z-index: 0;
+  background: radial-gradient(
+    650px circle at var(--cursor-x, 50vw) var(--cursor-y, 30vh),
+    var(--spotlight-color),
+    transparent 65%
+  );
+}
+
+@keyframes floatOrb {
+  0%, 100% { transform: translate3d(0, 0, 0) scale(1); }
+  50% { transform: translate3d(24px, -28px, 0) scale(1.06); }
+}
+
+@keyframes floatBadge {
+  0%, 100% { transform: translateY(0px); }
+  50% { transform: translateY(-8px); }
+}
+
+.animate-float-badge {
+  animation: floatBadge 5.5s ease-in-out infinite;
+}
+.animate-float-badge-delayed {
+  animation: floatBadge 6.5s ease-in-out 1.8s infinite;
+}
+
+/* ==========================================================================
+   3. GLASSMORPHISM & PROXIMITY CARDS
+   ========================================================================== */
+.glass-nav {
+  background: var(--bg-glass);
+  backdrop-filter: blur(22px);
+  -webkit-backdrop-filter: blur(22px);
+  border-bottom: 1px solid var(--border-subtle);
+}
+
+.proximity-card {
+  position: relative;
+  background: var(--bg-card);
+  backdrop-filter: blur(16px);
+  -webkit-backdrop-filter: blur(16px);
+  border: 1px solid var(--border-subtle);
+  box-shadow: var(--shadow-elevated);
+  transition: transform 0.28s cubic-bezier(0.22, 1, 0.36, 1),
+              border-color 0.28s ease,
+              background-color 0.28s ease,
+              box-shadow 0.28s ease;
+  overflow: hidden;
+}
+
+.proximity-card::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  border-radius: inherit;
+  padding: 1.3px;
+  background: radial-gradient(
+    360px circle at var(--card-mouse-x, -500px) var(--card-mouse-y, -500px),
+    var(--accent-primary),
+    var(--accent-secondary) 45%,
+    transparent 100%
+  );
+  -webkit-mask: linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0);
+  mask: linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0);
+  -webkit-mask-composite: xor;
+  mask-composite: exclude;
+  opacity: var(--card-proximity-opacity, 0);
+  transition: opacity 0.25s ease;
+  pointer-events: none;
+  z-index: 2;
+}
+
+.proximity-card::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  border-radius: inherit;
+  background: radial-gradient(
+    420px circle at var(--card-mouse-x, -500px) var(--card-mouse-y, -500px),
+    var(--spotlight-color),
+    transparent 70%
+  );
+  opacity: var(--card-proximity-opacity, 0);
+  transition: opacity 0.25s ease;
+  pointer-events: none;
+  z-index: 0;
+}
+
+.proximity-card > * {
+  position: relative;
+  z-index: 1;
+}
+
+/* ==========================================================================
+   4. MAGNETIC PROXIMITY ICONS
+   ========================================================================== */
+.magnetic-icon {
+  position: relative;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  transform: translate3d(var(--mag-x, 0px), var(--mag-y, 0px), 0) scale(var(--mag-scale, 1));
+  transition: transform 0.18s cubic-bezier(0.2, 0.8, 0.2, 1),
+              box-shadow 0.25s ease,
+              border-color 0.25s ease,
+              background-color 0.25s ease;
+  will-change: transform;
+}
+
+.magnetic-icon::after {
+  content: "";
+  position: absolute;
+  inset: -6px;
+  border-radius: inherit;
+  background: radial-gradient(circle, var(--accent-primary) 0%, transparent 72%);
+  opacity: var(--mag-glow, 0);
+  filter: blur(8px);
+  transition: opacity 0.2s ease;
+  z-index: -1;
+  pointer-events: none;
+}
+
+.magnetic-icon svg {
+  transition: transform 0.25s cubic-bezier(0.34, 1.56, 0.64, 1);
+}
+
+.magnetic-icon:hover svg {
+  transform: scale(1.12) rotate(-3deg);
+}
+
+/* ==========================================================================
+   5. MASCOT & FANNED CARDS DECK
+   ========================================================================== */
+.auditor-mascot {
+  overflow: visible;
+}
+.auditor-mascot .pupil-group {
+  transition: transform 0.08s linear;
+}
+.auditor-mascot .eyelid {
+  transform-origin: center;
+  transition: transform 0.16s ease-in-out;
+}
+.auditor-mascot.blinking .eyelid {
+  transform: scaleY(1) !important;
+}
+.auditor-mascot .uv-beam {
+  opacity: 0;
+  transition: opacity 0.45s ease;
+}
+:root[data-theme="dark"] .auditor-mascot .uv-beam {
+  opacity: 0.85;
+}
+
+.fan-deck .fan-card-left {
+  transform: translateX(-105px) translateY(10px) rotate(-7deg);
+  transition: transform 0.42s cubic-bezier(0.22, 1, 0.36, 1), box-shadow 0.35s ease;
+}
+.fan-deck .fan-card-center {
+  transform: translateY(-4px) rotate(0deg);
+  transition: transform 0.42s cubic-bezier(0.22, 1, 0.36, 1), box-shadow 0.35s ease;
+}
+.fan-deck .fan-card-right {
+  transform: translateX(105px) translateY(12px) rotate(7deg);
+  transition: transform 0.42s cubic-bezier(0.22, 1, 0.36, 1), box-shadow 0.35s ease;
+}
+.fan-deck:hover .fan-card-left {
+  transform: translateX(-146px) translateY(2px) rotate(-12deg) scale(1.02);
+}
+.fan-deck:hover .fan-card-center {
+  transform: translateY(-14px) scale(1.04);
+}
+.fan-deck:hover .fan-card-right {
+  transform: translateX(146px) translateY(4px) rotate(12deg) scale(1.02);
+}
+
+/* ==========================================================================
+   6. THREE ACCESSIBLE SEVERITY LEVELS (Distinct Underlines + Color)
+   ========================================================================== */
+.audit-span {
+  position: relative;
+  cursor: pointer;
+  border-radius: 6px;
+  padding: 2px 6px;
+  margin: 0 1px;
+  font-weight: 500;
+  transition: all 0.2s cubic-bezier(0.22, 1, 0.36, 1);
+  box-decoration-break: clone;
+  -webkit-box-decoration-break: clone;
+}
+.audit-span:hover {
+  filter: brightness(1.1);
+}
+.audit-span.active-span {
+  outline: 2px solid var(--focus-ring);
+  outline-offset: 2px;
+  box-shadow: 0 0 18px rgba(59, 130, 246, 0.38);
+}
+
+.span-critical {
+  background: rgba(239, 68, 68, 0.17);
+  border-bottom: 2px wavy #ef4444;
+  color: #fca5a5;
+}
+:root[data-theme="light"] .span-critical {
+  background: rgba(239, 68, 68, 0.13);
+  color: #991b1b;
+}
+
+.span-warning {
+  background: rgba(249, 115, 22, 0.17);
+  border-bottom: 2px solid #f97316;
+  color: #fdba74;
+}
+:root[data-theme="light"] .span-warning {
+  background: rgba(249, 115, 22, 0.14);
+  color: #9a3412;
+}
+
+.span-suggestion {
+  background: rgba(99, 102, 241, 0.17);
+  border-bottom: 2px dashed #818cf8;
+  color: #c7d2fe;
+}
+:root[data-theme="light"] .span-suggestion {
+  background: rgba(99, 102, 241, 0.13);
+  color: #3730a3;
+}
+
+.audit-span.is-resolved {
+  background: rgba(16, 185, 129, 0.12) !important;
+  border-bottom: 2px dotted #10b981 !important;
+  color: var(--text-main) !important;
+  opacity: 0.78;
+}
+
+.text-gradient-brand {
+  background: linear-gradient(135deg, var(--accent-primary) 0%, var(--accent-secondary) 55%, var(--accent-emerald) 100%);
+  -webkit-background-clip: text;
+  background-clip: text;
+  -webkit-text-fill-color: transparent;
+}
+
+.app-screen {
+  animation: screenFade 0.26s cubic-bezier(0.22, 1, 0.36, 1);
+}
+
+@keyframes screenFade {
+  from { opacity: 0; transform: translateY(6px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+    scroll-behavior: auto !important;
+  }
+  .ambient-orb,
+  .animate-float-badge,
+  .animate-float-badge-delayed {
+    animation: none !important;
+  }
+  .magnetic-icon {
+    transform: none !important;
+  }
+}
+
+::-webkit-scrollbar {
+  width: 7px;
+  height: 7px;
+}
+::-webkit-scrollbar-track {
+  background: transparent;
+}
+::-webkit-scrollbar-thumb {
+  background: rgba(148, 163, 184, 0.25);
+  border-radius: 9999px;
+}
+::-webkit-scrollbar-thumb:hover {
+  background: rgba(148, 163, 184, 0.45);
+}

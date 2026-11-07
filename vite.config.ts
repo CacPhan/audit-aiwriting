@@ -1,4 +1,4 @@
-import { defineConfig } from 'vite';
+import { defineConfig } from 'vitest/config';
 import react from '@vitejs/plugin-react';
 import { spawn } from 'child_process';
 import path from 'path';
@@ -58,7 +58,7 @@ function pythonAuditApiPlugin() {
 }
 
 export default defineConfig({
-  plugins: [react(), pythonAuditApiPlugin()],
+  plugins: [react() as any, pythonAuditApiPlugin()],
   test: {
     environment: 'jsdom',
     globals: true,
