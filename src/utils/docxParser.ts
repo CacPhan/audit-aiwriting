@@ -277,8 +277,9 @@ export function splitRawTextOrHtmlIntoSections(
         prev.paragraphs.push(sec.title);
         continue;
       }
-      // If followed by a non-excluded child section, attach parent title context to child's sectionLabel
+      // If followed by a non-excluded child section, attach parent title context to child's sectionLabel and parentHeading
       if (next && !next.isExcluded) {
+        next.parentHeading = sec.title;
         next.sectionLabel = `${buildShortTitle(sec.title, i + 1)} · ${next.shortTitle}`;
         continue;
       }

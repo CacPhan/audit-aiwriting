@@ -1,5 +1,6 @@
 import {
   AuditedParagraph,
+  AuditedSection,
   AuditFlag,
   DocumentAuditResult,
 } from '../types/auditor';
@@ -22,7 +23,7 @@ function getSafeBaseFilename(title: string): string {
 }
 
 /**
- * Palette of 5 distinct Turnitin Feedback Studio highlight color schemes
+ * Palette of distinct Turnitin Feedback Studio highlight color schemes
  * mapped deterministically by severity and finding index so adjacent/varied rules
  * stand out clearly just like Turnitin Feedback Studio (Red, Rose, Amber, Blue, Purple, Emerald).
  */
@@ -102,6 +103,32 @@ export function getTurnitinColorTheme(
 ): TurnitinColorTheme {
   const list = TURNITIN_PALETTE[severity] || TURNITIN_PALETTE.suggestion;
   return list[(Math.max(1, badgeNumber) - 1) % list.length];
+}
+
+function getSeverityRank(severity: string): number {
+  if (severity === 'critical') return 3;
+  if (severity === 'warning') return 2;
+  return 1;
+}
+
+/**
+ * Classifies heading hierarchy level (h1, h2, h3) from a Vietnamese thesis section title
+ * so that Feedback Studio preserves the original document heading hierarchy and formatting.
+ */
+export function classifyHeadingLevel(
+  title: string
+): 'cover' | 'h1' | 'h2' | 'h3' {
+  const cleaned = (title || '').trim();
+  if (/^Trang\s+bìa/i.test(cleaned)) return 'cover';
+  if (
+    /^(?:CHƯƠNG\s*(?:\d+|[IVXLC]+)|PHẦN\s+|MỞ\s+ĐẦU|LỜI\s+MỞ\s+ĐẦU|KẾT\s+LUẬN|LỜI\s+CAM\s+ĐOAN|LỜI\s+CẢM\s+ƠN|MỤC\s+LỤC|DANH\s+MỤC|TÀI\s+LIỆU\s+THAM\s+KHẢO|PHỤ\s+LỤC|[1-9]\.\s+[A-ZÀ-ỸĐ]{2,})/i.test(
+      cleaned
+    )
+  ) {
+    return 'h1';
+  }
+  if (/^\d+\.\d+\.\d+/.test(cleaned)) return 'h3';
+  return 'h2';
 }
 
 /**
@@ -270,8 +297,9 @@ export function generateStandaloneHtmlReport(
 }
 
 /**
- * Helper that slices a paragraph's text and wraps each flagged span in a
- * Turnitin Feedback Studio colored highlight with a superscript badge number.
+ * Interval-splitting HTML renderer for a paragraph in Feedback Studio:
+ * Preserves every single finding (including narrow phrases inside whole-paragraph RHY-01/DIS-01 flags)
+ * and renders superscript numbered badges (1, 2, 3...) at the exact start of each flagged span.
  */
 function renderParagraphTurnitinHtml(
   para: AuditedParagraph,
@@ -279,6 +307,8 @@ function renderParagraphTurnitinHtml(
   allFindingsMap: Map<string, AuditFlag>
 ): string {
   const text = para.text || '';
+  if (!text) return '';
+
   const paraFlags = (para.flags || [])
     .map((f) => allFindingsMap.get(f.id) || f)
     .filter(
@@ -286,52 +316,149 @@ function renderParagraphTurnitinHtml(
         typeof f.start === 'number' &&
         typeof f.end === 'number' &&
         f.end > f.start
-    )
-    .sort((a, b) => a.start - b.start);
+    );
 
   if (paraFlags.length === 0) {
     return escapeHtml(text);
   }
 
+  const boundariesSet = new Set<number>([0, text.length]);
+  paraFlags.forEach((f) => {
+    const s = Math.max(0, Math.min(f.start, text.length));
+    const e = Math.max(s, Math.min(f.end, text.length));
+    boundariesSet.add(s);
+    boundariesSet.add(e);
+  });
+
+  const boundaries = Array.from(boundariesSet).sort((a, b) => a - b);
   const parts: string[] = [];
-  let cursor = 0;
 
-  for (const flag of paraFlags) {
-    const start = Math.max(cursor, Math.min(flag.start, text.length));
-    const end = Math.max(start, Math.min(flag.end, text.length));
+  for (let i = 0; i < boundaries.length - 1; i++) {
+    const segStart = boundaries[i];
+    const segEnd = boundaries[i + 1];
+    if (segEnd <= segStart) continue;
 
-    if (start > cursor) {
-      parts.push(escapeHtml(text.slice(cursor, start)));
+    const covering = paraFlags.filter((f) => {
+      const s = Math.max(0, Math.min(f.start, text.length));
+      const e = Math.max(s, Math.min(f.end, text.length));
+      return s <= segStart && e >= segEnd;
+    });
+
+    if (covering.length === 0) {
+      parts.push(escapeHtml(text.slice(segStart, segEnd)));
+      continue;
     }
 
-    if (end > start) {
-      const badgeNum = findingNumberMap.get(flag.id) || 1;
-      const theme = getTurnitinColorTheme(flag.severity, badgeNum);
-      const snippet = escapeHtml(text.slice(start, end));
-      const tooltip = escapeHtml(
-        `[#${badgeNum} - ${flag.severityLabel}] ${flag.title}: ${flag.suggestion}`
+    // Narrowest span takes visual styling priority; badges for any flag starting at segStart are rendered
+    const sortedCovering = [...covering].sort((a, b) => {
+      const lenA = a.end - a.start;
+      const lenB = b.end - b.start;
+      if (lenA !== lenB) return lenA - lenB;
+      const rankDiff = getSeverityRank(b.severity) - getSeverityRank(a.severity);
+      if (rankDiff !== 0) return rankDiff;
+      return a.start - b.start;
+    });
+
+    const primaryFlag = sortedCovering[0];
+    const primaryNum = findingNumberMap.get(primaryFlag.id) || 1;
+    const theme = getTurnitinColorTheme(primaryFlag.severity, primaryNum);
+
+    // Find all flags whose start offset equals segStart so their numbered badges appear at the start of their span
+    const startingFlags = covering
+      .filter((f) => Math.max(0, Math.min(f.start, text.length)) === segStart)
+      .sort(
+        (a, b) =>
+          (findingNumberMap.get(a.id) || 0) - (findingNumberMap.get(b.id) || 0)
       );
 
-      parts.push(
-        `<a href="#turnitin-note-${badgeNum}" class="t-hl" style="background:${theme.bg};border-bottom:2px solid ${theme.border};color:${theme.text};" title="${tooltip}">` +
-          `<sup class="t-badge" style="background:${theme.badgeBg};">${badgeNum}</sup>` +
-          `${snippet}` +
-          `</a>`
-      );
-      cursor = end;
-    }
-  }
+    const badgesHtml = startingFlags
+      .map((flg) => {
+        const num = findingNumberMap.get(flg.id) || 1;
+        const flgTheme = getTurnitinColorTheme(flg.severity, num);
+        return `<sup class="t-badge" style="background:${flgTheme.badgeBg};">${num}</sup>`;
+      })
+      .join('');
 
-  if (cursor < text.length) {
-    parts.push(escapeHtml(text.slice(cursor)));
+    const snippet = escapeHtml(text.slice(segStart, segEnd));
+    const tooltip = escapeHtml(
+      `[#${primaryNum} - ${primaryFlag.severityLabel}] ${primaryFlag.title}: ${primaryFlag.suggestion}`
+    );
+
+    parts.push(
+      `<a href="#turnitin-note-${primaryNum}" class="t-hl" style="background:${theme.bg};border-bottom:2px solid ${theme.border};color:${theme.text};" title="${tooltip}">` +
+        `${badgesHtml}${snippet}` +
+        `</a>`
+    );
   }
 
   return parts.join('');
 }
 
+function renderSectionManuscriptHtml(
+  sec: AuditedSection,
+  findingNumberMap: Map<string, number>,
+  allFindingsMap: Map<string, AuditFlag>
+): string {
+  const level = classifyHeadingLevel(sec.title);
+  const isTocSection = /^(?:MỤC\s+LỤC|DANH\s+MỤC\s+)/i.test(sec.title.trim());
+
+  const parentHeadingHtml = sec.parentHeading
+    ? `<h1 class="doc-h1">${escapeHtml(sec.parentHeading)}</h1>`
+    : '';
+
+  let headingHtml = '';
+  if (level === 'cover') {
+    headingHtml = '';
+  } else if (level === 'h1') {
+    headingHtml = `<h1 class="doc-h1">${escapeHtml(sec.title)}</h1>`;
+  } else if (level === 'h3') {
+    headingHtml = `<h3 class="doc-h3">${escapeHtml(sec.title)}</h3>`;
+  } else {
+    headingHtml = `<h2 class="doc-h2">${escapeHtml(sec.title)}</h2>`;
+  }
+
+  const paragraphsHtml = sec.paragraphs
+    .map((para) => {
+      const prefixHtml = para.prefix
+        ? `<h3 class="doc-h3">${escapeHtml(para.prefix)}</h3>\n`
+        : '';
+
+      if (level === 'cover') {
+        const isMajorCoverLine =
+          /^(?:BỘ\s+GIÁO\s+DỤC|TRƯỜNG\s+ĐẠI\s+HỌC|ĐẠI\s+HỌC|HỌC\s+VIỆN|KHÓA\s+LUẬN|KHOÁ\s+LUẬN|LUẬN\s+VĂN|CHUYÊN\s+ĐỀ|BÁO\s+CÁO)/i.test(
+            para.text.trim()
+          );
+        return `<p class="${
+          isMajorCoverLine ? 'doc-cover-title' : 'doc-cover-line'
+        }">${escapeHtml(para.text)}</p>`;
+      }
+
+      if (isTocSection) {
+        return `<p class="doc-toc-line">${escapeHtml(para.text)}</p>`;
+      }
+
+      const innerHtml = renderParagraphTurnitinHtml(
+        para,
+        findingNumberMap,
+        allFindingsMap
+      );
+      return `${prefixHtml}<p class="manuscript-para">${innerHtml}</p>`;
+    })
+    .join('\n');
+
+  return `
+      <section class="manuscript-section ${
+        level === 'cover' ? 'manuscript-cover-block' : ''
+      }" id="sec-${escapeHtml(sec.id)}">
+        ${parentHeadingHtml}
+        ${headingHtml}
+        ${paragraphsHtml}
+      </section>`;
+}
+
 /**
- * Generates a full-manuscript Turnitin Feedback Studio HTML document:
- * - Renders the entire thesis manuscript on an A4-like academic page
+ * Generates a full-manuscript Feedback Studio HTML document preserving original .docx
+ * heading hierarchy, cover centering, TOC alignment, and paragraph indentation:
  * - Highlights every AI-style span inline with Turnitin-style colored backgrounds
  *   and top-left numbered superscript badges (1, 2, 3...)
  * - Includes a numbered Feedback Studio Annotation Key linking each badge number
@@ -358,42 +485,14 @@ export function generateTurnitinStyleHtmlReport(
     (f) => f.severity === 'suggestion'
   ).length;
 
-  // Render full manuscript sections
+  // Render full manuscript sections preserving document structure & headings
   const sectionsHtml = audit.sections
-    .map((sec) => {
-      const secFindingsCount = audit.findings.filter(
-        (f) => f.sectionId === sec.id
-      ).length;
-
-      const paragraphsHtml = sec.paragraphs
-        .map((para) => {
-          const innerHtml = renderParagraphTurnitinHtml(
-            para,
-            findingNumberMap,
-            allFindingsMap
-          );
-          return `<p class="manuscript-para">${innerHtml}</p>`;
-        })
-        .join('\n');
-
-      return `
-      <section class="manuscript-section" id="sec-${escapeHtml(sec.id)}">
-        <div class="section-heading-bar">
-          <h2 class="section-heading">${escapeHtml(sec.title)}</h2>
-          <span class="section-meta-badge">
-            ${
-              sec.isExcluded
-                ? 'Mục tự động bỏ qua'
-                : `${secFindingsCount} đánh dấu`
-            }
-          </span>
-        </div>
-        ${paragraphsHtml}
-      </section>`;
-    })
+    .map((sec) =>
+      renderSectionManuscriptHtml(sec, findingNumberMap, allFindingsMap)
+    )
     .join('\n');
 
-  // Render numbered Turnitin Feedback Studio annotation cards
+  // Render numbered Feedback Studio annotation cards
   const feedbackCardsHtml =
     audit.findings.length === 0
       ? `<div style="padding:18px;text-align:center;color:#64748b;border:1px dashed #cbd5e1;border-radius:10px;">
@@ -450,7 +549,7 @@ export function generateTurnitinStyleHtmlReport(
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Feedback Studio Bản thảo Bôi màu - ${escapeHtml(audit.title)}</title>
+  <title>Feedback - ${escapeHtml(audit.title)}</title>
   <style>
     * { box-sizing: border-box; }
     body {
@@ -519,16 +618,16 @@ export function generateTurnitinStyleHtmlReport(
         grid-template-columns: 1fr;
       }
     }
-    /* A4 Thesis Manuscript Sheet */
+    /* A4 Thesis Manuscript Sheet preserving original DOCX hierarchy */
     .a4-paper {
       background: #ffffff;
       border: 1px solid #cbd5e1;
       border-radius: 4px;
       box-shadow: 0 6px 24px rgba(15, 23, 42, 0.08);
-      padding: 48px 56px;
+      padding: 52px 60px;
       font-family: "Times New Roman", "Noto Serif", Georgia, serif;
       font-size: 17px;
-      line-height: 1.95;
+      line-height: 1.92;
       color: #111827;
     }
     @media (max-width: 640px) {
@@ -538,38 +637,69 @@ export function generateTurnitinStyleHtmlReport(
       }
     }
     .manuscript-section {
-      margin-bottom: 34px;
-      padding-bottom: 18px;
-      border-bottom: 1px dashed #e2e8f0;
+      margin-bottom: 24px;
     }
-    .section-heading-bar {
-      display: flex;
-      align-items: center;
-      justify-content: space-between;
-      gap: 12px;
-      margin-bottom: 16px;
+    .manuscript-cover-block {
+      padding: 28px 20px 36px;
+      margin-bottom: 36px;
+      border: 2px double #334155;
+      text-align: center;
     }
-    .section-heading {
+    .doc-cover-title {
       font-family: "Times New Roman", Georgia, serif;
-      font-size: 19px;
+      font-size: 18px;
       font-weight: 700;
       text-transform: uppercase;
+      text-align: center;
+      margin: 8px 0;
       color: #0f172a;
-      margin: 0;
     }
-    .section-meta-badge {
-      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
-      font-size: 11px;
-      font-weight: 600;
-      color: #475569;
-      background: #f1f5f9;
-      padding: 2px 9px;
-      border-radius: 999px;
+    .doc-cover-line {
+      font-family: "Times New Roman", Georgia, serif;
+      font-size: 16px;
+      text-align: center;
+      margin: 6px 0;
+      color: #1e293b;
+    }
+    .doc-h1 {
+      font-family: "Times New Roman", Georgia, serif;
+      font-size: 20px;
+      font-weight: 700;
+      text-transform: uppercase;
+      text-align: center;
+      color: #0f172a;
+      margin: 28px 0 18px 0;
+      line-height: 1.45;
+    }
+    .doc-h2 {
+      font-family: "Times New Roman", Georgia, serif;
+      font-size: 18px;
+      font-weight: 700;
+      text-align: left;
+      color: #0f172a;
+      margin: 20px 0 12px 0;
+      line-height: 1.45;
+    }
+    .doc-h3 {
+      font-family: "Times New Roman", Georgia, serif;
+      font-size: 17px;
+      font-weight: 700;
+      font-style: italic;
+      text-align: left;
+      color: #1e293b;
+      margin: 14px 0 8px 0;
+      line-height: 1.45;
+    }
+    .doc-toc-line {
+      font-family: "Times New Roman", Georgia, serif;
+      font-size: 15.5px;
+      margin: 4px 0;
+      color: #334155;
     }
     .manuscript-para {
-      margin: 0 0 16px 0;
+      margin: 0 0 14px 0;
       text-align: justify;
-      text-indent: 28px;
+      text-indent: 32px;
     }
     /* Turnitin Inline Highlight & Top-Left Badge */
     .t-hl {
@@ -705,7 +835,7 @@ export function generateTurnitinStyleHtmlReport(
 
     <aside class="studio-sidebar">
       <h3 style="margin:0 0 12px 0;font-size:14px;text-transform:uppercase;letter-spacing:0.05em;color:#334155;">
-        Danh mục Chú giải (${audit.findings.length} đánh dấu)
+        Danh mục Chú giải Feedback (${audit.findings.length} đánh dấu)
       </h3>
       ${feedbackCardsHtml}
     </aside>
@@ -751,7 +881,7 @@ export function downloadTurnitinStyleHtmlReport(
   const htmlContent = generateTurnitinStyleHtmlReport(audit);
   const blob = new Blob([htmlContent], { type: 'text/html;charset=utf-8' });
   const safeName = getSafeBaseFilename(audit.title);
-  triggerBlobDownload(blob, `${safeName}_Turnitin_Highlighted.html`);
+  triggerBlobDownload(blob, `${safeName}_Feedback.html`);
 }
 
 export function downloadJsonAuditReport(audit: DocumentAuditResult): void {
@@ -786,9 +916,9 @@ export function downloadJsonAuditReport(audit: DocumentAuditResult): void {
 }
 
 /**
- * Prints either the Summary Report or the Turnitin Feedback Studio Highlighted Manuscript
+ * Prints either the Summary Report or the Feedback Studio Highlighted Manuscript
  * inside a clean hidden iframe so Chrome/Edge Print-to-PDF renders crisp A4 pages
- * instead of printing the dark-mode SPA glassmorphism cards (which caused blank white pages).
+ * instead of printing the dark-mode SPA glassmorphism cards.
  */
 export function printAuditDocument(
   audit: DocumentAuditResult,
@@ -801,8 +931,6 @@ export function printAuditDocument(
 
   if (typeof document === 'undefined') return;
 
-  // In JSDOM test environments where iframe contentWindow.print may not exist,
-  // fallback gracefully if needed.
   const existingIframe = document.getElementById(
     'audit-print-iframe'
   ) as HTMLIFrameElement | null;
@@ -849,6 +977,5 @@ export function printAuditDocument(
     }
   };
 
-  // Allow styles/layout in the iframe to settle before invoking print()
   setTimeout(triggerPrint, 180);
 }

@@ -173,7 +173,7 @@ export const DiagnosticInspector: React.FC<DiagnosticInspectorProps> = ({
               >
                 <span>[PRO] Chỉnh sửa trực tiếp &amp; Xuất .docx</span>
                 <span className="px-2 py-0.5 rounded-full text-[10px] bg-violet-500/25">
-                  Coming soon
+                  Upgrade Pro
                 </span>
               </button>
             </div>

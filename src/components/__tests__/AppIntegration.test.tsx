@@ -44,6 +44,19 @@ describe('AI Style Auditor Multi-Screen SaaS, UI Jargon Non-Disclosure & E2E Flo
     expect(container.querySelector('#screen-workspace')).toBeNull();
     expect(container.querySelector('#screen-insights')).toBeNull();
 
+    // Verify Workspace and Insights navigation tabs are locked before uploading a file or clicking Explore Demo
+    const lockedWorkspaceBtn = screen.getAllByRole('button', {
+      name: /^Workspace$/i,
+    })[0] as HTMLButtonElement;
+    const lockedInsightsBtn = screen.getAllByRole('button', {
+      name: /^Insights$/i,
+    })[0] as HTMLButtonElement;
+    expect(lockedWorkspaceBtn.disabled).toBe(true);
+    expect(lockedInsightsBtn.disabled).toBe(true);
+    fireEvent.click(lockedWorkspaceBtn);
+    expect(container.querySelector('#screen-home')).toBeTruthy();
+    expect(container.querySelector('#screen-workspace')).toBeNull();
+
     // 2. Test non-.docx file upload validation on Home
     const fileInput = container.querySelector(
       '#docx-file-input'
@@ -58,7 +71,7 @@ describe('AI Style Auditor Multi-Screen SaaS, UI Jargon Non-Disclosure & E2E Flo
       )
     ).toBeTruthy();
 
-    // 3. Switch to Workspace via Explore Demo button
+    // 3. Switch to Workspace via Explore Demo button (unlocks Workspace & Insights)
     const demoBtn = screen.getByRole('button', {
       name: /Explore Demo với bản thảo mẫu/i,
     });
@@ -131,7 +144,7 @@ describe('AI Style Auditor Multi-Screen SaaS, UI Jargon Non-Disclosure & E2E Flo
     expect(screen.getByText(/Tổng quan kết quả rà soát/i)).toBeTruthy();
     expect(screen.getByText('1 / 7')).toBeTruthy();
 
-    // 9. Open Report Preview Modal, switch to Turnitin Feedback Studio tab, and close with Escape key
+    // 9. Open Report Preview Modal, switch to Feedback tab, and close with Escape key
     const openReportBtn = screen.getAllByRole('button', {
       name: /Xem trước Báo cáo/i,
     })[0];
@@ -143,6 +156,7 @@ describe('AI Style Auditor Multi-Screen SaaS, UI Jargon Non-Disclosure & E2E Flo
       '#tab-turnitin-studio'
     ) as HTMLButtonElement;
     expect(turnitinTabBtn).toBeTruthy();
+    expect(turnitinTabBtn.textContent).toBe('Feedback');
     fireEvent.click(turnitinTabBtn);
     expect(container.querySelector('#turnitin-studio-preview')).toBeTruthy();
     expect(container.querySelectorAll('.turnitin-hl').length).toBeGreaterThan(
@@ -155,14 +169,15 @@ describe('AI Style Auditor Multi-Screen SaaS, UI Jargon Non-Disclosure & E2E Flo
     fireEvent.keyDown(window, { key: 'Escape' });
     expect(container.querySelector('#report-modal')).toBeNull();
 
-    // 10. Open ProUpgradeModal and close with Escape key
-    const proBtn = screen.getByRole('button', {
-      name: /Upgrade Pro \(Coming soon\)/i,
-    });
+    // 10. Open ProUpgradeModal via "Upgrade Pro" header button (no "Coming soon" on header button; "Coming soon" appears inside modal)
+    const proBtn = screen.getAllByRole('button', {
+      name: /^Upgrade Pro$/i,
+    })[0];
     fireEvent.click(proBtn);
     expect(
       screen.getByText(/Tính năng Nâng cao đang được phát triển/i)
     ).toBeTruthy();
+    expect(screen.getAllByText(/Coming soon/i).length).toBeGreaterThan(0);
     fireEvent.keyDown(window, { key: 'Escape' });
     expect(container.querySelector('#pro-modal')).toBeNull();
 
