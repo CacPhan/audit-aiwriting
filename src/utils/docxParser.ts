@@ -17,7 +17,7 @@ const DEEP_SUBHEADING_LINE_REGEX =
   /^\d+\.\d+\.\d+(?:\.\d+)*\.?\s+[^\n]{2,130}$/;
 
 const TABLE_OR_FIGURE_METADATA_REGEX =
-  /^(?:(?:Bảng|Hình|Biểu\s+đồ|Sơ\s+đồ|Hộp)\s+\d+(?:[.,]\d+)*\s*[:.\-–]?|(?:Nguồn|Trích\s+nguồn|Đơn\s+vị(?:\s+tính)?|Ghi\s+chú)\s*[:])/i;
+  /^(?:(?:Bảng|Hình|Biểu\s+đồ|Sơ\s+đồ|Hộp)\s+\d+(?:[.,]\d+)*\s*[:.\-–]?|(?:Nguồn|Source|Trích\s+nguồn|Đơn\s+vị(?:\s+tính)?|Ghi\s+chú)\s*[:])/i;
 
 const TOC_DOT_LEADER_REGEX = /(?:\.{3,}|…+)\s*(?:\d+|[ivxlcdm]+)?\s*$/i;
 const TOC_TAB_PAGE_REGEX = /\t+\s*(?:\d+|[ivxlcdm]+)\s*$/i;

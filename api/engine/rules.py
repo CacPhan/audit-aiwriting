@@ -452,13 +452,13 @@ def audit_paragraph(text: str, index: int = 0) -> Dict[str, Any]:
                 bcr = 1.0
                 add_flag("DIS-02", last_s["start"], last_s["end"])
 
-    # DIS-04: Header-echo definition opener, robotic meta-discourse table signposting & category labeling
+    # DIS-04: Header-echo definition opener, robotic meta-discourse table/enumeration signposting & category labeling
     dis04_re = re.compile(
         r"(?:^[A-ZÀ-ỸĐ][^,.]{2,65}\s+(?:được\s+hiểu\s+là|có\s+thể\s+được\s+hiểu\s+là|được\s+định\s+nghĩa\s+(?:như\s+)?là|là\s+một\s+tập\s+hợp\s+các|đề\s+cập\s+đến\s+quá\s+trình)\b|"
-        r"^[A-ZÀ-ỸĐ][^,.]{2,45}\s+là\s+(?:hạng\s+mục|bước|yếu\s+tố|công\s+cụ|khâu|nhiệm\s+vụ)\s+(?:trọng\s+tâm|cốt\s+lõi|bắt\s+buộc|quan\s+trọng\s+hàng\s+đầu|then\s+chốt)\b|"
-        r"(?:Trong\s+phạm\s+vi\s+(?:nghiên\s+cứu|khóa\s+luận|chuyên\s+đề)(?:\s+này)?,\s*[^.!?]+được\s+xem\s+xét\s+(?:qua|trên|theo|dưới)\b|"
-        r"Bảng\s+(?:trên|dưới\s+đây|số\s+liệu|[\d.]+)\s+cho\s+thấy\s+(?:ba|bốn|hai|năm|\d+)\s+(?:điểm|điều|đặc\s+điểm|xu\s+hướng|nhận\s+định)\b|"
-        r"Để\s+đánh\s+giá\s+[^,]{5,60},\s*(?:tác\s+giả|nghiên\s+cứu|khóa\s+luận)\s+(?:tiến\s+hành\s+)?(?:khảo\s+sát|sử\s+dụng)\s+(?:năm|bốn|ba|\d+)\s+(?:biến\s+quan\s+sát|tiêu\s+chí|khía\s+cạnh))|"
+        r"^[A-ZÀ-ỸĐ][^,.]{2,45}\s+là\s+(?:hạng\s+mục|bước|yếu\s+tố|công\s+cụ|khâu|nhiệm\s+vụ)\s+(?:chiến\s+lược\s+)?(?:dài\s+hạn\s+)?(?:trọng\s+tâm|cốt\s+lõi|bắt\s+buộc|quan\s+trọng(?:\s+nhất|\s+hàng\s+đầu)?|then\s+chốt)\b|"
+        r"Trong\s+phạm\s+vi\s+(?:nghiên\s+cứu|khóa\s+luận|chuyên\s+đề)(?:\s+này)?,\s*[^.!?]+được\s+xem\s+xét\s+(?:qua|trên|theo|dưới)\b|"
+        r"(?:Số\s+liệu[\s\S]{0,25}?Bảng|Bảng|Hồ\s+sơ|Phân\s+tích|Cách\s+phân\s+bổ|Sự\s+khác\s+biệt|Cách\s+làm|Sự\s+phụ\s+thuộc)[\s\S]{0,95}?(?:cho\s+thấy|dẫn\s+tới|tác\s+động\s+tới\s+[^.!?]{0,35}\s+theo|thể\s+hiện\s+đầy\s+đủ\s+[^.!?]{0,30}\s+ở)\s+(?:hai|ba|bốn|năm|sáu|\d+)\s+(?:điểm|điều|đặc\s+điểm|xu\s+hướng|nhận\s+định|hệ\s+quả|định\s+hướng|hướng|hạn\s+chế(?:\s+nổi\s+bật)?)[^.!?]*\.\s*(?:Thứ\s+nhất|Một\s+là)\b|"
+        r"Để\s+đánh\s+giá\s+[^,]{5,60},\s*(?:tác\s+giả|nghiên\s+cứu|khóa\s+luận)\s+(?:tiến\s+hành\s+)?(?:khảo\s+sát|sử\s+dụng)\s+(?:năm|bốn|ba|\d+)\s+(?:biến\s+quan\s+sát|tiêu\s+chí|khía\s+cạnh)|"
         r"Sau khi đã (?:phân tích|tìm hiểu|làm rõ)[^,]{3,65},\s*(?:tiếp theo chúng ta sẽ|phần tiếp theo sẽ|chúng ta hãy cùng)|"
         r"Như đã (?:đề cập|trình bày) ở (?:phần )?trên,\s*(?:phần này sẽ|tiếp theo sẽ|chúng ta sẽ))",
         re.IGNORECASE,
@@ -538,16 +538,16 @@ def audit_paragraph(text: str, index: int = 0) -> Dict[str, Any]:
     # SYN-03: Negative Parallelism (All 4 Variants + False Ranges)
     syn03_re = re.compile(
         r"(?:"
-        # Variant 1: không chỉ... mà còn...
-        r"\bkhông\s+chỉ\s+[^.!?]{2,90}?\s+mà\s+còn\s+[^.!?]{3,90}|"
-        # Variant 2: không đơn thuần/dừng lại/giới hạn ở/là... mà (còn) là/ở/hướng tới...
-        r"\bkhông\s+(?:đơn\s+thuần|dừng\s+lại|giới\s+hạn)\s+(?:ở|là)\s+[^.!?]{3,80}?\s+mà\s+(?:còn\s+)?(?:là|ở|hướng\s+tới|mở\s+rộng)\s+[^.!?]{3,80}|"
-        # Variant 3: không phải (chỉ) (là) X mà (còn) (là) Y (Karve Meilleur & An Cường)
-        r"\bkhông\s+phải\s+(?:chỉ\s+)?(?:đơn\s+thuần\s+)?(?:là\s+)?[^,.;!?]{3,85}?,?\s+mà\s+(?:còn\s+)?(?:là|phải\s+là|nằm\s+ở|ở|cần\s+được|đòi\s+hỏi|hướng\s+tới)\s+[^.!?]{3,85}|"
+        # Variant 1: không chỉ... mà (còn)...
+        r"\bkhông\s+chỉ\s+[^.!?]{2,95}?\s+mà\s+(?:còn\s+|trở\s+thành\s+|phải\s+là\s+|là\s+|về\s+)?[^.!?]{3,90}|"
+        # Variant 2: không đơn thuần/dừng lại/giới hạn ở/là... mà (còn)...
+        r"\bkhông\s+(?:đơn\s+thuần|dừng\s+lại|giới\s+hạn)\s+(?:ở|là)?\s*[^.!?]{3,85}?\s+mà\s+(?:còn\s+)?(?:là|ở|hướng\s+tới|mở\s+rộng|thực\s+sự)?\s*[^.!?]{3,85}|"
+        # Variant 3: không phải (chỉ) (là) X mà (còn) (là / nâng cấp / phản ánh...) Y (Karve Meilleur & An Cường)
+        r"\bkhông\s+phải\s+(?:chỉ\s+)?(?:đơn\s+thuần\s+)?(?:là\s+)?[^.;!?]{3,90}?,?\s+mà\s+(?:còn\s+)?(?:là|phải\s+là|nằm\s+ở|ở|cần\s+được|đòi\s+hỏi|hướng\s+tới|phản\s+ánh|nâng\s+cấp|tập\s+trung|dựa\s+trên)?\s*[^.!?]{3,85}|"
         # Variant 4: X chứ không (chỉ) (phải) (đơn thuần) (là) Y (Hecatech)
         r"\bchứ\s+không\s+(?:chỉ\s+)?(?:phải\s+)?(?:đơn\s+thuần\s+)?(?:dừng\s+lại\s+ở\s+)?(?:là\s+)?[^,.;!?]{3,70}|"
         # Variant 5: thay vì chỉ đơn thuần... / Từ A đến B, từ C đến D...
-        r"\bthay\s+vì\s+chỉ\s+đơn\s+thuần\s+(?:là\s+)?[^,.;!?]{3,60}|"
+        r"\bthay\s+vì\s+chỉ\s+(?:đơn\s+thuần\s+|cung\s+cấp\s+|tập\s+trung\s+)?(?:là\s+)?[^,.;!?]{3,65}|"
         r"\bTừ\s+[^,.;]{3,35}\s+đến\s+[^,.;]{3,35},\s*(?:từ\s+[^,.;]{3,35}\s+đến\s+[^,.;]{3,35}|tất\s+cả\s+đều|mọi\s+khía\s+cạnh\s+đều)"
         r")",
         re.IGNORECASE,
@@ -798,10 +798,11 @@ def audit_paragraph(text: str, index: int = 0) -> Dict[str, Any]:
     ):
         add_flag("ARG-01", 0, len(text))
 
-    # ARG-02: 3-Phase Pendulum Hedging ("Khen/Kết quả -> Tuy nhiên hạn chế/chưa đồng đều -> Do đó/Vì vậy/Đây là cơ sở cần hoàn thiện/rà soát")
+    # ARG-02: 3-Phase Pendulum Hedging ("Khen/Kết quả -> Tuy nhiên hạn chế/chưa đồng đều -> Do đó/Vì vậy/Đây là cơ sở cần hoàn thiện/rà soát" or 2-sentence "Tuy nhiên... vẫn cần tiếp tục hoàn thiện/chuẩn hóa")
     arg02_re = re.compile(
-        r"(?:(?:Tuy\s+nhiên|Song|Mặt\s+khác|Bên\s+cạnh\s+những\s+(?:kết\s+quả|ưu\s+điểm|điểm\s+tích\s+cực)[^,]{0,40})\s*,[^.!?]*(?:thách\s+thức|hạn\s+chế|rủi\s+ro|khó\s+khăn|chưa\s+đồng\s+đều|chưa\s+rõ\s+ràng|chưa\s+đầy\s+đủ|chưa\s+thực\s+sự|khoảng\s+trống|bất\s+cập|phụ\s+thuộc)[^.!?]*\.\s*"
-        r"(?:Do\s+đó|Vì\s+vậy|Như\s+vậy|Chính\s+vì\s+vậy|Đây\s+là\s+cơ\s+sở\s+để|Điều\s+này\s+(?:đòi\s+hỏi|đặt\s+ra\s+yêu\s+cầu))\s*,?[^.!?]*(?:toàn\s+diện|đồng\s+bộ|hài\s+hòa|cân\s+bằng|phát\s+triển\s+bền\s+vững|tiếp\s+tục\s+hoàn\s+thiện|cần\s+rà\s+soát|cần\s+xây\s+dựng|cần\s+điều\s+chỉnh|cần\s+cải\s+thiện|cần\s+kết\s+hợp)[^.!?]*[.!?]?|"
+        r"(?:(?:Tuy\s+nhiên|Song|Mặt\s+khác|Bên\s+cạnh\s+những\s+(?:kết\s+quả|ưu\s+điểm|điểm\s+tích\s+cực)[^,]{0,40})\s*,[\s\S]{5,260}?(?:thách\s+thức|hạn\s+chế|rủi\s+ro|khó\s+khăn|chưa\s+đồng\s+đều|chưa\s+rõ(?:\s+ràng)?|chưa\s+đầy\s+đủ|chưa\s+thực\s+sự|chưa\s+được\s+tổ\s+chức|chưa\s+có\s+gói|khoảng\s+trống|bất\s+cập|phụ\s+thuộc)[\s\S]{0,180}?\.\s*"
+        r"(?:Do\s+đó|Vì\s+vậy|Như\s+vậy|Chính\s+vì\s+vậy|Đây\s+là\s+(?:cơ\s+sở|nội\s+dung|những\s+nội\s+dung|vấn\s+đề)|Các\s+hạn\s+chế\s+trên\s+là\s+cơ\s+sở|Điều\s+này\s+(?:đòi\s+hỏi|đặt\s+ra\s+yêu\s+cầu|cho\s+thấy))[^.!?]*(?:toàn\s+diện|đồng\s+bộ|hài\s+hòa|cân\s+bằng|phát\s+triển\s+bền\s+vững|tiếp\s+tục\s+(?:hoàn\s+thiện|xem\s+xét|rà\s+soát)|cần\s+(?:được\s+)?(?:hoàn\s+thiện|rà\s+soát|xây\s+dựng|điều\s+chỉnh|cải\s+thiện|kết\s+hợp|quan\s+tâm))[^.!?]*[.!?]?|"
+        r"\bTuy\s+nhiên\s*,\s*(?:công\s+ty|doanh\s+nghiệp|đơn\s+vị|chi\s+nhánh|hoạt\s+động\s+[^,]{3,35}|khả\s+năng\s+[^,]{3,40})\s+vẫn\s+(?:cần\s+tiếp\s+tục\s+(?:chuẩn\s+hóa|hoàn\s+thiện|rà\s+soát|cải\s+thiện)|là\s+những\s+nội\s+dung\s+cần\s+tiếp\s+tục\s+hoàn\s+thiện)[^.!?]*[.!?]?|"
         r"Mặc dù không thể phủ nhận[^,]{5,80},\s*(?:song|nhưng)\s+cũng cần\s+(?:nhìn nhận|thừa nhận|lưu ý)[^.!?]*[.!?]?|"
         r"Một mặt\s+[^,]{5,80},\s*mặt khác\s+[^.!?]{5,90}(?:đòi hỏi sự cân nhắc|cần được xem xét hài hòa|cần có sự kết hợp)[^.!?]*[.!?]?)",
         re.IGNORECASE,
@@ -823,8 +824,9 @@ def audit_paragraph(text: str, index: int = 0) -> Dict[str, Any]:
 
     # ARG-04: Formulaic Challenges & Prospects / Hollow Policy Slogans
     arg04_re = re.compile(
-        r"(?:Mặc\s+dù\s+(?:đã\s+)?(?:đạt\s+được|ghi\s+nhận|có)\s+[^,]{5,90},\s*[^,]{3,60}\s+vẫn\s+(?:còn\s+)?(?:đối\s+mặt|tồn\s+tại|gặp\s+phải)\s+[^.!?]{5,90}|"
+        r"(?:Mặc\s+dù\s+(?:đã\s+)?[^,]{5,90},\s*[^,.!?]{3,75}\s+vẫn\s+(?:còn\s+)?(?:đối\s+mặt|tồn\s+tại|gặp\s+phải|phụ\s+thuộc\s+nhiều\s+vào|chưa\s+liên\s+kết\s+đầy\s+đủ)\s+[^.!?]{5,90}|"
         r"Nếu\s+được\s+triển\s+khai\s+(?:đồng\s+bộ|phù\s+hợp)[^,]{0,60},\s*(?:hệ\s+thống\s+)?các\s+giải\s+pháp\s+(?:đề\s+xuất\s+)?có\s+thể\s+góp\s+phần\s+nâng\s+cao\s+[^.!?]+trong\s+(?:những\s+năm\s+tiếp\s+theo|thời\s+gian\s+tới|dài\s+hạn)|"
+        r"đề\s+xuất\s+hệ\s+thống\s+các\s+giải\s+pháp\s+hoàn\s+thiện\s+đồng\s+bộ\s+trên\s+\d+\s+trụ\s+cột|"
         r"Thách thức và Triển vọng tương lai|"
         r"Cần tăng cường (?:hơn nữa )?(?:sự |công tác )?phối hợp đồng bộ[^.!?]{0,60}|"
         r"Đẩy mạnh (?:việc )?ứng dụng công nghệ thông tin và chuyển đổi số một cách toàn diện[^.!?]{0,50})",
@@ -856,9 +858,11 @@ def audit_paragraph(text: str, index: int = 0) -> Dict[str, Any]:
         # PRG-02a: Didactic hedging
         r"điều\s+quan\s+trọng\s+(?:cần\s+lưu\s+ý\s+)?là|cần\s+(?:phải\s+)?(?:lưu\s+ý|nhớ|nhấn\s+mạnh)\s+rằng|một\s+(?:điểm|lưu\s+ý|nguyên\s+tắc)\s+(?:quan\s+trọng\s+)?cần\s+(?:nhấn\s+mạnh|lưu\s+ý)\s+là|không\s+ngoa\s+khi\s+nói\s+rằng|"
         # PRG-02b: Prompt data scarcity self-disclaimer (WP:AIDISCLAIMER)
-        r"trong\s+phạm\s+vi\s+dữ\s+liệu\s+nghiên\s+cứu,\s*chưa\s+có\s+(?:tài\s+liệu|cơ\s+sở|thông\s+tin)\s+cho\s+thấy|mặc\s+dù\s+chi\s+tiết\s+cụ\s+thể\s+không\s+được\s+công\s+bố(?:\s+rộng\s+rãi)?|dữ\s+liệu\s+hiện\s+có\s+mới\s+cho\s+thấy[^.!?]*?để\s+khẳng\s+định\s+quan\s+hệ\s+nhân\s+quả\s+cần\s+thêm|"
+        r"trong\s+phạm\s+vi\s+dữ\s+liệu\s+nghiên\s+cứu,\s*chưa\s+có\s+(?:tài\s+liệu|cơ\s+sở|thông\s+tin)\s+cho\s+thấy|(?:tài\s+liệu|báo\s+cáo)\s+(?:chưa|không)\s+(?:có|công\s+bố)\s+số\s+liệu\s+(?:riêng|chi\s+tiết)\s+(?:về|theo)|mặc\s+dù\s+chi\s+tiết\s+cụ\s+thể\s+không\s+được\s+công\s+bố(?:\s+rộng\s+rãi)?|dữ\s+liệu\s+hiện\s+có\s+mới\s+cho\s+thấy[^.!?]*?để\s+khẳng\s+định\s+quan\s+hệ\s+nhân\s+quả\s+cần\s+thêm|"
         # PRG-02c: Methodological & metric interpretation disclaimer (E-COM WOW, An Cường, Hecatech)
-        r"(?:khóa\s+luận|nghiên\s+cứu|chuyên\s+đề|tác\s+giả)\s+(?:không\s+sử\s+dụng\s+[^.!?]{3,55}\s+để\s+[^.!?]{3,55}\s+mà\s+chỉ\s+coi\s+đây\s+là\s+khung\s+tham\s+chiếu|(?:chỉ\s+)?sử\s+dụng\s+[^.!?]{3,55}\s+như\s+(?:một\s+|các\s+)?(?:khung\s+tham\s+chiếu|chỉ\s+báo\s+bổ\s+sung|cơ\s+sở\s+bổ\s+trợ)[^.!?]*?\s+(?:chứ\s+)?không\s+(?:coi|dùng|sử\s+dụng|đồng\s+nhất))|"
+        r"(?:khóa\s+luận|nghiên\s+cứu|chuyên\s+đề|tác\s+giả)\s+(?:không\s+sử\s+dụng\s+[^.!?]{3,55}\s+để\s+[^.!?]{3,55}\s+mà\s+chỉ\s+coi\s+đây\s+là\s+khung\s+tham\s+chiếu|(?:chỉ\s+)?sử\s+dụng\s+[^.!?]{2,55}\s+như\s+(?:một\s+|các\s+)?(?:khung\s+tham\s+chiếu|chỉ\s+báo\s+bổ\s+sung|cơ\s+sở\s+bổ\s+trợ)[^.!?]*?(?:,\s*không\s+(?:coi|dùng|sử\s+dụng|đồng\s+nhất)|và\s+kết\s+hợp\s+với|và\s+không\s+dùng))|"
+        r"hai\s+loại\s+điểm\s+không\s+được\s+sử\s+dụng\s+để\s+tính\s+một\s+khoảng\s+chênh\s+lệch|"
+        r"đây\s+chỉ\s+là\s+các\s+chỉ\s+báo\s+gián\s+tiếp\s+và\s+không\s+được\s+sử\s+dụng\s+để\s+khẳng\s+định\s+trực\s+tiếp|"
         r"không\s+tính\s+trực\s+tiếp\s+(?:khoảng\s+)?chênh\s+lệch\s+giữa\s+hai\s+loại\s+điểm\s+vì\s+hai\s+loại\s+điểm\s+phản\s+ánh\s+hai\s+khía\s+cạnh\s+khác\s+nhau|"
         r"không\s+dùng\s+sự\s+thay\s+đổi\s+của\s+chỉ\s+tiêu\s+này\s+để\s+khẳng\s+định\s+trực\s+tiếp\s+quan\s+hệ\s+nhân\s+quả"
         r")\b",

@@ -341,3 +341,91 @@ def test_cross_paragraph_discourse_pass_detects_multi_paragraph_arg01_syn01b_and
     res = audit_document_sections("Cross_Paragraph_Test.docx", sections)
     arg01_findings = [f for f in res["findings"] if f["ruleId"] == "ARG-01"]
     assert len(arg01_findings) == 3
+
+
+def test_lex01b_ai_intensifier_vocab_density_and_syn03_four_variants():
+    para = (
+        "Trong bối cảnh chuyển đổi số đóng vai trò then chốt và có ý nghĩa quyết định, "
+        "năng lực cạnh tranh là tài sản vô giá thúc đẩy sự phát triển vượt bậc của đơn vị. "
+        "Mô hình quản trị mới không phải là một sự thay thế hình thức mà là bước tái cấu trúc nền tảng. "
+        "Hệ thống đo lường tập trung vào hiệu suất thực chất chứ không phải các chỉ tiêu báo cáo bề nổi. "
+        "Giải pháp này không đơn thuần là công cụ kiểm soát ngắn hạn mà còn mở ra dư địa tăng trưởng dài hạn."
+    )
+    res = audit_paragraph(para, 0)
+    rule_ids = [f["ruleId"] for f in res["flags"]]
+    assert "LEX-01" in rule_ids
+    syn03_flags = [f for f in res["flags"] if f["ruleId"] == "SYN-03"]
+    assert len(syn03_flags) >= 3
+
+
+def test_prg02_b_c_meta_disclaimers_and_lex05_vague_hedging_density():
+    para = (
+        "Mặc dù báo cáo chưa công bố số liệu chi tiết theo từng phân khúc khách hàng, "
+        "nhưng việc phân tích vẫn sử dụng khung đánh giá chuẩn nhằm phản ánh xu hướng vận hành tương đối ổn định. "
+        "Kết quả khảo sát đạt mức tương đối khả quan và tạo ra những tác động nhất định đối với hiệu quả hoạt động."
+    )
+    res = audit_paragraph(para, 0)
+    rule_ids = [f["ruleId"] for f in res["flags"]]
+    assert "PRG-02" in rule_ids
+    assert "LEX-05" in rule_ids
+
+
+def test_syn_vn01_mid_clause_vi_vay_and_fmt01_explanatory_dashes():
+    para = (
+        "Cấu trúc vốn của doanh nghiệp vì vậy cần được điều chỉnh linh hoạt theo chu kỳ kinh doanh — "
+        "đặc biệt là trong giai đoạn lãi suất biến động mạnh - nhằm giảm thiểu rủi ro thanh khoản."
+    )
+    res = audit_paragraph(para, 0)
+    rule_ids = [f["ruleId"] for f in res["flags"]]
+    assert "SYN-VN-01" in rule_ids
+    assert "FMT-01" in rule_ids
+
+
+def test_dis02_short_closing_echo_and_dis04_table_signposting():
+    para_dis04 = (
+        "Số liệu ở Bảng 2.4 không chỉ phản ánh quy mô nguồn vốn mà còn cho thấy ba xu hướng dịch chuyển rõ nét. "
+        "Thứ nhất, tỷ trọng vốn huy động ngắn hạn tăng nhanh."
+    )
+    res_dis04 = audit_paragraph(para_dis04, 0)
+    assert "DIS-04" in [f["ruleId"] for f in res_dis04["flags"]]
+
+    para_dis02 = (
+        "Tóm lại, những hạn chế trên đòi hỏi doanh nghiệp phải sớm đồng bộ hóa quy trình kiểm soát nội bộ. "
+        "Đây là tiền đề quan trọng để nâng cao hiệu quả kinh doanh trong giai đoạn tới."
+    )
+    res_dis02 = audit_paragraph(para_dis02, 0)
+    assert "DIS-02" in [f["ruleId"] for f in res_dis02["flags"]]
+
+
+def test_cross_paragraph_dis02_dis04_lex04_lex05_and_fmt01():
+    sections = [
+        {
+            "id": "sec-cross-extended",
+            "title": "Chương 2: Phân tích thực trạng",
+            "isExcluded": False,
+            "paragraphs": [
+                "Qua Bảng 2.1 có thể thấy tốc độ tăng trưởng doanh thu của doanh nghiệp này đạt mức tương đối cao — phản ánh nỗ lực mở rộng thị trường tương đối rõ nét.",
+                "Qua Bảng 2.2 có thể thấy cơ cấu chi phí vận hành của đơn vị kinh doanh trên duy trì ở ngưỡng tương đối ổn định — giúp pháp nhân thương mại này bảo toàn biên lợi nhuận.",
+                "Qua Bảng 2.3 có thể thấy hiệu suất sử dụng vốn của công ty tạo ra những tác động nhất định — củng cố nền tảng tài chính tương đối tốt.",
+                "Tóm lại, bức tranh tài chính giai đoạn 2023-2025 cho thấy sự tăng trưởng ổn định và là cơ sở quan trọng để đề xuất các giải pháp ở chương sau.",
+            ],
+        }
+    ]
+    res = audit_document_sections("Cross_Paragraph_Extended.docx", sections)
+    found_rules = {f["ruleId"] for f in res["findings"]}
+    assert "DIS-04" in found_rules
+    assert "DIS-02" in found_rules
+    assert "LEX-04" in found_rules
+    assert "LEX-05" in found_rules
+    assert "FMT-01" in found_rules
+
+
+def test_build_contextual_suggestion_covers_all_26_rules_with_quoted_evidence():
+    from api.engine.lexicon import build_contextual_suggestion
+
+    sample_evidence = "Mô hình này không phải là giải pháp tạm thời mà là chiến lược cốt lõi"
+    for rule_id in RULE_METADATA:
+        suggestion = build_contextual_suggestion(rule_id, sample_evidence)
+        assert suggestion.strip(), f"Empty suggestion for {rule_id}"
+        assert "«" in suggestion and "»" in suggestion, f"Missing quoted evidence in suggestion for {rule_id}"
+

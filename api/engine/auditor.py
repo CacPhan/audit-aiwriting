@@ -112,7 +112,7 @@ _CLOSING_PARA_OPENER_RE = re.compile(
 _DIS04_TEMPLATE_OPENER_RE = re.compile(
     r"^(?:(?:Tiêu\s+chí|Chỉ\s+tiêu|Yếu\s+tố|Khía\s+cạnh|Biến\s+quan\s+sát)\s+[^,]{2,45}\s+đạt\s+[\d.,]+\s*điểm|"
     r"[A-ZÀ-ỸĐ][^,.]{2,45}\s+là\s+(?:hạng\s+mục|bước|yếu\s+tố|công\s+cụ|khâu|nhiệm\s+vụ)\s+(?:trọng\s+tâm|cốt\s+lõi|bắt\s+buộc|quan\s+trọng)|"
-    r"Bảng\s+(?:trên|dưới\s+đây|số\s+liệu|[\d.]+)\s+cho\s+thấy|"
+    r"(?:Qua\s+|Số\s+liệu\s+(?:ở\s+|tại\s+)?)?Bảng\s+(?:trên|dưới\s+đây|số\s+liệu|[\d.]+)\s+(?:cho\s+thấy|có\s+thể\s+thấy)|"
     r"Kết\s+quả\s+(?:tại\s+)?Bảng\s+[\d.]+\s+cho\s+thấy)",
     re.IGNORECASE | re.UNICODE,
 )
@@ -266,12 +266,12 @@ def _run_cross_paragraph_discourse_pass(para_results: List[Dict[str, Any]], sec_
 
     # 4. Cross-paragraph DIS-02 (Subsection closing paragraph <= 3 sentences echoing preceding paragraphs)
     last_para = para_results[-1]
-    if 1 <= last_para["sentenceCount"] <= 3 and not has_quantitative_evidence(last_para["text"]):
+    if 1 <= last_para["sentenceCount"] <= 3:
         m_close = _CLOSING_PARA_OPENER_RE.match(last_para["text"].strip())
         if m_close:
             preceding_text = " ".join(p["text"] for p in para_results[:-1])
             overlap = _compute_content_word_jaccard(preceding_text, last_para["text"])
-            if overlap >= 0.25 or len(para_results) >= 2:
+            if overlap >= 0.20 or len(para_results) >= 2:
                 last_para["metrics"]["bcr"] = 1.0
                 _append_cross_para_flag(
                     last_para,
