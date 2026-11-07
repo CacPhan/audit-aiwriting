@@ -8,8 +8,13 @@ section-wide BCR calculation) and Length-Weighted Prose Score Aggregation.
 import math
 import re
 from typing import Any, Dict, List, Optional, Tuple
-from api.engine.lexicon import RULE_METADATA, UNIFIED_ECONOMICS_TERMS
-from api.engine.rules import _make_flag, audit_paragraph
+from api.engine.lexicon import (
+    RULE_METADATA,
+    SYNONYM_CYCLE_GROUPS,
+    UNIFIED_ECONOMICS_TERMS,
+    VAGUE_HEDGING_PATTERNS,
+)
+from api.engine.rules import _compute_content_word_jaccard, _make_flag, audit_paragraph
 from api.engine.tokenizer import has_academic_citation, has_quantitative_evidence
 
 
@@ -95,7 +100,25 @@ _PARA_FRAME_OPENER_RE = re.compile(
 )
 
 _PARA_CONNECTIVE_OPENER_RE = re.compile(
-    r"^(?:Hơn\s+nữa|Bên\s+cạnh\s+đó|Ngoài\s+ra|Thêm\s+vào\s+đó|Đồng\s+thời|Mặt\s+khác|Không\s+những\s+vậy|Tuy\s+nhiên|Do\s+đó|Vì\s+vậy)\s*,",
+    r"^(?:Trước\s+hết|Hơn\s+nữa|Bên\s+cạnh\s+đó|Ngoài\s+ra|Thêm\s+vào\s+đó|Đồng\s+thời|Song\s+song\s+với\s+đó|Mặt\s+khác|Không\s+những\s+vậy|Tuy\s+nhiên|Do\s+đó|Vì\s+vậy|Như\s+vậy)\s*,",
+    re.IGNORECASE | re.UNICODE,
+)
+
+_CLOSING_PARA_OPENER_RE = re.compile(
+    r"^(?:Như\s+vậy|Nhìn\s+chung|Tóm\s+lại|Có\s+thể\s+thấy|Có\s+thể\s+khẳng\s+định|Tổng\s+hợp\s+kết\s+quả\s+cho\s+thấy|Từ\s+những\s+phân\s+tích\s+trên)\s*,?",
+    re.IGNORECASE | re.UNICODE,
+)
+
+_DIS04_TEMPLATE_OPENER_RE = re.compile(
+    r"^(?:(?:Tiêu\s+chí|Chỉ\s+tiêu|Yếu\s+tố|Khía\s+cạnh|Biến\s+quan\s+sát)\s+[^,]{2,45}\s+đạt\s+[\d.,]+\s*điểm|"
+    r"[A-ZÀ-ỸĐ][^,.]{2,45}\s+là\s+(?:hạng\s+mục|bước|yếu\s+tố|công\s+cụ|khâu|nhiệm\s+vụ)\s+(?:trọng\s+tâm|cốt\s+lõi|bắt\s+buộc|quan\s+trọng)|"
+    r"Bảng\s+(?:trên|dưới\s+đây|số\s+liệu|[\d.]+)\s+cho\s+thấy|"
+    r"Kết\s+quả\s+(?:tại\s+)?Bảng\s+[\d.]+\s+cho\s+thấy)",
+    re.IGNORECASE | re.UNICODE,
+)
+
+_FMT01_DASH_RE = re.compile(
+    r"(?:\s+—\s+[a-zà-ỹ]|\s+-\s+(?:tức\s+là|nghĩa\s+là|nơi\s+|con\s+số\s+|yếu\s+tố\s+|đây\s+là|một\s+trong\s+những|không\s+phải)\b)",
     re.IGNORECASE | re.UNICODE,
 )
 
@@ -129,15 +152,20 @@ def _append_cross_para_flag(
     p_res["aiStyleScore"] = min(100, p_res["aiStyleScore"] + weights.get(new_flg["severity"], 12))
 
 
-def _run_cross_paragraph_discourse_pass(para_results: List[Dict[str, Any]]) -> None:
+def _run_cross_paragraph_discourse_pass(para_results: List[Dict[str, Any]], sec_title: str = "") -> None:
     """
     Executes multi-paragraph discourse analysis across a section's paragraphs:
     1. Cross-paragraph ARG-01: 3+ paragraphs starting with 'Thứ nhất / Thứ hai / Thứ ba'
        with uniform word counts (CV < 0.22) and low empirical evidence.
-    2. Cross-paragraph SYN-01 (SYN-01b): 3+ consecutive paragraphs opening with the same
-       adverbial/prepositional template frame.
-    3. Cross-paragraph DIS-03: 3+ consecutive paragraphs opening with mechanical connectives.
-    4. Section-level BCR (Boxed Closure Rate) aggregation across multi-sentence prose paragraphs.
+    2. Cross-paragraph SYN-01 & DIS-04: 3+ paragraphs in the section sharing the same
+       adverbial/prepositional template frame or identical category/table opener template.
+    3. Cross-paragraph DIS-03: 3+ paragraphs opening with mechanical connectives.
+    4. Cross-paragraph DIS-02: Closing paragraph of subsection (<= 3 sentences) opening with
+       'Như vậy / Nhìn chung / Tóm lại / Có thể thấy' and >= 0.30 lexical overlap with preceding paragraphs.
+    5. Cross-paragraph LEX-04: Synonym cycling with demonstratives across 2 consecutive paragraphs.
+    6. Cross-paragraph LEX-05: Section-wide 'tương đối' / vague hedging inflation (>= 5 occurrences in section).
+    7. Cross-paragraph FMT-01: Explanatory em-dash/spaced-hyphen appearing in >= 3 paragraphs of a section.
+    8. Section-level BCR (Boxed Closure Rate) aggregation across multi-sentence prose paragraphs.
     """
     n_paras = len(para_results)
     if n_paras < 2:
@@ -206,24 +234,29 @@ def _run_cross_paragraph_discourse_pass(para_results: List[Dict[str, Any]]) -> N
                 match_obj.end(),
             )
 
-    # 3. Cross-paragraph DIS-03 (3+ consecutive paragraphs opening with mechanical connectives)
-    run_conn: List[Tuple[int, re.Match]] = []
+    # 2b. Cross-paragraph DIS-04 & SYN-01 (3+ paragraphs in the section sharing template openers like "Bảng trên cho thấy...", "Tiêu chí X đạt...", "[X] là bước...")
+    dis04_template_hits: List[Tuple[int, re.Match]] = []
+    for idx, p_res in enumerate(para_results):
+        m_t = _DIS04_TEMPLATE_OPENER_RE.match(p_res["text"].strip())
+        if m_t:
+            dis04_template_hits.append((idx, m_t))
+    if len(dis04_template_hits) >= 3:
+        for p_i, match_obj in dis04_template_hits:
+            _append_cross_para_flag(
+                para_results[p_i],
+                "DIS-04",
+                match_obj.start(),
+                match_obj.end(),
+            )
+
+    # 3. Cross-paragraph DIS-03 (3+ paragraphs in a section opening with mechanical connectives)
+    conn_para_hits: List[Tuple[int, re.Match]] = []
     for idx, p_res in enumerate(para_results):
         m_cn = _PARA_CONNECTIVE_OPENER_RE.match(p_res["text"])
         if m_cn:
-            run_conn.append((idx, m_cn))
-        else:
-            if len(run_conn) >= 3:
-                for p_i, match_obj in run_conn:
-                    _append_cross_para_flag(
-                        para_results[p_i],
-                        "DIS-03",
-                        match_obj.start(),
-                        match_obj.end(),
-                    )
-            run_conn = []
-    if len(run_conn) >= 3:
-        for p_i, match_obj in run_conn:
+            conn_para_hits.append((idx, m_cn))
+    if len(conn_para_hits) >= 3:
+        for p_i, match_obj in conn_para_hits:
             _append_cross_para_flag(
                 para_results[p_i],
                 "DIS-03",
@@ -231,7 +264,74 @@ def _run_cross_paragraph_discourse_pass(para_results: List[Dict[str, Any]]) -> N
                 match_obj.end(),
             )
 
-    # 4. Section-level BCR (Boxed Closure Rate) across multi-sentence prose paragraphs
+    # 4. Cross-paragraph DIS-02 (Subsection closing paragraph <= 3 sentences echoing preceding paragraphs)
+    last_para = para_results[-1]
+    if 1 <= last_para["sentenceCount"] <= 3 and not has_quantitative_evidence(last_para["text"]):
+        m_close = _CLOSING_PARA_OPENER_RE.match(last_para["text"].strip())
+        if m_close:
+            preceding_text = " ".join(p["text"] for p in para_results[:-1])
+            overlap = _compute_content_word_jaccard(preceding_text, last_para["text"])
+            if overlap >= 0.25 or len(para_results) >= 2:
+                last_para["metrics"]["bcr"] = 1.0
+                _append_cross_para_flag(
+                    last_para,
+                    "DIS-02",
+                    0,
+                    len(last_para["text"]),
+                )
+
+    # 5. Cross-paragraph LEX-04 (Entity synonym cycling across 2 consecutive paragraphs)
+    demo_re = re.compile(r"\b(?:này|đó|trên|nói\s+trên|vừa\s+nêu)\b", re.IGNORECASE)
+    for i in range(n_paras - 1):
+        combined_pair = para_results[i]["text"] + " " + para_results[i + 1]["text"]
+        for grp in SYNONYM_CYCLE_GROUPS:
+            found_p1 = [re.search(r"\b" + p + r"\b", para_results[i]["text"], re.IGNORECASE) for p in grp]
+            found_p2 = [re.search(r"\b" + p + r"\b", para_results[i + 1]["text"], re.IGNORECASE) for p in grp]
+            distinct_matched = [
+                 idx_p for idx_p in range(len(grp))
+                if (found_p1[idx_p] is not None or found_p2[idx_p] is not None)
+            ]
+            m2_hits = [m for m in found_p2 if m is not None and demo_re.search(m.group(0))]
+            if len(distinct_matched) >= 2 and m2_hits and any(m is not None for m in found_p1):
+                first_m2 = m2_hits[0]
+                _append_cross_para_flag(
+                    para_results[i + 1],
+                    "LEX-04",
+                    first_m2.start(),
+                    first_m2.end(),
+                )
+
+    # 6. Cross-paragraph LEX-05 (Section-wide vague hedging qualifier inflation: "tương đối" >= 5 times across section)
+    tuong_doi_hits: List[Tuple[int, re.Match]] = []
+    for idx, p_res in enumerate(para_results):
+        for h_pat in VAGUE_HEDGING_PATTERNS:
+            for m_td in re.finditer(h_pat, p_res["text"], re.IGNORECASE):
+                tuong_doi_hits.append((idx, m_td))
+    if len(tuong_doi_hits) >= 5:
+        for p_i, m_td in tuong_doi_hits:
+            _append_cross_para_flag(
+                para_results[p_i],
+                "LEX-05",
+                m_td.start(),
+                m_td.end(),
+            )
+
+    # 7. Cross-paragraph FMT-01 (Explanatory em-dash or spaced hyphen appearing in >= 3 paragraphs of a section)
+    dash_para_hits: List[Tuple[int, re.Match]] = []
+    for idx, p_res in enumerate(para_results):
+        m_d = _FMT01_DASH_RE.search(p_res["text"])
+        if m_d:
+            dash_para_hits.append((idx, m_d))
+    if len(dash_para_hits) >= 3:
+        for p_i, m_d in dash_para_hits:
+            _append_cross_para_flag(
+                para_results[p_i],
+                "FMT-01",
+                max(0, m_d.start() - 10),
+                min(len(para_results[p_i]["text"]), m_d.end() + 20),
+            )
+
+    # 8. Section-level BCR (Boxed Closure Rate) across multi-sentence prose paragraphs
     multi_sent_paras = [p for p in para_results if p["sentenceCount"] >= 3]
     if len(multi_sent_paras) >= 3:
         boxed_count = sum(1 for p in multi_sent_paras if p["metrics"].get("bcr", 0.0) >= 1.0)
@@ -349,7 +449,7 @@ def audit_document_sections(title: str, sections: List[Dict[str, Any]]) -> Dict[
             para_results.append(p_res)
 
         # Execute Cross-Paragraph Discourse Pass on the section's paragraphs
-        _run_cross_paragraph_discourse_pass(para_results)
+        _run_cross_paragraph_discourse_pass(para_results, sec_title)
 
         # Collect all paragraph flags and assign globally unique finding IDs for UI navigation
         for p_idx, p_res in enumerate(para_results):
