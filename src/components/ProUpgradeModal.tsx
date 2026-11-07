@@ -5,11 +5,11 @@ import {
   DocumentAuditResult,
 } from '../types/auditor';
 import {
-  classifyHeadingLevel,
+  classifyManuscriptBlock,
+  downloadFeedbackHtmlReport,
   downloadJsonAuditReport,
   downloadStandaloneHtmlReport,
-  downloadTurnitinStyleHtmlReport,
-  getTurnitinColorTheme,
+  getFeedbackColorTheme,
   printAuditDocument,
 } from '../utils/reportExporter';
 
@@ -35,7 +35,7 @@ export const ProUpgradeModal: React.FC<ProUpgradeModalProps> = ({
       <div className="proximity-card max-w-md w-full rounded-3xl p-6 sm:p-7 border border-violet-500/40 space-y-4">
         <div className="flex items-center justify-between">
           <span className="px-3 py-1 rounded-full text-xs font-semibold bg-violet-500/20 text-violet-300 border border-violet-500/35">
-            Upgrade Pro · Coming soon
+            Upgrade Pro (Coming soon)
           </span>
           <button
             type="button"
@@ -50,7 +50,7 @@ export const ProUpgradeModal: React.FC<ProUpgradeModalProps> = ({
           id="pro-modal-title"
           className="font-display font-extrabold text-xl"
         >
-          Tính năng Nâng cao đang được phát triển (Coming soon)
+          Tính năng Nâng cao đang được phát triển
         </h2>
         <p className="text-xs sm:text-sm text-[var(--text-muted)] leading-relaxed">
           Phiên bản Pro với không gian biên tập trực tiếp kèm chấm điểm thời gian thực và xuất tài liệu Microsoft Word (.docx) giữ nguyên định dạng đang trong quá trình hoàn thiện. Hiện tại bạn có thể trải nghiệm đầy đủ luồng duyệt bản thảo, xem đề xuất biên tập và tải báo cáo kiểm toán.
@@ -69,19 +69,13 @@ export const ProUpgradeModal: React.FC<ProUpgradeModalProps> = ({
   );
 };
 
-export type ReportPreviewTab = 'summary' | 'turnitin';
+export type ReportPreviewTab = 'summary' | 'feedback';
 
 interface ReportPreviewModalProps {
   isOpen: boolean;
   onClose: () => void;
   audit: DocumentAuditResult;
   initialTab?: ReportPreviewTab;
-}
-
-function getSeverityRank(severity: string): number {
-  if (severity === 'critical') return 3;
-  if (severity === 'warning') return 2;
-  return 1;
 }
 
 function getSeverityBadgeStyle(severity: string): string {
@@ -92,12 +86,7 @@ function getSeverityBadgeStyle(severity: string): string {
   return 'bg-indigo-500/20 text-indigo-300 border border-indigo-500/35';
 }
 
-/**
- * Interval-splitting React node renderer for Feedback Studio:
- * Handles overlapping/nested flags (e.g., narrow phrase flags inside paragraph-level RHY-01/DIS-01)
- * and renders superscript numbered badges at the exact start of each flagged span.
- */
-function renderTurnitinParagraphNodes(
+function renderFeedbackParagraphNodes(
   para: AuditedParagraph,
   findingNumberMap: Map<string, number>,
   allFindingsMap: Map<string, AuditFlag>,
@@ -105,8 +94,6 @@ function renderTurnitinParagraphNodes(
   onSelectBadge: (num: number) => void
 ): React.ReactNode {
   const text = para.text || '';
-  if (!text) return text;
-
   const paraFlags = (para.flags || [])
     .map((f) => allFindingsMap.get(f.id) || f)
     .filter(
@@ -114,126 +101,71 @@ function renderTurnitinParagraphNodes(
         typeof f.start === 'number' &&
         typeof f.end === 'number' &&
         f.end > f.start
-    );
+    )
+    .sort((a, b) => a.start - b.start);
 
   if (paraFlags.length === 0) {
     return text;
   }
 
-  const boundariesSet = new Set<number>([0, text.length]);
-  paraFlags.forEach((f) => {
-    const s = Math.max(0, Math.min(f.start, text.length));
-    const e = Math.max(s, Math.min(f.end, text.length));
-    boundariesSet.add(s);
-    boundariesSet.add(e);
-  });
-
-  const boundaries = Array.from(boundariesSet).sort((a, b) => a - b);
   const nodes: React.ReactNode[] = [];
+  let cursor = 0;
 
-  for (let i = 0; i < boundaries.length - 1; i++) {
-    const segStart = boundaries[i];
-    const segEnd = boundaries[i + 1];
-    if (segEnd <= segStart) continue;
+  paraFlags.forEach((flag, idx) => {
+    const start = Math.max(cursor, Math.min(flag.start, text.length));
+    const end = Math.max(start, Math.min(flag.end, text.length));
 
-    const covering = paraFlags.filter((f) => {
-      const s = Math.max(0, Math.min(f.start, text.length));
-      const e = Math.max(s, Math.min(f.end, text.length));
-      return s <= segStart && e >= segEnd;
-    });
-
-    if (covering.length === 0) {
+    if (start > cursor) {
       nodes.push(
-        <React.Fragment key={`t-txt-${segStart}-${segEnd}`}>
-          {text.slice(segStart, segEnd)}
+        <React.Fragment key={`fb-txt-${idx}`}>
+          {text.slice(cursor, start)}
         </React.Fragment>
       );
-      continue;
     }
 
-    const sortedCovering = [...covering].sort((a, b) => {
-      const lenA = a.end - a.start;
-      const lenB = b.end - b.start;
-      if (lenA !== lenB) return lenA - lenB;
-      const rankDiff = getSeverityRank(b.severity) - getSeverityRank(a.severity);
-      if (rankDiff !== 0) return rankDiff;
-      return a.start - b.start;
-    });
+    if (end > start) {
+      const badgeNum = findingNumberMap.get(flag.id) || 1;
+      const theme = getFeedbackColorTheme(flag.severity, badgeNum);
+      const isSelected = activeBadgeNum === badgeNum;
 
-    const primaryFlag = sortedCovering[0];
-    const primaryNum = findingNumberMap.get(primaryFlag.id) || 1;
-    const theme = getTurnitinColorTheme(primaryFlag.severity, primaryNum);
-
-    const startingFlags = covering
-      .filter((f) => Math.max(0, Math.min(f.start, text.length)) === segStart)
-      .sort(
-        (a, b) =>
-          (findingNumberMap.get(a.id) || 0) - (findingNumberMap.get(b.id) || 0)
+      nodes.push(
+        <span
+          key={`fb-hl-${flag.id}-${idx}`}
+          className="feedback-hl"
+          style={{
+            backgroundColor: theme.bg,
+            borderBottom: `2px solid ${theme.border}`,
+            color: theme.text,
+            outline: isSelected ? `2px solid ${theme.badgeBg}` : 'none',
+            outlineOffset: '1px',
+          }}
+          title={`[#${badgeNum} - ${flag.severityLabel}] ${flag.title}`}
+          onClick={() => onSelectBadge(badgeNum)}
+          role="button"
+          tabIndex={0}
+          onKeyDown={(e) => {
+            if (e.key === 'Enter' || e.key === ' ') {
+              e.preventDefault();
+              onSelectBadge(badgeNum);
+            }
+          }}
+        >
+          <sup
+            className="feedback-badge"
+            style={{ backgroundColor: theme.badgeBg }}
+          >
+            {badgeNum}
+          </sup>
+          {text.slice(start, end)}
+        </span>
       );
+      cursor = end;
+    }
+  });
 
-    const coveringBadgeNums = sortedCovering.map(
-      (f) => findingNumberMap.get(f.id) || 1
-    );
-    const isSelected =
-      activeBadgeNum !== null && coveringBadgeNums.includes(activeBadgeNum);
-
-    const handleSegmentClick = () => {
-      if (
-        coveringBadgeNums.length > 1 &&
-        activeBadgeNum !== null &&
-        coveringBadgeNums.includes(activeBadgeNum)
-      ) {
-        const curIdx = coveringBadgeNums.indexOf(activeBadgeNum);
-        const nextNum =
-          coveringBadgeNums[(curIdx + 1) % coveringBadgeNums.length] ||
-          primaryNum;
-        onSelectBadge(nextNum);
-      } else {
-        onSelectBadge(primaryNum);
-      }
-    };
-
+  if (cursor < text.length) {
     nodes.push(
-      <span
-        key={`t-hl-${segStart}-${segEnd}-${primaryFlag.id}`}
-        className="turnitin-hl"
-        style={{
-          backgroundColor: theme.bg,
-          borderBottom: `2px solid ${theme.border}`,
-          color: theme.text,
-          outline: isSelected ? `2px solid ${theme.badgeBg}` : 'none',
-          outlineOffset: '1px',
-        }}
-        title={`[#${primaryNum} - ${primaryFlag.severityLabel}] ${primaryFlag.title}`}
-        onClick={handleSegmentClick}
-        role="button"
-        tabIndex={0}
-        onKeyDown={(e) => {
-          if (e.key === 'Enter' || e.key === ' ') {
-            e.preventDefault();
-            handleSegmentClick();
-          }
-        }}
-      >
-        {startingFlags.map((flg) => {
-          const bNum = findingNumberMap.get(flg.id) || 1;
-          const bTheme = getTurnitinColorTheme(flg.severity, bNum);
-          return (
-            <sup
-              key={`badge-${bNum}`}
-              className="turnitin-badge"
-              style={{ backgroundColor: bTheme.badgeBg }}
-              onClick={(e) => {
-                e.stopPropagation();
-                onSelectBadge(bNum);
-              }}
-            >
-              {bNum}
-            </sup>
-          );
-        })}
-        {text.slice(segStart, segEnd)}
-      </span>
+      <React.Fragment key="fb-tail">{text.slice(cursor)}</React.Fragment>
     );
   }
 
@@ -280,7 +212,7 @@ export const ReportPreviewModal: React.FC<ReportPreviewModalProps> = ({
   const handleSelectBadge = (num: number) => {
     setSelectedBadgeNum(num);
     if (typeof document !== 'undefined') {
-      const noteEl = document.getElementById(`modal-turnitin-note-${num}`);
+      const noteEl = document.getElementById(`modal-feedback-note-${num}`);
       if (noteEl && typeof noteEl.scrollIntoView === 'function') {
         noteEl.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
       }
@@ -351,13 +283,13 @@ export const ReportPreviewModal: React.FC<ReportPreviewModalProps> = ({
               <button
                 type="button"
                 role="tab"
-                id="tab-turnitin-studio"
-                aria-selected={activeTab === 'turnitin'}
-                onClick={() => setActiveTab('turnitin')}
+                id="tab-feedback-studio"
+                aria-selected={activeTab === 'feedback'}
+                onClick={() => setActiveTab('feedback')}
                 className={
-                  activeTab === 'turnitin'
-                    ? 'px-3.5 py-1.5 rounded-xl font-bold bg-gradient-to-r from-cyan-600 to-blue-600 text-white shadow-sm transition-all'
-                    : 'px-3.5 py-1.5 rounded-xl font-medium text-[var(--text-muted)] hover:text-[var(--text-main)] transition-all'
+                  activeTab === 'feedback'
+                    ? 'px-4 py-1.5 rounded-xl font-bold bg-gradient-to-r from-cyan-600 to-blue-600 text-white shadow-sm transition-all'
+                    : 'px-4 py-1.5 rounded-xl font-medium text-[var(--text-muted)] hover:text-[var(--text-main)] transition-all'
                 }
               >
                 Feedback
@@ -437,12 +369,12 @@ export const ReportPreviewModal: React.FC<ReportPreviewModalProps> = ({
             </div>
           </div>
         ) : (
-          /* FEEDBACK STUDIO FULL-MANUSCRIPT VIEW PRESERVING DOCX HEADINGS & FORMAT */
+          /* FEEDBACK STUDIO FULL-MANUSCRIPT VIEW */
           <div
-            id="turnitin-studio-preview"
+            id="feedback-studio-preview"
             className="flex-1 min-h-0 grid lg:grid-cols-12 overflow-hidden bg-slate-100 text-slate-900"
           >
-            {/* Left/Center: Full Thesis A4 Paper with Original Headings & Inline Highlights */}
+            {/* Left/Center: Full Thesis A4 Paper Preserving Original .docx Structure & Headings */}
             <div className="lg:col-span-8 h-full overflow-y-auto workspace-scroll-area p-4 sm:p-6">
               {/* Feedback Studio Top Banner */}
               <div className="mb-4 px-4 py-2.5 rounded-xl bg-white border-b-2 border-sky-600 shadow-sm flex flex-wrap items-center justify-between gap-2 text-xs">
@@ -468,9 +400,9 @@ export const ReportPreviewModal: React.FC<ReportPreviewModalProps> = ({
                 </div>
               </div>
 
-              {/* A4 Academic Manuscript Sheet Preserving DOCX Structure */}
+              {/* A4 Academic Manuscript Sheet */}
               <div
-                className="bg-white border border-slate-300 rounded shadow-md px-6 sm:px-12 py-8 sm:py-10 space-y-6 text-slate-900"
+                className="bg-white border border-slate-300 rounded shadow-md px-6 sm:px-12 py-8 sm:py-10 space-y-7 text-slate-900"
                 style={{
                   fontFamily:
                     '"Times New Roman", "Noto Serif", Georgia, Cambria, serif',
@@ -479,90 +411,93 @@ export const ReportPreviewModal: React.FC<ReportPreviewModalProps> = ({
                 }}
               >
                 {audit.sections.map((sec) => {
-                  const level = classifyHeadingLevel(sec.title);
-                  const isTocSection = /^(?:MỤC\s+LỤC|DANH\s+MỤC\s+)/i.test(
-                    sec.title.trim()
-                  );
+                  const isTopChapter =
+                    /^(?:CHƯƠNG\s*(?:\d+|[IVXLC]+)|PHẦN\s+|MỞ\s+ĐẦU|LỜI\s+MỞ\s+ĐẦU|KẾT\s+LUẬN|DANH\s+MỤC|TÀI\s+LIỆU\s+THAM\s+KHẢO|MỤC\s+LỤC|PHỤ\s+LỤC)/i.test(
+                      sec.title.trim()
+                    );
+                  const hasParentChapterLabel =
+                    sec.sectionLabel &&
+                    !sec.sectionLabel.startsWith('Phần ') &&
+                    !sec.sectionLabel.startsWith('Mục loại trừ') &&
+                    sec.sectionLabel.includes('·');
 
                   return (
                     <section
                       key={sec.id}
-                      className={
-                        level === 'cover'
-                          ? 'p-6 mb-8 border-2 border-double border-slate-700 text-center space-y-2'
-                          : 'space-y-3 pb-4'
-                      }
+                      className="space-y-3.5 pb-5 border-b border-dashed border-slate-200 last:border-none"
                     >
-                      {sec.parentHeading && (
-                        <h2 className="font-bold text-lg sm:text-xl uppercase text-center text-slate-900 mt-4 mb-3">
-                          {sec.parentHeading}
-                        </h2>
+                      {hasParentChapterLabel && (
+                        <div className="text-xs sm:text-sm font-bold uppercase tracking-wide text-slate-600">
+                          {sec.sectionLabel.split('·')[0].trim()}
+                        </div>
                       )}
 
-                      {level !== 'cover' && (
+                      <div className="flex items-start justify-between gap-3">
                         <h3
                           className={
-                            level === 'h1'
-                              ? 'font-bold text-lg sm:text-xl uppercase text-center text-slate-900 mt-4 mb-3'
-                              : level === 'h3'
-                              ? 'font-bold italic text-base text-left text-slate-800 mt-2 mb-1'
-                              : 'font-bold text-base sm:text-[17.5px] text-left text-slate-900 mt-3 mb-2'
+                            isTopChapter
+                              ? 'font-bold text-lg sm:text-xl uppercase text-slate-950 leading-snug'
+                              : 'font-bold text-base sm:text-lg text-slate-900 leading-snug'
                           }
                         >
                           {sec.title}
                         </h3>
-                      )}
+                        <span
+                          className="text-[11px] font-sans font-semibold px-2.5 py-0.5 rounded-full bg-slate-100 text-slate-600 shrink-0"
+                          style={{
+                            fontFamily: 'Plus Jakarta Sans, sans-serif',
+                          }}
+                        >
+                          {sec.isExcluded
+                            ? 'Mục tự động loại trừ'
+                            : `${
+                                audit.findings.filter(
+                                  (f) => f.sectionId === sec.id
+                                ).length
+                              } vị trí`}
+                        </span>
+                      </div>
 
                       {sec.paragraphs.map((para) => {
-                        if (level === 'cover') {
-                          const isMajorCoverLine =
-                            /^(?:BỘ\s+GIÁO\s+DỤC|TRƯỜNG\s+ĐẠI\s+HỌC|ĐẠI\s+HỌC|HỌC\s+VIỆN|KHÓA\s+LUẬN|KHOÁ\s+LUẬN|LUẬN\s+VĂN|CHUYÊN\s+ĐỀ|BÁO\s+CÁO)/i.test(
-                              para.text.trim()
-                            );
-                          return (
-                            <p
-                              key={para.index}
-                              className={
-                                isMajorCoverLine
-                                  ? 'font-bold uppercase text-center text-slate-900'
-                                  : 'text-center text-slate-800'
-                              }
-                            >
-                              {para.text}
-                            </p>
-                          );
-                        }
-
-                        if (isTocSection) {
-                          return (
-                            <p
-                              key={para.index}
-                              className="text-slate-700 text-[15px]"
-                            >
-                              {para.text}
-                            </p>
-                          );
-                        }
+                        const blockKind = classifyManuscriptBlock(
+                          para.text,
+                          sec.isExcluded
+                        );
+                        const contentNodes = renderFeedbackParagraphNodes(
+                          para,
+                          findingNumberMap,
+                          allFindingsMap,
+                          selectedBadgeNum,
+                          handleSelectBadge
+                        );
 
                         return (
                           <div key={para.index} className="space-y-1.5">
                             {para.prefix && (
-                              <h4 className="font-bold italic text-[16px] text-slate-800 mt-2">
+                              <h4 className="font-bold text-[16px] text-slate-900 pt-2">
                                 {para.prefix}
                               </h4>
                             )}
-                            <p
-                              className="text-justify"
-                              style={{ textIndent: '28px' }}
-                            >
-                              {renderTurnitinParagraphNodes(
-                                para,
-                                findingNumberMap,
-                                allFindingsMap,
-                                selectedBadgeNum,
-                                handleSelectBadge
-                              )}
-                            </p>
+                            {blockKind === 'subheading' ? (
+                              <h4 className="font-bold text-[16px] text-slate-900 pt-2">
+                                {contentNodes}
+                              </h4>
+                            ) : blockKind === 'bullet' ? (
+                              <p className="text-justify pl-6">
+                                {contentNodes}
+                              </p>
+                            ) : blockKind === 'toc-or-ref' ? (
+                              <p className="text-left text-[15.5px]">
+                                {contentNodes}
+                              </p>
+                            ) : (
+                              <p
+                                className="text-justify"
+                                style={{ textIndent: '26px' }}
+                              >
+                                {contentNodes}
+                              </p>
+                            )}
                           </div>
                         );
                       })}
@@ -585,14 +520,14 @@ export const ReportPreviewModal: React.FC<ReportPreviewModalProps> = ({
 
               {audit.findings.map((f, idx) => {
                 const num = idx + 1;
-                const theme = getTurnitinColorTheme(f.severity, num);
+                const theme = getFeedbackColorTheme(f.severity, num);
                 const isSelected = selectedBadgeNum === num;
                 const secObj = audit.sections.find((s) => s.id === f.sectionId);
 
                 return (
                   <div
                     key={f.id}
-                    id={`modal-turnitin-note-${num}`}
+                    id={`modal-feedback-note-${num}`}
                     onClick={() => setSelectedBadgeNum(num)}
                     className={`p-3 rounded-xl border transition-all cursor-pointer space-y-1.5 text-xs ${
                       isSelected
@@ -652,14 +587,14 @@ export const ReportPreviewModal: React.FC<ReportPreviewModalProps> = ({
           <div className="flex flex-wrap items-center gap-2">
             <button
               type="button"
-              onClick={() => downloadTurnitinStyleHtmlReport(audit)}
+              onClick={() => downloadFeedbackHtmlReport(audit)}
               className="px-3.5 py-2 rounded-xl text-xs font-bold text-white bg-gradient-to-r from-cyan-600 to-blue-600 hover:opacity-95 shadow-sm transition-all"
             >
               Tải Feedback (HTML)
             </button>
             <button
               type="button"
-              onClick={() => printAuditDocument(audit, 'turnitin')}
+              onClick={() => printAuditDocument(audit, 'feedback')}
               className="px-3.5 py-2 rounded-xl text-xs font-semibold border border-cyan-500/40 bg-cyan-500/10 text-cyan-300 hover:bg-cyan-500/20 transition-all"
             >
               In / Lưu PDF Feedback

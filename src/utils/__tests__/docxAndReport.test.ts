@@ -7,7 +7,7 @@ import {
 } from '../docxParser';
 import {
   generateStandaloneHtmlReport,
-  generateTurnitinStyleHtmlReport,
+  generateFeedbackHtmlReport,
   printAuditDocument,
 } from '../reportExporter';
 
@@ -112,37 +112,57 @@ describe('Thesis .docx Section Splitter & Audit Report Exporter', () => {
     expect(active[0].paragraphs[1]).toContain('Tiền gửi tiết kiệm dân cư');
   });
 
-  it('generates both standalone Summary HTML and Turnitin Feedback Studio Full-Manuscript Highlighted HTML and injects clean print iframe', () => {
+  it('generates both standalone Summary HTML and Feedback Full-Manuscript HTML preserving headings and injects clean print iframe', () => {
     const sampleAudit: any = {
       title: 'Luan_van_Thac_si_Tai_chinh.docx',
-      totalWords: 1250,
-      totalSentences: 48,
-      overallScore: 68,
-      protectedTermsCount: 5,
+      summary: {
+        totalWords: 1250,
+        totalSentences: 48,
+        totalSections: 1,
+        auditedSections: 1,
+        totalFlags: 1,
+        criticalCount: 0,
+        warningCount: 1,
+        suggestionCount: 0,
+        overallAiStyleScore: 68,
+        protectedTermsMatched: [],
+      },
       sections: [
         {
           id: 'sec-1',
-          sectionLabel: 'CHƯƠNG 1',
-          title: 'Chương 1: Cơ sở lý luận',
-          shortTitle: 'Chương 1',
+          chapterNumber: 1,
+          sectionLabel: 'CHƯƠNG 1: TỔNG QUAN · 1.1. Khái niệm',
+          title: '1.1. Khái niệm hoạt động tín dụng',
+          shortTitle: '1.1. Khái niệm',
           isExcluded: false,
           wordCount: 120,
-          sentenceCount: 5,
-          overallScore: 70,
-          metrics: {},
+          flagCount: 1,
+          aiStyleScore: 70,
           paragraphs: [
             {
               index: 0,
+              text: '1.1.1. Đặc điểm hoạt động tín dụng ngân hàng',
+              wordCount: 7,
+              sentenceCount: 1,
+              aiStyleScore: 0,
+              protectedTerms: [],
+              metrics: {},
+              flags: [],
+            },
+            {
+              index: 1,
               text: 'Trong bối cảnh hội nhập hiện nay, hoạt động tín dụng giữ vai trò nền tảng.',
               wordCount: 15,
               sentenceCount: 1,
-              overallScore: 70,
+              aiStyleScore: 70,
+              protectedTerms: [],
               metrics: {},
               flags: [
                 {
                   id: 'f1',
+                  ruleId: 'ARG-03',
                   sectionId: 'sec-1',
-                  paragraphIndex: 0,
+                  paragraphIndex: 1,
                   category: 'lexical',
                   severity: 'warning',
                   severityLabel: 'Nên sửa',
@@ -163,8 +183,9 @@ describe('Thesis .docx Section Splitter & Audit Report Exporter', () => {
       findings: [
         {
           id: 'f1',
+          ruleId: 'ARG-03',
           sectionId: 'sec-1',
-          paragraphIndex: 0,
+          paragraphIndex: 1,
           category: 'lexical',
           severity: 'warning',
           severityLabel: 'Nên sửa',
@@ -186,15 +207,17 @@ describe('Thesis .docx Section Splitter & Audit Report Exporter', () => {
     expect(html).toContain('Cụm từ mở đầu rập khuôn');
     expect(html).toContain('Nên sửa');
 
-    const turnitinHtml = generateTurnitinStyleHtmlReport(sampleAudit);
-    expect(turnitinHtml).toContain('feedback studio');
-    expect(turnitinHtml).toContain('class="t-hl"');
-    expect(turnitinHtml).toContain('class="t-badge"');
-    expect(turnitinHtml).toContain('>1</sup>Trong bối cảnh hội nhập hiện nay</a>');
-    expect(turnitinHtml).toContain('id="turnitin-note-1"');
+    const feedbackHtml = generateFeedbackHtmlReport(sampleAudit);
+    expect(feedbackHtml).toContain('feedback studio');
+    expect(feedbackHtml).toContain('CHƯƠNG 1: TỔNG QUAN');
+    expect(feedbackHtml).toContain('<h4 class="manuscript-subheading">1.1.1. Đặc điểm hoạt động tín dụng ngân hàng</h4>');
+    expect(feedbackHtml).toContain('class="t-hl"');
+    expect(feedbackHtml).toContain('class="t-badge"');
+    expect(feedbackHtml).toContain('>1</sup>Trong bối cảnh hội nhập hiện nay</a>');
+    expect(feedbackHtml).toContain('id="feedback-note-1"');
 
     // Verify printAuditDocument injects #audit-print-iframe with clean HTML content
-    printAuditDocument(sampleAudit, 'turnitin');
+    printAuditDocument(sampleAudit, 'feedback');
     const printIframe = document.getElementById('audit-print-iframe') as HTMLIFrameElement;
     expect(printIframe).toBeTruthy();
     expect(printIframe.contentDocument?.body.innerHTML).toContain('feedback studio');

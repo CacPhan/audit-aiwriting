@@ -286,7 +286,6 @@ def audit_document_sections(title: str, sections: List[Dict[str, Any]]) -> Dict[
             else (sec_title.split(":")[0].strip() if ":" in sec_title else sec_title)
         )
         section_label = str(sec.get("sectionLabel") or f"Phần {sec_idx + 1} · Bản thảo")
-        parent_heading = str(sec.get("parentHeading") or "").strip()
         is_excluded = bool(sec.get("isExcluded", False))
         raw_paragraphs_input = sec.get("paragraphs")
         raw_paragraphs: List[str] = (
@@ -307,7 +306,6 @@ def audit_document_sections(title: str, sections: List[Dict[str, Any]]) -> Dict[
                     "title": sec_title,
                     "shortTitle": short_title,
                     "sectionLabel": section_label,
-                    "parentHeading": parent_heading,
                     "isExcluded": True,
                     "wordCount": sum(len(p.split()) for p in raw_paragraphs),
                     "flagCount": 0,
@@ -375,7 +373,6 @@ def audit_document_sections(title: str, sections: List[Dict[str, Any]]) -> Dict[
                 "title": sec_title,
                 "shortTitle": short_title,
                 "sectionLabel": section_label,
-                "parentHeading": parent_heading,
                 "isExcluded": False,
                 "wordCount": sec_words,
                 "flagCount": len(sec_flags),

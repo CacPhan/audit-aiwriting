@@ -29,6 +29,10 @@ const FORBIDDEN_INTERNAL_JARGON = [
   '99.000đ',
   'rê chuột',
   'di chuột',
+  'Turnitin',
+  'turnitin',
+  'Bản thảo bôi màu',
+  'Bản thảo Bôi màu',
 ];
 
 describe('AI Style Auditor Multi-Screen SaaS, UI Jargon Non-Disclosure & E2E Flow', () => {
@@ -36,7 +40,7 @@ describe('AI Style Auditor Multi-Screen SaaS, UI Jargon Non-Disclosure & E2E Flo
     vi.restoreAllMocks();
   });
 
-  it('verifies 3 independent screens (Home, Workspace, Insights), severity filters, column collapse, theme toggle, and Escape modal close', () => {
+  it('verifies 3 independent screens (Home, Workspace, Insights), initial Home navigation lock, severity filters, column collapse, theme toggle, and Escape modal close', () => {
     const { container } = render(<App />);
 
     // 1. Home screen is rendered by default; Workspace and Insights are NOT in the DOM (no vertical scroll single-page)
@@ -44,18 +48,16 @@ describe('AI Style Auditor Multi-Screen SaaS, UI Jargon Non-Disclosure & E2E Flo
     expect(container.querySelector('#screen-workspace')).toBeNull();
     expect(container.querySelector('#screen-insights')).toBeNull();
 
-    // Verify Workspace and Insights navigation tabs are locked before uploading a file or clicking Explore Demo
-    const lockedWorkspaceBtn = screen.getAllByRole('button', {
-      name: /^Workspace$/i,
-    })[0] as HTMLButtonElement;
-    const lockedInsightsBtn = screen.getAllByRole('button', {
-      name: /^Insights$/i,
-    })[0] as HTMLButtonElement;
-    expect(lockedWorkspaceBtn.disabled).toBe(true);
-    expect(lockedInsightsBtn.disabled).toBe(true);
-    fireEvent.click(lockedWorkspaceBtn);
-    expect(container.querySelector('#screen-home')).toBeTruthy();
+    // 1B. Verify Workspace and Insights navigation buttons are LOCKED on Home before uploading/demo
+    const navButtons = container.querySelectorAll('.main-nav-btn');
+    expect(navButtons.length).toBe(3);
+    const workspaceNavBtn = navButtons[1] as HTMLButtonElement;
+    const insightsNavBtn = navButtons[2] as HTMLButtonElement;
+    expect(workspaceNavBtn.disabled).toBe(true);
+    expect(insightsNavBtn.disabled).toBe(true);
+    fireEvent.click(workspaceNavBtn);
     expect(container.querySelector('#screen-workspace')).toBeNull();
+    expect(container.querySelector('#screen-home')).toBeTruthy();
 
     // 2. Test non-.docx file upload validation on Home
     const fileInput = container.querySelector(
@@ -79,6 +81,8 @@ describe('AI Style Auditor Multi-Screen SaaS, UI Jargon Non-Disclosure & E2E Flo
 
     expect(container.querySelector('#screen-home')).toBeNull();
     expect(container.querySelector('#screen-workspace')).toBeTruthy();
+    expect(workspaceNavBtn.disabled).toBe(false);
+    expect(insightsNavBtn.disabled).toBe(false);
 
     // 4. Verify 3-column Workspace, chapter switching, and 3 underline classes (wavy, solid, dashed)
     expect(screen.getByText(/Cấu trúc tài liệu/i)).toBeTruthy();
@@ -152,32 +156,33 @@ describe('AI Style Auditor Multi-Screen SaaS, UI Jargon Non-Disclosure & E2E Flo
     expect(
       screen.getByText(/Báo cáo Kiểm toán Văn phong Học thuật/i)
     ).toBeTruthy();
-    const turnitinTabBtn = container.querySelector(
-      '#tab-turnitin-studio'
+    const feedbackTabBtn = container.querySelector(
+      '#tab-feedback-studio'
     ) as HTMLButtonElement;
-    expect(turnitinTabBtn).toBeTruthy();
-    expect(turnitinTabBtn.textContent).toBe('Feedback');
-    fireEvent.click(turnitinTabBtn);
-    expect(container.querySelector('#turnitin-studio-preview')).toBeTruthy();
-    expect(container.querySelectorAll('.turnitin-hl').length).toBeGreaterThan(
+    expect(feedbackTabBtn).toBeTruthy();
+    expect(feedbackTabBtn.textContent).toBe('Feedback');
+    fireEvent.click(feedbackTabBtn);
+    expect(container.querySelector('#feedback-studio-preview')).toBeTruthy();
+    expect(container.querySelectorAll('.feedback-hl').length).toBeGreaterThan(
       0
     );
     expect(
-      container.querySelectorAll('.turnitin-badge').length
+      container.querySelectorAll('.feedback-badge').length
     ).toBeGreaterThan(0);
 
     fireEvent.keyDown(window, { key: 'Escape' });
     expect(container.querySelector('#report-modal')).toBeNull();
 
-    // 10. Open ProUpgradeModal via "Upgrade Pro" header button (no "Coming soon" on header button; "Coming soon" appears inside modal)
-    const proBtn = screen.getAllByRole('button', {
+    // 10. Open ProUpgradeModal via header 'Upgrade Pro' button (verify 'Coming soon' is only inside the modal)
+    expect(screen.queryByText(/Coming soon/i)).toBeNull();
+    const proBtn = screen.getByRole('button', {
       name: /^Upgrade Pro$/i,
-    })[0];
+    });
     fireEvent.click(proBtn);
+    expect(screen.getByText(/Upgrade Pro \(Coming soon\)/i)).toBeTruthy();
     expect(
       screen.getByText(/Tính năng Nâng cao đang được phát triển/i)
     ).toBeTruthy();
-    expect(screen.getAllByText(/Coming soon/i).length).toBeGreaterThan(0);
     fireEvent.keyDown(window, { key: 'Escape' });
     expect(container.querySelector('#pro-modal')).toBeNull();
 

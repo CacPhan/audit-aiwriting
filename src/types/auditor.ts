@@ -33,17 +33,10 @@ export interface AuditFlag {
   status: FindingStatus;
 }
 
-export type ManuscriptBlockType =
-  | 'prose'
-  | 'subheading'
-  | 'caption'
-  | 'list-item';
-
 export interface AuditedParagraph {
   index: number;
   text: string;
   prefix?: string;
-  blockType?: ManuscriptBlockType;
   wordCount: number;
   sentenceCount: number;
   metrics: ParagraphMetrics;
@@ -58,7 +51,6 @@ export interface AuditedSection {
   title: string;
   shortTitle: string;
   sectionLabel: string;
-  parentHeading?: string;
   isExcluded: boolean;
   wordCount: number;
   flagCount: number;
@@ -94,8 +86,6 @@ export interface ParsedThesisSection {
   title: string;
   shortTitle: string;
   sectionLabel: string;
-  parentHeading?: string;
   paragraphs: string[];
-  paragraphTypes?: ManuscriptBlockType[];
   isExcluded: boolean;
 }

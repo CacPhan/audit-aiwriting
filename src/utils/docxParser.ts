@@ -236,8 +236,12 @@ export function splitRawTextOrHtmlIntoSections(
       }
 
       const cleanedLine = text.replace(/\t+/g, ' ').trim();
-      // Filter out Table/Figure captions, Source attributions, and deep subheadings (1.1.1) from audited prose
-      if (currentSection.isExcluded || !isNonProseMetadataOrSubheading(cleanedLine)) {
+      // Filter out Table/Figure captions and Source attributions from audited prose,
+      // while keeping deep subheadings (1.1.1, 2.1.2) so document heading hierarchy is preserved.
+      const isCaptionOrSource =
+        cleanedLine.length <= 160 &&
+        TABLE_OR_FIGURE_METADATA_REGEX.test(cleanedLine);
+      if (currentSection.isExcluded || !isCaptionOrSource) {
         currentSection.paragraphs.push(cleanedLine);
       }
     }
@@ -277,9 +281,8 @@ export function splitRawTextOrHtmlIntoSections(
         prev.paragraphs.push(sec.title);
         continue;
       }
-      // If followed by a non-excluded child section, attach parent title context to child's sectionLabel and parentHeading
+      // If followed by a non-excluded child section, attach parent title context to child's sectionLabel
       if (next && !next.isExcluded) {
-        next.parentHeading = sec.title;
         next.sectionLabel = `${buildShortTitle(sec.title, i + 1)} · ${next.shortTitle}`;
         continue;
       }

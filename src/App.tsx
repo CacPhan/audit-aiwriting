@@ -13,7 +13,7 @@ import {
   ReportPreviewModal,
   ReportPreviewTab,
 } from './components/ProUpgradeModal';
-import { downloadTurnitinStyleHtmlReport } from './utils/reportExporter';
+import { downloadFeedbackHtmlReport } from './utils/reportExporter';
 
 function formatBytes(bytes: number): string {
   if (!bytes || bytes <= 0) return '1.42 MB';
@@ -25,6 +25,8 @@ function formatBytes(bytes: number): string {
 export const App: React.FC = () => {
   const [currentScreen, setCurrentScreen] = useState<AppScreen>('home');
   const [theme, setTheme] = useState<'dark' | 'light'>('dark');
+  const [hasUnlockedWorkspace, setHasUnlockedWorkspace] =
+    useState<boolean>(false);
 
   // Audit Document State
   const [auditData, setAuditData] =
@@ -36,7 +38,6 @@ export const App: React.FC = () => {
   const [auditProgressText, setAuditProgressText] = useState<string>('');
 
   // Workspace Navigation & View State
-  const [hasUnlockedWorkspace, setHasUnlockedWorkspace] = useState(false);
   const [activeSectionId, setActiveSectionId] = useState<string>('sec-1');
   const [activeFindingId, setActiveFindingId] = useState<string>('f2');
   const [activeFilter, setActiveFilter] = useState<FindingFilterType>('all');
@@ -322,13 +323,13 @@ export const App: React.FC = () => {
 
       setHasUnlockedWorkspace(true);
       setAuditData(finalResult);
-      const firstSecWithFinding =
+      const firstSec =
         finalResult.findings[0]?.sectionId ||
         finalResult.sections.find((s) => !s.isExcluded)?.id ||
         finalResult.sections[0]?.id ||
         'sec-1';
       const firstFinding = finalResult.findings[0]?.id || '';
-      setActiveSectionId(firstSecWithFinding);
+      setActiveSectionId(firstSec);
       setActiveFindingId(firstFinding);
       navigateToScreen('workspace', true);
     } catch {
@@ -366,16 +367,8 @@ export const App: React.FC = () => {
   };
 
   const handleStepFinding = (delta: number) => {
-    const filteredList = auditData.findings.filter((f) => {
-      const isResolved = f.status !== 'pending';
-      if (activeFilter === 'all') return true;
-      if (activeFilter === 'resolved') return isResolved;
-      return f.severity === activeFilter && !isResolved;
-    });
-    const list =
-      filteredList.length > 0 ? filteredList : auditData.findings;
+    const list = auditData.findings;
     if (list.length === 0) return;
-
     const curIdx = Math.max(
       0,
       list.findIndex((f) => f.id === activeFindingId)
@@ -411,12 +404,12 @@ export const App: React.FC = () => {
     handleStepFinding(1);
   };
 
-  // Compute Center Column span class based on collapsed sidebars
-  let centerSpanClass = 'lg:col-span-5';
+  // Compute Center Column span class based on symmetrical 3 - 6 - 3 columns
+  let centerSpanClass = 'lg:col-span-6';
   if (leftColCollapsed && rightColCollapsed) {
     centerSpanClass = 'lg:col-span-12';
   } else if (leftColCollapsed) {
-    centerSpanClass = 'lg:col-span-8';
+    centerSpanClass = 'lg:col-span-9';
   } else if (rightColCollapsed) {
     centerSpanClass = 'lg:col-span-9';
   }
@@ -880,7 +873,7 @@ export const App: React.FC = () => {
                   className={
                     hasUnlockedWorkspace
                       ? 'hover:text-[var(--text-main)] transition-colors'
-                      : 'opacity-40 cursor-not-allowed select-none'
+                      : 'opacity-45 cursor-not-allowed select-none'
                   }
                 >
                   Workspace
@@ -892,7 +885,7 @@ export const App: React.FC = () => {
                   className={
                     hasUnlockedWorkspace
                       ? 'hover:text-[var(--text-main)] transition-colors'
-                      : 'opacity-40 cursor-not-allowed select-none'
+                      : 'opacity-45 cursor-not-allowed select-none'
                   }
                 >
                   Insights
@@ -906,7 +899,7 @@ export const App: React.FC = () => {
                   className={
                     hasUnlockedWorkspace
                       ? 'hover:text-[var(--text-main)] transition-colors'
-                      : 'opacity-40 cursor-not-allowed select-none'
+                      : 'opacity-45 cursor-not-allowed select-none'
                   }
                 >
                   Báo cáo kiểm toán
@@ -923,11 +916,11 @@ export const App: React.FC = () => {
       {currentScreen === 'workspace' && activeSection && (
         <main
           id="screen-workspace"
-          className="app-screen flex-1 lg:h-[calc(100vh-68px)] lg:max-h-[calc(100vh-68px)] lg:overflow-hidden flex flex-col"
+          className="app-screen flex-1 lg:h-[calc(100vh-76px)] lg:max-h-[calc(100vh-76px)] lg:overflow-hidden flex flex-col"
         >
-          <div className="max-w-[1620px] w-full mx-auto px-4 sm:px-6 lg:px-7 xl:px-10 py-3.5 flex-1 min-h-0 flex flex-col gap-3.5">
+          <div className="max-w-[1640px] w-full mx-auto px-4 sm:px-6 lg:px-8 py-4 flex-1 min-h-0 flex flex-col gap-4">
             {/* A. Workspace Header / Application Bar */}
-            <div className="shrink-0 proximity-card rounded-2xl px-4 py-2.5 flex flex-wrap items-center justify-between gap-3">
+            <div className="shrink-0 proximity-card rounded-2xl px-4 py-3 flex flex-wrap items-center justify-between gap-3">
               <div className="flex flex-wrap items-center gap-2.5 min-w-0">
                 <button
                   type="button"
@@ -946,7 +939,7 @@ export const App: React.FC = () => {
                   <span>/</span>
                   <span
                     id="workspace-doc-title"
-                    className="font-semibold text-[var(--text-main)] truncate max-w-[220px] sm:max-w-[360px]"
+                    className="font-semibold text-[var(--text-main)] truncate max-w-[220px] sm:max-w-[320px]"
                   >
                     {auditData.title}
                   </span>
@@ -987,7 +980,7 @@ export const App: React.FC = () => {
                 <button
                   type="button"
                   onClick={() => {
-                    setReportInitialTab('turnitin');
+                    setReportInitialTab('feedback');
                     setIsReportModalOpen(true);
                   }}
                   className="inline-flex items-center gap-1.5 px-3.5 py-1.5 rounded-xl text-xs font-semibold border border-cyan-500/40 bg-cyan-500/15 text-cyan-300 hover:bg-cyan-500/25 transition-all"
@@ -1007,10 +1000,10 @@ export const App: React.FC = () => {
               </div>
             </div>
 
-            {/* B. Three-Column Workspace Grid (Expanded balanced width, locked height, 3 independent scrollbars) */}
+            {/* B. Three-Column Workspace Grid (Locked height, 3 independent scrollbars, balanced 3-6-3 layout) */}
             <div
               id="workspace-grid"
-              className="flex-1 min-h-0 grid lg:grid-cols-12 gap-4 xl:gap-5 items-stretch lg:overflow-hidden"
+              className="flex-1 min-h-0 grid lg:grid-cols-12 gap-5 items-stretch lg:overflow-hidden"
             >
               <ChapterSidebar
                 sections={auditData.sections}
@@ -1084,12 +1077,12 @@ export const App: React.FC = () => {
                 <button
                   type="button"
                   onClick={() => {
-                    setReportInitialTab('turnitin');
+                    setReportInitialTab('feedback');
                     setIsReportModalOpen(true);
                   }}
                   className="px-4 py-2 rounded-xl text-xs font-semibold border border-cyan-500/40 bg-cyan-500/15 text-cyan-300 hover:bg-cyan-500/25 transition-all"
                 >
-                  Xem Feedback
+                  Feedback
                 </button>
                 <button
                   type="button"
@@ -1298,13 +1291,13 @@ export const App: React.FC = () => {
                   Báo cáo Kiểm toán &amp; Feedback
                 </h2>
                 <p className="text-xs sm:text-sm text-[var(--text-muted)] max-w-2xl">
-                  Xem toàn bộ nội dung luận văn giữ nguyên cấu trúc chương mục đã được đánh dấu trực tiếp kèm số thứ tự chú giải trong chế độ Feedback, hoặc tải xuống báo cáo tổng hợp định dạng HTML / PDF / JSON.
+                  Xem trực tiếp giao diện Feedback giữ nguyên cấu trúc chương mục của tài liệu gốc kèm đánh số chú giải chi tiết, hoặc tải xuống báo cáo tổng hợp định dạng HTML / PDF / JSON.
                 </p>
               </div>
               <div className="flex flex-wrap items-center justify-center gap-3 shrink-0">
                 <button
                   type="button"
-                  onClick={() => downloadTurnitinStyleHtmlReport(auditData)}
+                  onClick={() => downloadFeedbackHtmlReport(auditData)}
                   className="px-4 py-3 rounded-2xl font-display font-bold text-xs sm:text-sm border border-cyan-500/40 bg-cyan-500/15 text-cyan-300 hover:bg-cyan-500/25 transition-all"
                 >
                   Tải Feedback (.html)
@@ -1312,12 +1305,12 @@ export const App: React.FC = () => {
                 <button
                   type="button"
                   onClick={() => {
-                    setReportInitialTab('turnitin');
+                    setReportInitialTab('feedback');
                     setIsReportModalOpen(true);
                   }}
                   className="magnetic-icon px-5 py-3 rounded-2xl font-display font-bold text-xs sm:text-sm text-white bg-gradient-to-r from-cyan-600 to-blue-600 shadow-lg"
                 >
-                  Xem Feedback
+                  Feedback
                 </button>
                 <button
                   type="button"

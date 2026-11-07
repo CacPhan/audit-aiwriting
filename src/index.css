@@ -334,7 +334,7 @@ input:focus-visible,
 }
 
 /* ==========================================================================
-   5B. WORKSPACE INDEPENDENT COLUMN SCROLLBARS & TURNITIN STUDIO SPANS
+   5B. WORKSPACE INDEPENDENT COLUMN SCROLLBARS & FEEDBACK STUDIO SPANS
    ========================================================================== */
 .workspace-scroll-area {
   scrollbar-width: thin;
@@ -359,7 +359,7 @@ input:focus-visible,
   background-color: rgba(59, 130, 246, 0.55);
 }
 
-.turnitin-hl {
+.feedback-hl {
   position: relative;
   display: inline;
   padding: 2px 3px 2px 4px;
@@ -370,11 +370,11 @@ input:focus-visible,
   transition: filter 0.15s ease, box-shadow 0.15s ease;
 }
 
-.turnitin-hl:hover {
+.feedback-hl:hover {
   filter: brightness(0.95);
 }
 
-.turnitin-badge {
+.feedback-badge {
   display: inline-flex;
   align-items: center;
   justify-content: center;
