@@ -387,72 +387,148 @@ SINO_VIETNAMESE_ABSTRACT_SYLLABLES: Set[str] = {
 }
 
 
-# 3. ENTITY SYNONYM CYCLING GROUPS ACROSS 8 ECONOMICS FIELDS (For LEX-04)
+# 3. AI INTENSIFIER VOCABULARY CLUSTER (For LEX-01b Density Counter)
+AI_INTENSIFIER_VOCAB: Set[str] = {
+    "then chốt",
+    "cốt lõi",
+    "toàn diện",
+    "đồng bộ",
+    "sâu sắc",
+    "triệt để",
+    "đột phá",
+    "bền vững",
+    "thiết yếu",
+    "mạnh mẽ",
+    "vượt bậc",
+    "tối ưu",
+    "sống còn",
+    "cấp thiết",
+    "khắt khe",
+    "gắt gao",
+    "bệ phóng",
+    "kim chỉ nam",
+    "nút thắt",
+    "mắt xích",
+    "trụ cột",
+    "đòn bẩy",
+    "khai phá",
+    "kiến tạo",
+    "tiền đề",
+    "động lực",
+    "hài hòa",
+    "chuyên sâu",
+}
+
+# 4. VAGUE HEDGING QUALIFIER PATTERNS (For LEX-05 Stealth Academic AI Hedging Inflation)
+VAGUE_HEDGING_PATTERNS: List[str] = [
+    r"\btương\s+đối\s+(?:nhanh|chậm|cao|thấp|tốt|xấu|đầy\s+đủ|rõ\s+ràng|hợp\s+lý|tích\s+cực|tiêu\s+cực|đồng\s+đều|chặt\s+chẽ|hiệu\s+quả|ổn\s+định|lớn|nhỏ|phổ\s+biến|thuận\s+lợi|hoàn\s+thiện|cụ\s+thể|nhất\s+quán|phù\s+hợp)\b",
+    r"\b(?:một\s+số|những)\s+[^,.!?]{2,35}?\s+nhất\s+định\b",
+    r"\bở\s+mức\s+độ\s+nhất\s+định\b",
+    r"\bphần\s+nào\s+(?:phản\s+ánh|thể\s+hiện|tác\s+động|ảnh\s+hưởng|cho\s+thấy|giúp|góp\s+phần|hạn\s+chế)\b",
+]
+
+
+# 5. ENTITY SYNONYM CYCLING GROUPS ACROSS 8 ECONOMICS FIELDS (12 Groups for LEX-04)
 SYNONYM_CYCLE_GROUPS: List[List[str]] = [
     # 1. Ngân hàng / Tổ chức tín dụng
     [
-        r"ngân\s+hàng(?:\s+này|\s+đó|\s+trên)?",
-        r"tổ\s+chức\s+tín\s+dụng(?:\s+này|\s+đó|\s+trên)?",
-        r"định\s+chế\s+tài\s+chính(?:\s+này|\s+đó|\s+trên)?",
-        r"nhà\s+băng(?:\s+này|\s+đó|\s+trên)?",
-        r"đơn\s+vị\s+cấp\s+vốn(?:\s+này|\s+đó)?",
+        r"ngân\s+hàng(?:\s+này|\s+đó|\s+trên|\s+nói\s+trên|\s+vừa\s+nêu)?",
+        r"tổ\s+chức\s+tín\s+dụng(?:\s+này|\s+đó|\s+trên|\s+nói\s+trên|\s+vừa\s+nêu)?",
+        r"định\s+chế\s+tài\s+chính(?:\s+này|\s+đó|\s+trên|\s+nói\s+trên|\s+vừa\s+nêu)?",
+        r"nhà\s+băng(?:\s+này|\s+đó|\s+trên|\s+nói\s+trên)?",
+        r"đơn\s+vị\s+cấp\s+vốn(?:\s+này|\s+đó|\s+trên)?",
     ],
     # 2. Doanh nghiệp / Công ty / Tập đoàn
     [
-        r"doanh\s+nghiệp(?:\s+này|\s+đó|\s+trên)",
-        r"công\s+ty(?:\s+này|\s+đó|\s+trên)",
-        r"tập\s+đoàn(?:\s+này|\s+đó|\s+trên)",
-        r"đơn\s+vị\s+kinh\s+doanh(?:\s+này|\s+đó|\s+trên)?",
-        r"tổ\s+chức\s+kinh\s+tế(?:\s+này|\s+đó|\s+trên)?",
-        r"chủ\s+thể\s+kinh\s+doanh(?:\s+này|\s+đó)?",
-        r"pháp\s+nhân\s+thương\s+mại(?:\s+này|\s+đó)?",
+        r"doanh\s+nghiệp(?:\s+này|\s+đó|\s+trên|\s+nói\s+trên|\s+vừa\s+nêu)",
+        r"công\s+ty(?:\s+này|\s+đó|\s+trên|\s+nói\s+trên|\s+vừa\s+nêu)",
+        r"tập\s+đoàn(?:\s+này|\s+đó|\s+trên|\s+nói\s+trên|\s+vừa\s+nêu)",
+        r"đơn\s+vị\s+kinh\s+doanh(?:\s+này|\s+đó|\s+trên|\s+nói\s+trên)?",
+        r"tổ\s+chức\s+kinh\s+tế(?:\s+này|\s+đó|\s+trên|\s+nói\s+trên)?",
+        r"chủ\s+thể\s+kinh\s+doanh(?:\s+này|\s+đó|\s+trên)?",
+        r"pháp\s+nhân\s+thương\s+mại(?:\s+này|\s+đó|\s+trên)?",
     ],
     # 3. Khách hàng / Người tiêu dùng
     [
-        r"khách\s+hàng(?:\s+này|\s+đó)?",
-        r"người\s+tiêu\s+dùng",
-        r"người\s+mua\s+hàng",
+        r"khách\s+hàng(?:\s+này|\s+đó|\s+trên)?",
+        r"người\s+tiêu\s+dùng(?:\s+này|\s+đó|\s+trên)?",
+        r"người\s+mua\s+hàng(?:\s+này|\s+đó)?",
         r"thượng\s+đế",
-        r"đối\s+tượng\s+phục\s+vụ",
-        r"người\s+thụ\s+hưởng\s+dịch\s+vụ",
+        r"đối\s+tượng\s+phục\s+vụ(?:\s+này|\s+đó)?",
+        r"người\s+thụ\s+hưởng\s+dịch\s+vụ(?:\s+này|\s+đó)?",
     ],
     # 4. Nhân sự / Lao động
     [
-        r"người\s+lao\s+động",
-        r"đội\s+ngũ\s+nhân\s+sự",
-        r"lực\s+lượng\s+nhân\s+viên",
-        r"cán\s+bộ\s+công\s+nhân\s+viên",
+        r"người\s+lao\s+động(?:\s+này|\s+đó|\s+trên)?",
+        r"đội\s+ngũ\s+nhân\s+sự(?:\s+này|\s+đó|\s+trên)?",
+        r"lực\s+lượng\s+nhân\s+viên(?:\s+này|\s+đó)?",
+        r"cán\s+bộ\s+công\s+nhân\s+viên(?:\s+này|\s+đó)?",
         r"tài\s+sản\s+con\s+người",
-        r"đội\s+ngũ\s+cán\s+bộ",
+        r"đội\s+ngũ\s+cán\s+bộ(?:\s+này|\s+đó|\s+trên)?",
     ],
     # 5. Nhà đầu tư / Cổ đông
     [
-        r"nhà\s+đầu\s+tư(?:\s+này|\s+đó)?",
-        r"cổ\s+đông",
-        r"chủ\s+sở\s+hữu\s+vốn",
-        r"nhà\s+rót\s+vốn",
-        r"các\s+bên\s+góp\s+vốn",
+        r"nhà\s+đầu\s+tư(?:\s+này|\s+đó|\s+trên)?",
+        r"cổ\s+đông(?:\s+này|\s+đó|\s+trên)?",
+        r"chủ\s+sở\s+hữu\s+vốn(?:\s+này|\s+đó)?",
+        r"nhà\s+rót\s+vốn(?:\s+này|\s+đó)?",
+        r"các\s+bên\s+góp\s+vốn(?:\s+này|\s+đó|\s+trên)?",
     ],
     # 6. Thị trường / Thương trường
     [
-        r"thị\s+trường(?:\s+này|\s+đó)",
-        r"sân\s+chơi\s+kinh\s+tế",
-        r"thương\s+trường",
-        r"môi\s+trường\s+cạnh\s+tranh(?:\s+này|\s+đó)?",
-        r"không\s+gian\s+thương\s+mại",
+        r"thị\s+trường(?:\s+này|\s+đó|\s+trên|\s+nói\s+trên)",
+        r"sân\s+chơi\s+kinh\s+tế(?:\s+này|\s+đó)?",
+        r"thương\s+trường(?:\s+này|\s+đó)?",
+        r"môi\s+trường\s+cạnh\s+tranh(?:\s+này|\s+đó|\s+trên)?",
+        r"không\s+gian\s+thương\s+mại(?:\s+này|\s+đó)?",
     ],
     # 7. Chuỗi cung ứng / Mạng lưới hậu cần
     [
-        r"chuỗi\s+cung\s+ứng(?:\s+này|\s+đó)?",
-        r"mạng\s+lưới\s+hậu\s+cần",
-        r"hệ\s+thống\s+phân\s+phối(?:\s+này|\s+đó)?",
-        r"dòng\s+chảy\s+hàng\s+hóa",
+        r"chuỗi\s+cung\s+ứng(?:\s+này|\s+đó|\s+trên)?",
+        r"mạng\s+lưới\s+hậu\s+cần(?:\s+này|\s+đó|\s+trên)?",
+        r"hệ\s+thống\s+phân\s+phối(?:\s+này|\s+đó|\s+trên)?",
+        r"dòng\s+chảy\s+hàng\s+hóa(?:\s+này|\s+đó)?",
         r"mạch\s+máu\s+lưu\s+thông",
+    ],
+    # 8. Thương hiệu / Nhãn hàng / Nhà mốt
+    [
+        r"thương\s+hiệu(?:\s+này|\s+đó|\s+trên|\s+nói\s+trên|\s+vừa\s+nêu)",
+        r"nhãn\s+hàng(?:\s+này|\s+đó|\s+trên|\s+nói\s+trên|\s+vừa\s+nêu)?",
+        r"tên\s+tuổi(?:\s+này|\s+đó|\s+trên)?",
+        r"nhà\s+mốt(?:\s+này|\s+đó|\s+trên)?",
+    ],
+    # 9. Dự án / Gói thầu / Thương vụ / Hợp đồng
+    [
+        r"dự\s+án(?:\s+này|\s+đó|\s+trên|\s+nói\s+trên|\s+vừa\s+nêu)",
+        r"gói\s+thầu(?:\s+này|\s+đó|\s+trên|\s+nói\s+trên)?",
+        r"thương\s+vụ(?:\s+này|\s+đó|\s+trên|\s+nói\s+trên)?",
+        r"hợp\s+đồng(?:\s+này|\s+đó|\s+trên|\s+nói\s+trên)",
+    ],
+    # 10. Sản phẩm / Mặt hàng / Dòng sản phẩm / Giải pháp
+    [
+        r"sản\s+phẩm(?:\s+này|\s+đó|\s+trên|\s+nói\s+trên|\s+vừa\s+nêu)",
+        r"mặt\s+hàng(?:\s+này|\s+đó|\s+trên|\s+nói\s+trên)?",
+        r"dòng\s+sản\s+phẩm(?:\s+này|\s+đó|\s+trên|\s+nói\s+trên)?",
+        r"giải\s+pháp(?:\s+này|\s+đó|\s+trên|\s+nói\s+trên)",
+    ],
+    # 11. Người quản lý / Nhà lãnh đạo / Cấp trên / Đội ngũ quản trị
+    [
+        r"người\s+quản\s+lý(?:\s+này|\s+đó|\s+trên)?",
+        r"nhà\s+lãnh\s+đạo(?:\s+này|\s+đó|\s+trên)?",
+        r"cấp\s+trên(?:\s+này|\s+đó|\s+trên)?",
+        r"đội\s+ngũ\s+quản\s+trị(?:\s+này|\s+đó|\s+trên)?",
+    ],
+    # 12. Nền tảng / Sàn thương mại điện tử / Kênh trực tuyến / Hệ thống
+    [
+        r"nền\s+tảng(?:\s+này|\s+đó|\s+trên|\s+nói\s+trên)",
+        r"sàn\s+thương\s+mại\s+điện\s+tử(?:\s+này|\s+đó|\s+trên)?",
+        r"kênh\s+trực\s+tuyến(?:\s+này|\s+đó|\s+trên)?",
+        r"hệ\s+thống(?:\s+này|\s+đó|\s+trên|\s+nói\s+trên)",
     ],
 ]
 
 
-# 4. 26 STANDARDIZED AI WRITING STYLE RULES METADATA
+# 6. 26 STANDARDIZED AI WRITING STYLE RULES METADATA
 RULE_METADATA: Dict[str, Dict[str, Any]] = {
     "LEX-01": {
         "id": "LEX-01",
@@ -461,8 +537,8 @@ RULE_METADATA: Dict[str, Dict[str, Any]] = {
         "priority_stage": "P3",
         "severity": "warning",
         "severityLabel": "Nên sửa",
-        "userTitle": "Từ vựng hoa mỹ hoặc sáo ngữ khuôn mẫu",
-        "userReason": "Các cụm từ như 'bức tranh toàn cảnh', 'đóng vai trò then chốt', 'tấm thảm đa sắc', 'bối cảnh không ngừng biến đổi' mang sắc thái chung chung, làm giảm độ sắc nét học thuật.",
+        "userTitle": "Từ vựng hoa mỹ hoặc mật độ từ khuếch đại cao",
+        "userReason": "Các cụm từ như 'bức tranh toàn cảnh', 'kim chỉ nam xuyên suốt', 'nút thắt cổ chai', 'tảng băng chìm' hoặc mật độ từ khuếch đại dày đặc mang sắc thái chung chung, làm giảm độ sắc nét học thuật.",
         "userSuggestion": "Thay bằng động từ chuyên ngành hoặc chỉ số định lượng cụ thể phản ánh trực tiếp cơ chế kinh tế.",
     },
     "LEX-02": {
@@ -473,7 +549,7 @@ RULE_METADATA: Dict[str, Dict[str, Any]] = {
         "severity": "suggestion",
         "severityLabel": "Gợi ý",
         "userTitle": "Dùng động từ vòng vo thay cho hệ từ cơ bản 'là / có'",
-        "userReason": "Các cụm 'đóng vai trò như là', 'sở hữu', 'tự hào có', 'giữ vị thế là' khi mô tả khái niệm hoặc số liệu tạo cảm giác phô trương không cần thiết.",
+        "userReason": "Các cụm 'đóng vai trò như là', 'được xem như là một', 'sở hữu', 'tự hào có', 'giữ vị thế là' khi mô tả khái niệm hoặc số liệu tạo cảm giác phô trương không cần thiết.",
         "userSuggestion": "Chuyển về hệ từ trực diện ('là', 'có', 'gồm', 'chiếm') để câu văn chuẩn mực và khách quan.",
     },
     "LEX-03": {
@@ -484,7 +560,7 @@ RULE_METADATA: Dict[str, Dict[str, Any]] = {
         "severity": "warning",
         "severityLabel": "Nên sửa",
         "userTitle": "Diễn đạt phóng đại thiếu thước đo cụ thể",
-        "userReason": "Cụm từ mang sắc thái quảng cáo và tán dương ('minh chứng sống động', 'bước ngoặt lịch sử', 'chìa khóa vàng', 'thành công rực rỡ') làm giảm tính khách quan của nghiên cứu.",
+        "userReason": "Cụm từ mang sắc thái quảng cáo và tán dương ('bứt phá mạnh mẽ', 'nhảy vọt phi mã', 'vươn ra biển lớn', 'thành tựu rực rỡ') làm giảm tính khách quan của nghiên cứu.",
         "userSuggestion": "Lược bỏ các tính từ tán dương; chỉ giữ lại dữ kiện thực nghiệm, tỷ lệ phần trăm hoặc cơ chế tác động thực tế.",
     },
     "LEX-04": {
@@ -500,14 +576,14 @@ RULE_METADATA: Dict[str, Dict[str, Any]] = {
     },
     "LEX-05": {
         "id": "LEX-05",
-        "name": "Diễn đạt mơ hồ về mối liên hệ / gắn kết",
+        "name": "Diễn đạt mơ hồ về mối liên hệ & Lạm dụng từ rào đón mức độ",
         "category": "LEXICAL",
         "priority_stage": "P3",
         "severity": "suggestion",
         "severityLabel": "Gợi ý",
-        "userTitle": "Mô tả mối quan hệ nhân quả hoặc tương quan mơ hồ",
-        "userReason": "Các cụm 'gắn liền với các hoạt động', 'có mối liên hệ mật thiết với', 'xoay quanh các lĩnh vực liên quan đến' không chỉ rõ chiều hướng hay mức độ tác động.",
-        "userSuggestion": "Nêu trực tiếp động từ tác động ('làm tăng 5%', 'rút ngắn thời gian lưu kho', 'quy định trực tiếp').",
+        "userTitle": "Mô tả quan hệ nhân quả mơ hồ hoặc lạm dụng từ rào đón ('tương đối / nhất định')",
+        "userReason": "Các cụm 'gắn liền với', 'có mối liên hệ mật thiết với' hoặc việc lặp lại dày đặc các từ rào đón 'tương đối...', 'một số... nhất định' không chỉ rõ mức độ tác động thực tế.",
+        "userSuggestion": "Nêu trực tiếp động từ tác động và thay các từ rào đón mơ hồ ('tương đối', 'nhất định') bằng con số hoặc tỷ lệ phần trăm cụ thể.",
     },
     "LEX-VN-01": {
         "id": "LEX-VN-01",
@@ -527,9 +603,9 @@ RULE_METADATA: Dict[str, Dict[str, Any]] = {
         "priority_stage": "P2",
         "severity": "warning",
         "severityLabel": "Nên sửa",
-        "userTitle": "Các câu liên tiếp lặp lại cùng một khuôn cú pháp 3 nhịp",
-        "userReason": "Nhiều câu liên tiếp đều mở đầu bằng trạng ngữ bối cảnh, theo sau là mệnh đề chính và kết thúc bằng mệnh đề phụ ('qua đó / từ đó / góp phần') tạo nhịp điệu đơn điệu.",
-        "userSuggestion": "Gộp các câu có quan hệ nhân quả trực tiếp và thay đổi cách mở câu (mở bằng chủ ngữ trực diện hoặc cấu trúc Đề – Thuyết).",
+        "userTitle": "Các câu liên tiếp lặp lại cùng một khuôn cú pháp",
+        "userReason": "Nhiều câu liên tiếp đều mở đầu bằng cùng một khung trạng ngữ hoặc cùng một mẫu bình luận tiêu chí ('Tiêu chí X đạt Y điểm...'), tạo nhịp điệu đơn điệu.",
+        "userSuggestion": "Gộp các câu có quan hệ nhân quả/so sánh trực tiếp và thay đổi cách mở câu (mở bằng chủ ngữ trực diện hoặc nhóm các tiêu chí có chung xu hướng).",
     },
     "SYN-02": {
         "id": "SYN-02",
@@ -549,9 +625,9 @@ RULE_METADATA: Dict[str, Dict[str, Any]] = {
         "priority_stage": "P3",
         "severity": "warning",
         "severityLabel": "Nên sửa",
-        "userTitle": "Cấu trúc đối lập khuếch đại ý nghĩa ('không chỉ... mà còn...')",
-        "userReason": "Cách đặt vấn đề theo khuôn mẫu 'không chỉ là X đơn thuần mà còn là Y toàn diện' mang tính hùng biện hơn là phân tích dữ liệu thực nghiệm.",
-        "userSuggestion": "Chuyển sang câu khẳng định trực diện hoặc dùng cặp từ 'đồng thời', 'vừa... vừa...' gắn với chỉ tiêu cụ thể.",
+        "userTitle": "Cấu trúc sóng đôi phủ định ('không chỉ... mà còn...', 'không phải X mà là Y', 'chứ không phải')",
+        "userReason": "Cách đặt vấn đề theo khuôn mẫu phủ định vế đầu để tôn vế sau ('không phải là X mà là Y', 'X chứ không phải Y', 'không chỉ... mà còn...') lặp lại dày đặc mang dấu ấn diễn ngôn máy móc.",
+        "userSuggestion": "Chuyển sang câu khẳng định trực diện nêu thẳng bản chất của đối tượng hoặc dùng cặp từ 'đồng thời', 'vừa... vừa...' gắn với chỉ tiêu cụ thể.",
     },
     "SYN-04": {
         "id": "SYN-04",
@@ -566,14 +642,14 @@ RULE_METADATA: Dict[str, Dict[str, Any]] = {
     },
     "SYN-VN-01": {
         "id": "SYN-VN-01",
-        "name": "Dư thừa đại từ hồi chỉ / Thiếu tỉnh lược chủ ngữ",
+        "name": "Dư thừa đại từ chỉ định & Chèn 'vì vậy' giữa Chủ–Vị theo lối dịch máy",
         "category": "VIETNAMESE_SYNTAX",
         "priority_stage": "P2",
         "severity": "warning",
         "severityLabel": "Nên sửa",
-        "userTitle": "Lạm dụng đại từ 'nó / họ / điều này' và sở hữu cách 'của họ / của mình'",
-        "userReason": "Câu văn lặp lại cơ học các từ 'nó', 'điều này', 'của họ', 'của mình' theo lối dịch từng từ từ tiếng Anh, làm mất tính tự nhiên của tiếng Việt học thuật.",
-        "userSuggestion": "Lược bỏ đại từ 'nó' khi chỉ khái niệm trừu tượng, xóa định ngữ sở hữu thừa ('của họ', 'của mình') và nối trực tiếp mệnh đề.",
+        "userTitle": "Lạm dụng đại từ chỉ định hoặc chèn 'vì vậy' vào giữa Chủ ngữ và Vị ngữ",
+        "userReason": "Câu văn lặp lại cơ học 'nó', 'điều này', 'của họ' hoặc chèn 'vì vậy' ngay giữa Chủ ngữ và Vị ngữ ('Doanh nghiệp vì vậy cần...') theo lối dịch từng từ từ tiếng Anh ('Subject therefore Verb').",
+        "userSuggestion": "Chuyển liên từ 'Vì vậy,' lên đầu câu hoặc dùng 'nên / do đó' trước mệnh đề kết quả; lược bỏ các đại từ 'nó / của họ / của mình' dư thừa.",
     },
     "SYN-VN-02": {
         "id": "SYN-VN-02",
@@ -582,20 +658,20 @@ RULE_METADATA: Dict[str, Dict[str, Any]] = {
         "priority_stage": "P2",
         "severity": "suggestion",
         "severityLabel": "Gợi ý",
-        "userTitle": "Mở câu vòng vo bằng khung 'Đối với vấn đề..., nó...'",
-        "userReason": "Khuôn câu 'Đối với vấn đề X, nó thường được...' tách rời chủ đề khỏi vị ngữ và chèn đại từ thừa.",
+        "userTitle": "Mở câu vòng vo bằng khung 'Đối với..., / Về mặt..., nó...'",
+        "userReason": "Khuôn câu 'Đối với X, điều này / nó thường được...' tách rời chủ đề khỏi vị ngữ và chèn đại từ thừa.",
         "userSuggestion": "Đưa thẳng đối tượng X lên đầu câu làm Đề ngữ và chuyển vị ngữ sang dạng chủ động.",
     },
     "SYN-VN-03": {
         "id": "SYN-VN-03",
-        "name": "Bị động dịch máy ('được/bị... bởi') & Danh hóa ngoại lai ('việc/sự + V')",
+        "name": "Bị động dịch máy ('được/bị... bởi') & Danh hóa 'Việc + V' làm chủ ngữ",
         "category": "VIETNAMESE_SYNTAX",
         "priority_stage": "P2",
         "severity": "suggestion",
         "severityLabel": "Gợi ý",
-        "userTitle": "Câu bị động ('được... bởi') và danh hóa ('việc/sự...') kéo dài",
-        "userReason": "Lồng ghép nhiều cụm danh hóa ('việc thực hiện...', 'thông qua việc...') và thể bị động ('được thực hiện bởi') khiến câu văn nặng nề.",
-        "userSuggestion": "Đưa chủ thể hành động lên trước động từ chủ động và thay 'thông qua việc' bằng 'nhờ' hoặc 'khi'.",
+        "userTitle": "Câu bị động ('được... bởi') và lạm dụng danh hóa ('Việc + động từ...') đầu câu",
+        "userReason": "Lồng ghép nhiều cụm danh hóa mở đầu bằng 'Việc thực hiện / Việc triển khai...' hoặc thể bị động dịch máy khiến câu văn nặng nề.",
+        "userSuggestion": "Đưa chủ thể hành động (doanh nghiệp, ngân hàng, bộ phận) lên làm chủ ngữ trực tiếp thay vì mở câu bằng 'Việc + động từ'.",
     },
     "RHY-01": {
         "id": "RHY-01",
@@ -610,25 +686,25 @@ RULE_METADATA: Dict[str, Dict[str, Any]] = {
     },
     "DIS-01": {
         "id": "DIS-01",
-        "name": "Cấu trúc 'Đoạn văn đóng hộp' 4 bước khép kín",
+        "name": "Cấu trúc 'Đoạn văn đóng hộp' khép kín",
         "category": "DISCOURSE",
         "priority_stage": "P1",
         "severity": "warning",
         "severityLabel": "Nên sửa",
-        "userTitle": "Đoạn văn đóng khung 4 bước khép kín ('Cụ thể -> Tuy nhiên -> Do đó')",
-        "userReason": "Đoạn văn vận hành theo khuôn mẫu cứng nhắc: Mở đoạn -> Cụ thể -> Tuy nhiên -> Do đó tự kết luận, làm đứt mạch liên kết tự nhiên sang đoạn tiếp theo.",
+        "userTitle": "Đoạn văn đóng khung khép kín ('Nhận định -> Tuy nhiên/Cụ thể -> Do đó/Như vậy')",
+        "userReason": "Đoạn văn vận hành theo khuôn mẫu cứng nhắc: Mở đoạn -> Giải thích/Phản biện -> Tự kết luận khép kín, làm đứt mạch liên kết tự nhiên sang đoạn tiếp theo.",
         "userSuggestion": "Lược bỏ câu tổng kết sáo rỗng cuối đoạn thân bài và chuyển ý trực tiếp sang vấn đề của đoạn kế tiếp.",
     },
     "DIS-02": {
         "id": "DIS-02",
-        "name": "Câu kết đoạn / kết mục tổng kết thừa",
+        "name": "Câu kết đoạn / Đoạn kết tiểu mục tổng kết thừa (Echoic Closure)",
         "category": "DISCOURSE",
         "priority_stage": "P1",
         "severity": "warning",
         "severityLabel": "Nên sửa",
-        "userTitle": "Câu kết đoạn lặp lại ý chung mà không có thông tin mới",
-        "userReason": "Câu cuối đoạn bắt đầu bằng 'Tóm lại,', 'Nhìn chung,', 'Như vậy, có thể thấy...' chỉ nhắc lại câu mở đoạn bằng từ ngữ khẩu hiệu.",
-        "userSuggestion": "Xóa câu kết đoạn thừa nếu không chứa số liệu mới, hoặc thay bằng nhận định bản lề dẫn sang mục tiếp theo.",
+        "userTitle": "Câu hoặc đoạn kết tiểu mục tóm tắt lặp lại ý cũ ('Như vậy, / Nhìn chung, / Đây là cơ sở để...')",
+        "userReason": "Câu hoặc đoạn ngắn cuối mục bắt đầu bằng 'Tóm lại,', 'Nhìn chung,', 'Như vậy,' hoặc kết bằng 'Đây là cơ sở để tiếp tục đề xuất giải pháp ở Chương 3' lặp lại ở cuối mọi tiểu mục gây dư thừa.",
+        "userSuggestion": "Xóa đoạn/câu kết tiểu mục mang tính chuyển tiếp công thức, hoặc giữ lại tối đa 1 lần ở phần Kết luận cuối chương.",
     },
     "DIS-03": {
         "id": "DIS-03",
@@ -638,19 +714,19 @@ RULE_METADATA: Dict[str, Dict[str, Any]] = {
         "severity": "suggestion",
         "severityLabel": "Gợi ý",
         "userTitle": "Mật độ từ nối đóng khung đầu câu cao ('Cụ thể, / Tuy nhiên, / Do đó,')",
-        "userReason": "Việc gắn từ nối kèm dấu phẩy ở đầu hầu hết các câu trong đoạn làm mạch văn bị cắt khúc cơ học.",
+        "userReason": "Việc gắn từ nối kèm dấu phẩy ở đầu hầu hết các câu hoặc các đoạn liên tiếp làm mạch văn bị cắt khúc cơ học.",
         "userSuggestion": "Giữ tối đa 1 từ nối đầu câu trong đoạn; chuyển các liên kết còn lại vào phụ từ nội câu ('cũng', 'vẫn', 'lại', 'nhờ đó').",
     },
     "DIS-04": {
         "id": "DIS-04",
-        "name": "Mở đầu định nghĩa tiêu đề như thực thể độc lập",
+        "name": "Dẫn nhập siêu diễn ngôn & Định danh tiêu đề/bảng biểu rập khuôn",
         "category": "DISCOURSE",
         "priority_stage": "P3",
         "severity": "suggestion",
         "severityLabel": "Gợi ý",
-        "userTitle": "Mở đầu mục bằng câu định nghĩa lặp lại nguyên văn tiêu đề",
-        "userReason": "Câu đầu tiên lặp lại toàn bộ cụm tiêu đề kèm 'đề cập đến / là một tập hợp các...' làm chậm nhịp đi vào nội dung phân tích.",
-        "userSuggestion": "Đi thẳng vào bối cảnh ngành hoặc cơ chế vận hành thực tế của đối tượng nghiên cứu.",
+        "userTitle": "Mở đầu bằng định nghĩa tiêu đề hoặc câu dẫn nhập bảng biểu rập khuôn",
+        "userReason": "Các câu mở đầu dạng 'X được hiểu là...', 'Bảng trên cho thấy ba điểm...', 'X là hạng mục trọng tâm...' lặp lại cùng một công thức dẫn nhập.",
+        "userSuggestion": "Đi thẳng vào số liệu nổi bật nhất trong bảng hoặc cơ chế nghiệp vụ thực tế thay vì câu dẫn nhập công thức.",
     },
     "ARG-01": {
         "id": "ARG-01",
@@ -660,19 +736,19 @@ RULE_METADATA: Dict[str, Dict[str, Any]] = {
         "severity": "suggestion",
         "severityLabel": "Gợi ý",
         "userTitle": "Các luận điểm được chia dung lượng ngang nhau, thiếu trọng tâm và số liệu",
-        "userReason": "Đoạn văn liệt kê các yếu tố với độ dài tương đương nhau và vắng bóng số liệu thực nghiệm hoặc điều khoản cụ thể.",
+        "userReason": "Đoạn văn liệt kê các yếu tố ('Thứ nhất... Thứ hai... Thứ ba...' hoặc 'Trước hết... Bên cạnh đó... Ngoài ra...') với độ dài tương đương nhau và vắng bóng số liệu thực nghiệm.",
         "userSuggestion": "Phân bổ dung lượng sâu hơn cho nguyên nhân cốt lõi (kèm số liệu minh chứng) và gom các yếu tố phụ thành nhóm cộng hưởng.",
     },
     "ARG-02": {
         "id": "ARG-02",
-        "name": "Đường cong lập luận kiểu 'Con lắc an toàn' (Pendulum Hedging)",
+        "name": "Đường cong lập luận kiểu 'Con lắc an toàn' 3 pha (Pendulum Hedging)",
         "category": "ARGUMENTATION",
         "priority_stage": "P1",
         "severity": "warning",
         "severityLabel": "Nên sửa",
-        "userTitle": "Lập luận rào đón hai mặt và kết luận 'đồng bộ, toàn diện, bền vững'",
-        "userReason": "Khuôn lập luận 'nêu mặt tích cực -> Tuy nhiên có thách thức -> Do đó cần tái cấu trúc toàn diện để phát triển bền vững' mang tính trung dung, thiếu chiều sâu phân tích.",
-        "userSuggestion": "Chỉ rõ bài toán đánh đổi (trade-off) hoặc điều kiện biên cụ thể thay cho lời khuyên tổng quát.",
+        "userTitle": "Lập luận con lắc 3 pha ('Khen kết quả -> Tuy nhiên còn hạn chế -> Do đó cần hoàn thiện')",
+        "userReason": "Khuôn lập luận 3 pha 'Nêu mặt tích cực -> Tuy nhiên còn hạn chế/chưa đồng đều -> Do đó cần tiếp tục hoàn thiện/rà soát' lặp lại tạo cảm giác trung dung, thiếu chiều sâu phân tích.",
+        "userSuggestion": "Chỉ rõ nguyên nhân gốc rễ (về quy trình, ngân sách, nhân sự) hoặc bài toán đánh đổi (trade-off) thay cho lời khuyên tổng quát.",
     },
     "ARG-03": {
         "id": "ARG-03",
@@ -682,19 +758,19 @@ RULE_METADATA: Dict[str, Dict[str, Any]] = {
         "severity": "suggestion",
         "severityLabel": "Gợi ý",
         "userTitle": "Mở đầu hoặc nhận định bằng đại cảnh vĩ mô chung chung",
-        "userReason": "Các cụm 'Trong bối cảnh toàn cầu hóa...', 'phản ánh xu hướng rộng lớn hơn', 'để lại dấu ấn không phai mờ' xuất hiện lặp lại ở nhiều tài liệu.",
+        "userReason": "Các cụm 'Trong bối cảnh toàn cầu hóa...', 'Trong kỷ nguyên kinh tế số...', 'khẳng định tầm vóc' xuất hiện lặp lại ở nhiều tài liệu.",
         "userSuggestion": "Đi thẳng vào vấn đề nghiệp vụ hoặc dữ liệu thực tế của ngành đang nghiên cứu.",
     },
     "ARG-04": {
         "id": "ARG-04",
-        "name": "Kết luận đóng khung 'Thách thức & Triển vọng' và Đề mục đối xứng",
+        "name": "Kết luận đóng khung 'Thách thức & Triển vọng' và Khuyến nghị khẩu hiệu",
         "category": "ARGUMENTATION",
         "priority_stage": "P1",
         "severity": "suggestion",
         "severityLabel": "Gợi ý",
-        "userTitle": "Đóng khung nhận định theo công thức 'Mặc dù..., vẫn đối mặt với nhiều thách thức'",
-        "userReason": "Mẫu câu 'Mặc dù đạt được X, Y vẫn đối mặt với nhiều thách thức...' lặp lại nhiều lần khiến phần thảo luận thiếu tính phát hiện mới.",
-        "userSuggestion": "Phân tích trực tiếp nút thắt nghiệp vụ hoặc giới hạn dữ liệu cụ thể.",
+        "userTitle": "Đóng khung nhận định 'Mặc dù..., vẫn đối mặt...' hoặc khuyến nghị khẩu hiệu chung chung",
+        "userReason": "Mẫu câu 'Mặc dù đạt được X, Y vẫn còn tồn tại...' hoặc 'Nếu được triển khai đồng bộ, các giải pháp sẽ góp phần nâng cao...' mang tính khẩu hiệu chung chung.",
+        "userSuggestion": "Phân tích trực tiếp nút thắt nghiệp vụ hoặc nêu rõ lộ trình và chỉ tiêu KPI dự kiến đạt được.",
     },
     "PRG-01": {
         "id": "PRG-01",
@@ -703,31 +779,31 @@ RULE_METADATA: Dict[str, Dict[str, Any]] = {
         "priority_stage": "P4",
         "severity": "warning",
         "severityLabel": "Nên sửa",
-        "userTitle": "Dẫn nguồn nhận định mơ hồ ('Các chuyên gia cho rằng...')",
-        "userReason": "Sử dụng cụm 'Các chuyên gia cho rằng', 'Nhiều nhà quan sát nhận định' mà không nêu tên tác giả, năm công bố hay tổ chức cụ thể.",
+        "userTitle": "Dẫn nguồn nhận định mơ hồ hoặc nhấn mạnh độ phủ truyền thông chung chung",
+        "userReason": "Sử dụng cụm 'Các chuyên gia cho rằng', 'Nhiều nghiên cứu chỉ ra rằng', 'được đưa tin bởi các tạp chí' mà không nêu tên tác giả, năm công bố hay số liệu kiểm chứng.",
         "userSuggestion": "Bổ sung trích dẫn chuẩn học thuật (Tác giả, Năm) hoặc dẫn trực tiếp báo cáo thống kê của cơ quan chuyên ngành.",
     },
     "PRG-02": {
         "id": "PRG-02",
-        "name": "Rào đón giáo huấn & Miễn trừ trách nhiệm nguồn tin",
+        "name": "Rào đón giáo huấn & Miễn trừ trách nhiệm dữ liệu/phương pháp luận",
         "category": "ARGUMENTATION",
         "priority_stage": "P4",
         "severity": "suggestion",
         "severityLabel": "Gợi ý",
-        "userTitle": "Cụm từ rào đón mang tính nhắc nhở ('Điều quan trọng cần lưu ý là...')",
-        "userReason": "Các cụm mở đầu 'Điều quan trọng cần lưu ý là', 'Cần phải nhớ rằng' làm gián đoạn mạch lập luận khách quan.",
-        "userSuggestion": "Xóa cụm từ rào đón và trình bày thẳng luận điểm hoặc điều kiện kiểm định.",
+        "userTitle": "Câu rào đón miễn trừ trách nhiệm về giới hạn dữ liệu hoặc cách hiểu chỉ số",
+        "userReason": "Các câu tự thanh minh như 'Trong phạm vi dữ liệu nghiên cứu, chưa có tài liệu cho thấy...', 'Khóa luận chỉ sử dụng X như khung tham chiếu chứ không đồng nhất...' hoặc 'Điều quan trọng cần lưu ý là...' mang đậm dấu ấn rào đón của mô hình ngôn ngữ.",
+        "userSuggestion": "Xóa câu rào đón tự thanh minh; trình bày thẳng kết quả phân tích từ dữ liệu hiện có (chuyển phần hạn chế dữ liệu về mục 'Hạn chế của đề tài' ở cuối khóa luận).",
     },
     "FMT-01": {
         "id": "FMT-01",
-        "name": "Định dạng thị giác cơ học: Danh sách tiêu đề in đậm, Bold, Title Case, Gạch ngang dài",
+        "name": "Định dạng thị giác cơ học: Danh sách tiêu đề in đậm, Gạch ngang giải thích giữa câu",
         "category": "FORMATTING_FORENSIC",
         "priority_stage": "P0_P3",
         "severity": "suggestion",
         "severityLabel": "Gợi ý",
-        "userTitle": "Định dạng liệt kê tiêu đề in đậm hoặc lạm dụng dấu gạch ngang dài (—)",
-        "userReason": "Các danh sách dạng '- **Tiêu đề**: Mô tả' lặp lại dày đặc hoặc lạm dụng dấu gạch ngang dài (—) làm văn bản giống bản tóm tắt tự động.",
-        "userSuggestion": "Chuyển các ý phân tích quan trọng thành đoạn văn xuôi học thuật hoàn chỉnh và dùng dấu câu tiếng Việt chuẩn.",
+        "userTitle": "Lạm dụng dấu gạch ngang giải thích (— / -) giữa câu hoặc danh sách tiêu đề in đậm",
+        "userReason": "Việc chèn mệnh đề giải thích bằng dấu gạch ngang dài (—) hoặc gạch nối (-) giữa câu theo lối tiếng Anh, hoặc liệt kê '- **Tiêu đề**:' lặp lại làm mất nhịp văn xuôi học thuật tiếng Việt.",
+        "userSuggestion": "Thay dấu gạch ngang giải thích (— / -) bằng dấu phẩy (,), dấu ngoặc đơn () hoặc tách thành câu văn xuôi độc lập.",
     },
     "FOR-01": {
         "id": "FOR-01",
@@ -745,17 +821,150 @@ RULE_METADATA: Dict[str, Dict[str, Any]] = {
 
 def build_contextual_suggestion(rule_id: str, matched_text: str, sentence_text: str = "") -> str:
     """
-    Contextual Rewrite Engine:
+    Contextual Rewrite Engine (Full 26/26 Rules Coverage):
     Generates a concrete, span-specific Vietnamese academic editorial rewrite
-    based on the exact matched text and surrounding sentence context.
+    containing «clean_match» and an academic model sentence/phrase.
     """
     base_suggestion = RULE_METADATA.get(rule_id, {}).get("userSuggestion", "")
     clean_match = matched_text.strip().strip('"')
     if not clean_match:
         return base_suggestion
+    short_match = clean_match[:75] + ("..." if len(clean_match) > 75 else "")
+    lower_m = clean_match.lower()
 
-    # 1. SYN-VN-03: Passive calque ("được/bị [V] bởi [Agent]") & nominalization
-    if rule_id == "SYN-VN-03":
+    # 1. LEX-01: AI Vocabulary & Intensifier Density
+    if rule_id == "LEX-01":
+        cliche_map = {
+            "bức tranh toàn cảnh": "thống kê tổng hợp / thực trạng tổng thể",
+            "tấm thảm đa sắc": "cơ cấu đa dạng",
+            "sự giao thoa phức tạp": "mối tương quan / sự kết hợp",
+            "bối cảnh không ngừng biến đổi": "giai đoạn biến động lãi suất / thị trường",
+            "đóng vai trò": "quyết định trực tiếp đến / tác động đến",
+            "khai phá tiềm năng": "khai thác hiệu quả nguồn lực",
+            "kiến tạo hệ sinh thái": "xây dựng mạng lưới dịch vụ",
+            "góc nhìn đa chiều": "phân tích đa biến / đánh giá từ nhiều khía cạnh",
+            "kim chỉ nam": "nguyên tắc định hướng / tiêu chuẩn vận hành",
+            "bệ phóng": "nền tảng hỗ trợ / điều kiện thuận lợi",
+            "nút thắt cổ chai": "điểm nghẽn quy trình / hạn chế lớn nhất",
+            "tảng băng chìm": "rủi ro tiềm ẩn chưa ghi nhận",
+            "mắt xích": "khâu nghiệp vụ / bộ phận",
+            "trụ cột chiến lược": "nhiệm vụ trọng tâm",
+            "đòn bẩy chiến lược": "công cụ thúc đẩy",
+            "cát cứ tri thức": "tình trạng phân mảnh thông tin giữa các bộ phận",
+            "luồng sinh khí mới": "động lực cải tiến quy trình",
+        }
+        for k, v in cliche_map.items():
+            if k in lower_m:
+                return f"Thay cụm sáo ngữ «{short_match}» bằng thuật ngữ học thuật cụ thể: «{v}»."
+        return (
+            f"Giảm mật độ tính từ/danh từ khuếch đại tại «{short_match}»; "
+            f"thay bằng chỉ tiêu đo lường cụ thể (ví dụ: «chiếm tỷ trọng lớn nhất», «tác động trực tiếp đến chi phí vận hành»)."
+        )
+
+    # 2. LEX-02: Copula Avoidance
+    elif rule_id == "LEX-02":
+        if any(w in lower_m for w in ["sở hữu", "tự hào có", "nổi bật với", "mang trong mình"]):
+            return f"Thay cụm động từ phô trương «{short_match}» bằng hệ từ chỉ sở hữu khách quan: «có», «gồm» hoặc «đạt»."
+        return f"Thay cụm động từ vòng vo «{short_match}» bằng hệ từ trực diện: «là», «chiếm» hoặc «thuộc nhóm»."
+
+    # 3. LEX-03: Corporate & Academic Puffery
+    elif rule_id == "LEX-03":
+        return (
+            f"Lược bỏ cụm từ tán dương phóng đại «{short_match}»; "
+            f"thay bằng dữ kiện định lượng khách quan (ví dụ: «tăng trưởng 18,5%/năm», «đạt 4,2/5 điểm khảo sát»)."
+        )
+
+    # 4. LEX-04: Artificial Synonym Cycling
+    elif rule_id == "LEX-04":
+        return (
+            f"Trong đoạn xuất hiện hiện tượng xoay vòng cách gọi «{short_match}»; "
+            f"hãy thống nhất dùng 1 thuật ngữ định danh duy nhất (ví dụ: giữ nguyên «doanh nghiệp» hoặc tên viết tắt của đơn vị)."
+        )
+
+    # 5. LEX-05: Vague Association & Hedging Qualifier Inflation ("tương đối", "nhất định")
+    elif rule_id == "LEX-05":
+        if "tương đối" in lower_m or "nhất định" in lower_m or "phần nào" in lower_m:
+            return (
+                f"Thay cụm rào đón mức độ mơ hồ «{short_match}» bằng mức đánh giá định lượng cụ thể "
+                f"(ví dụ: «đạt mức khá (3,85/5 điểm)», «chiếm 62,4% ý kiến đồng ý» hoặc xóa hẳn từ «tương đối / nhất định»)."
+            )
+        return (
+            f"Thay cụm liên kết mơ hồ «{short_match}» bằng động từ chỉ rõ chiều hướng tác động "
+            f"(ví dụ: «làm tăng chi phí...», «quyết định trực tiếp đến...», «tương quan thuận với...»)."
+        )
+
+    # 6. LEX-VN-01: Sino-Vietnamese Syllable Congestion & Nominalization Stacking
+    elif rule_id == "LEX-VN-01":
+        return (
+            f"Giải nén chuỗi danh hóa / từ Hán–Việt dày đặc «{short_match}» bằng cách đưa chủ thể lên trước động từ "
+            f"(ví dụ: «Doanh nghiệp chuẩn hóa quy trình đánh giá...» thay cho «Việc thực hiện quy trình hoàn thiện hoạt động...»)."
+        )
+
+    # 7. SYN-01: Syntactic Isomorphism
+    elif rule_id == "SYN-01":
+        return (
+            f"Các câu trong đoạn «{short_match}» đang lặp lại cùng một khuôn mở đầu; "
+            f"hãy gộp các tiêu chí có điểm số tương đồng vào chung 1 câu so sánh (ví dụ: «Hai tiêu chí X và Y cùng đạt mức cao trên 4,1 điểm, trong khi Z chỉ đạt 3,2 điểm»)."
+        )
+
+    # 8. SYN-02: Trailing Participial Summary Clause
+    elif rule_id == "SYN-02":
+        return (
+            f"Cắt bỏ mệnh đề đuôi tổng kết chung chung «{short_match}» "
+            f"hoặc tách thành câu độc lập nêu rõ kết quả định lượng thực tế."
+        )
+
+    # 9. SYN-03: Negative Parallelism (4 variants)
+    elif rule_id == "SYN-03":
+        if "không phải" in lower_m and "mà" in lower_m:
+            return (
+                f"Viết lại cấu trúc sóng đôi phủ định «{short_match}» thành câu khẳng định trực diện: "
+                f"bỏ vế phủ định «không phải là...» và nêu thẳng bản chất của đối tượng ở vế sau."
+            )
+        if "chứ không" in lower_m:
+            return (
+                f"Rút gọn cụm đối lập «{short_match}» bằng cách khẳng định thẳng phân loại/bản chất nghiệp vụ "
+                f"(hoặc dùng «thay vì» khi thực sự cần đối chiếu hai phương án)."
+            )
+        return (
+            f"Chuyển cấu trúc sóng đôi «{short_match}» sang câu khẳng định trực diện dùng «đồng thời» hoặc «bên cạnh... còn...» gắn với số liệu cụ thể."
+        )
+
+    # 10. SYN-04: Mechanical Rule of Three
+    elif rule_id == "SYN-04":
+        return (
+            f"Rút gọn cụm liệt kê ba vế «{short_match}»: chỉ giữ lại 1–2 khái niệm sát nhất với chỉ tiêu kinh tế đang phân tích."
+        )
+
+    # 11. SYN-VN-01: Redundant Pronouns & Mid-clause "vì vậy" Calque
+    elif rule_id == "SYN-VN-01":
+        if "vì vậy" in lower_m:
+            return (
+                f"Cụm «{short_match}» đang chèn «vì vậy» vào giữa Chủ ngữ và Vị ngữ theo lối dịch tiếng Anh (Subject therefore Verb); "
+                f"hãy đưa «Vì vậy,» lên đầu câu hoặc đổi thành «Do đó, [Chủ ngữ] cần/phải...»."
+            )
+        if "của họ" in lower_m or "của mình" in lower_m or "của nó" in lower_m:
+            return f"Xóa trực tiếp định ngữ sở hữu dịch máy «{short_match}» vì chủ thể đã xác định rõ trong câu."
+        if "nó" in lower_m:
+            return f"Lược bỏ đại từ «{short_match}» và nối trực tiếp vị ngữ vào danh từ chủ đề đứng trước."
+        return (
+            f"Thay đại từ chỉ định lặp lại «{short_match}» bằng danh ngữ cụ thể (ví dụ: «Mức chênh lệch này», «Cơ chế trên») hoặc nối thẳng vào câu trước."
+        )
+
+    # 12. SYN-VN-02: Topic-Comment Calque ("Đối với..., nó...")
+    elif rule_id == "SYN-VN-02":
+        m_top = re.match(
+            r"^(?:Đối\s+với(?:\s+vấn\s+đề)?|Liên\s+quan\s+đến(?:\s+khía\s+cạnh)?|Xét\s+(?:về|trên)\s+(?:mặt|phương\s+diện|góc\s+độ|khía\s+cạnh)|Về\s+(?:mặt|phương\s+diện|phía|khía\s+cạnh)|Dưới\s+góc\s+(?:độ|nhìn)(?:\s+của)?)\s+([^,]+),\s*",
+            clean_match,
+            re.IGNORECASE,
+        )
+        if m_top:
+            topic = m_top.group(1).strip()
+            return f"Đưa thẳng chủ đề «{topic.capitalize()}» tại «{short_match}» lên đầu câu làm chủ ngữ trực tiếp và bỏ phần đệm mở đầu."
+        return f"Rút gọn khung đề–thuyết dịch máy «{short_match}» bằng cách đưa danh từ trung tâm lên làm chủ ngữ chủ động."
+
+    # 13. SYN-VN-03: Passive Calque & "Việc + V" Nominalization Subject
+    elif rule_id == "SYN-VN-03":
         m_pas = re.search(
             r"\b(?:được|bị)\s+([a-zA-ZÀ-ỹ\s]{2,30}?)\s+bởi\s+([a-zA-ZÀ-ỹ\s]{2,40})",
             clean_match,
@@ -775,65 +984,111 @@ def build_contextual_suggestion(rule_id: str, matched_text: str, sentence_text: 
         )
         if m_nom:
             action = m_nom.group(1).strip()
-            return f"Rút gọn cụm danh hóa «{clean_match}» thành: «nhờ {action}» hoặc «khi triển khai {action}»."
-
-    # 2. SYN-VN-01: Redundant pronouns ("của họ", "của mình", "nó thường", "điều này")
-    elif rule_id == "SYN-VN-01":
-        lower_m = clean_match.lower()
-        if "của họ" in lower_m or "của mình" in lower_m or "của nó" in lower_m:
-            return f"Xóa trực tiếp định ngữ sở hữu dịch máy «{clean_match}» vì chủ thể đã rõ trong câu."
-        if "nó" in lower_m:
-            return f"Lược bỏ đại từ «{clean_match}» và nối trực tiếp vị ngữ vào danh từ chủ đề đứng trước."
-        if "điều này" in lower_m or "việc này" in lower_m:
-            return f"Thay đại từ mơ hồ «{clean_match}» bằng danh từ chỉ định cụ thể (ví dụ: «Cơ chế này», «Biến động trên») hoặc nối với câu trước bằng «, qua đó»."
-
-    # 3. SYN-VN-02: Topic-comment loss ("Đối với vấn đề X, nó...")
-    elif rule_id == "SYN-VN-02":
-        m_top = re.match(
-            r"^(?:Đối\s+với\s+vấn\s+đề|Liên\s+quan\s+đến\s+khía\s+cạnh|Xét\s+trên\s+phương\s+diện)\s+([^,]+),\s*(?:nó\s+)?",
-            clean_match,
-            re.IGNORECASE,
-        )
-        if m_top:
-            topic = m_top.group(1).strip()
-            return f"Đưa thẳng chủ đề «{topic.capitalize()}» lên đầu câu làm chủ ngữ trực tiếp và bỏ phần đệm «Đối với vấn đề... nó»."
-
-    # 4. LEX-02: Copula avoidance ("đóng vai trò như là", "giữ vị thế là")
-    elif rule_id == "LEX-02":
-        return f"Thay cụm động từ vòng vo «{clean_match}» bằng hệ từ trực diện: «là», «chiếm» hoặc «gồm»."
-
-    # 5. LEX-01: AI Vocabulary & Clichés
-    elif rule_id == "LEX-01":
-        cliche_map = {
-            "bức tranh toàn cảnh": "thống kê tổng hợp / thực trạng tổng thể",
-            "tấm thảm đa sắc": "cơ cấu đa dạng",
-            "sự giao thoa phức tạp": "mối tương quan / sự kết hợp",
-            "bối cảnh không ngừng biến đổi": "giai đoạn biến động lãi suất / thị trường",
-            "đóng vai trò": "quyết định trực tiếp đến / tác động đến",
-            "khai phá tiềm năng": "khai thác hiệu quả nguồn lực",
-            "kiến tạo hệ sinh thái": "xây dựng mạng lưới dịch vụ",
-            "góc nhìn đa chiều": "phân tích đa biến / đánh giá từ nhiều khía cạnh",
-        }
-        lower_m = clean_match.lower()
-        for k, v in cliche_map.items():
-            if k in lower_m:
-                return f"Thay cụm sáo ngữ «{clean_match}» bằng thuật ngữ học thuật cụ thể: «{v}»."
-
-    # 6. SYN-02: Trailing participial clause
-    elif rule_id == "SYN-02":
+            return f"Rút gọn cụm danh hóa «{short_match}» thành: «nhờ {action}» hoặc «khi triển khai {action}»."
         return (
-            f"Cắt bỏ mệnh đề đuôi «{clean_match[:60]}{'...' if len(clean_match) > 60 else ''}» "
-            f"hoặc tách thành câu riêng nêu rõ mức tăng/giảm định lượng cụ thể."
+            f"Thay chủ ngữ danh hóa «{short_match}» bằng chủ thể thực hiện hành động "
+            f"(ví dụ: «Khi doanh nghiệp...» hoặc «Bộ phận quản lý trực tiếp...»)."
         )
 
-    # 7. SYN-04: Rule of Three
-    elif rule_id == "SYN-04":
+    # 14. RHY-01: Monotonous Sentence Rhythm
+    elif rule_id == "RHY-01":
         return (
-            f"Rút gọn cụm ba vế «{clean_match}»: chỉ giữ lại 1 thuật ngữ đo lường được sát nhất với chỉ tiêu kinh tế đang phân tích."
+            f"Đoạn văn «{short_match}» có độ dài các câu quá đồng đều; "
+            f"hãy rút gọn câu đầu thành câu nhận định ngắn dưới 15 từ và gộp hai câu giải thích kế tiếp bằng dấu hai chấm (:)."
         )
 
-    # 8. DIS-03: Mechanical sentence-initial connective
+    # 15. DIS-01: Boxed 4-Step Paragraph
+    elif rule_id == "DIS-01":
+        return (
+            f"Câu kết «{short_match}» đang đóng hộp khép kín đoạn văn; "
+            f"hãy lược bỏ câu tổng kết cuối đoạn này để mạch phân tích nối tự nhiên sang đoạn tiếp theo."
+        )
+
+    # 16. DIS-02: Echoic Subsection / Paragraph Closure
+    elif rule_id == "DIS-02":
+        return (
+            f"Xóa câu/đoạn kết tiểu mục mang tính tóm tắt công thức «{short_match}»; "
+            f"chỉ giữ lại phần tổng hợp chung ở mục Tóm tắt cuối chương để tránh lặp lại giữa các tiểu mục."
+        )
+
+    # 17. DIS-03: Mechanical Connective Openers
     elif rule_id == "DIS-03":
-        return f"Xóa từ nối đầu câu «{clean_match}» hoặc chuyển thành phụ từ nội câu («cũng», «vẫn», «đồng thời») sau chủ ngữ."
+        return f"Xóa từ nối đầu câu «{short_match}» hoặc chuyển thành phụ từ nội câu («cũng», «vẫn», «đồng thời») đặt sau chủ ngữ."
 
-    return base_suggestion
+    # 18. DIS-04: Header-Echo Opener & Robotic Table Signposting
+    elif rule_id == "DIS-04":
+        if "bảng" in lower_m:
+            return (
+                f"Thay câu dẫn nhập bảng rập khuôn «{short_match}» bằng cách nêu thẳng xu hướng hoặc con số chênh lệch lớn nhất trong bảng "
+                f"(ví dụ: «Số liệu tại Bảng cho thấy tỷ lệ hoàn thành KPI tăng từ 78% lên 86%...»)."
+            )
+        return (
+            f"Bỏ lối mở đoạn định danh công thức «{short_match}»; "
+            f"đi thẳng vào cách thức doanh nghiệp triển khai thực tế hoặc số liệu khảo sát."
+        )
+
+    # 19. ARG-01: Flat Epistemic Weight
+    elif rule_id == "ARG-01":
+        return (
+            f"Các luận điểm trong «{short_match}» đang liệt kê dàn trải không kèm số liệu; "
+            f"hãy bổ sung tỷ lệ %, số liệu bảng biểu cho nguyên nhân quan trọng nhất và gộp các ý phụ."
+        )
+
+    # 20. ARG-02: 3-Phase Pendulum Hedging
+    elif rule_id == "ARG-02":
+        return (
+            f"Đoạn văn «{short_match}» đi theo quỹ đạo con lắc 3 pha (Khen -> Tuy nhiên hạn chế -> Do đó cần hoàn thiện); "
+            f"hãy thay câu kết chung chung bằng nguyên nhân cụ thể gây ra hạn chế đó tại đơn vị."
+        )
+
+    # 21. ARG-03: Macro-Context Inflation
+    elif rule_id == "ARG-03":
+        return (
+            f"Cắt bỏ phần mở màn đại cảnh vĩ mô «{short_match}» và mở đầu trực tiếp bằng bối cảnh nghiệp vụ tại đơn vị nghiên cứu."
+        )
+
+    # 22. ARG-04: Formulaic Challenges & Hollow Policy Slogans
+    elif rule_id == "ARG-04":
+        return (
+            f"Thay câu nhận định/khuyến nghị khẩu hiệu «{short_match}» bằng mục tiêu định lượng cụ thể "
+            f"(ví dụ: «Các giải pháp trên hướng tới mục tiêu giảm 15% tỷ lệ biến động nhân sự trong năm 2026»)."
+        )
+
+    # 23. PRG-01: Weasel Attribution & Media Coverage Clichés
+    elif rule_id == "PRG-01":
+        if any(w in lower_m for w in ["đưa tin", "tạp chí", "ấn phẩm", "truyền thông"]):
+            return (
+                f"Thay cụm nhấn mạnh truyền thông «{short_match}» bằng chỉ số nhận diện thương hiệu cụ thể (lượt tiếp cận, thị phần hoặc nguồn báo cáo khảo sát)."
+            )
+        return (
+            f"Thay cụm quy chiếu mơ hồ «{short_match}» bằng trích dẫn học thuật cụ thể theo chuẩn (Tác giả, Năm) hoặc bỏ cụm dẫn nhập để nêu thẳng luận điểm."
+        )
+
+    # 24. PRG-02: Didactic Hedging & Methodological/Data Disclaimers (PRG-02a/b/c)
+    elif rule_id == "PRG-02":
+        if any(w in lower_m for w in ["phạm vi dữ liệu", "chưa có tài liệu", "dữ liệu hiện có", "không được công bố"]):
+            return (
+                f"Xóa câu tự thú nhận giới hạn dữ liệu «{short_match}» khỏi phần phân tích; "
+                f"chỉ phân tích trên số liệu thực tế đang có và gom các giới hạn dữ liệu về mục «Hạn chế của đề tài» ở cuối khóa luận."
+            )
+        if any(w in lower_m for w in ["khung tham chiếu", "chỉ báo bổ sung", "không tính trực tiếp", "không dùng sự thay đổi"]):
+            return (
+                f"Lược bỏ câu rào đón miễn trừ phương pháp luận «{short_match}»; "
+                f"chỉ cần giải thích quy ước đo lường 1 lần duy nhất tại phần Phương pháp nghiên cứu."
+            )
+        return f"Xóa cụm rào đón giáo huấn «{short_match}» và trình bày thẳng luận điểm chính của câu."
+
+    # 25. FMT-01: Mechanical Formatting & Explanatory Dashes
+    elif rule_id == "FMT-01":
+        if "—" in clean_match or " - " in clean_match:
+            return (
+                f"Thay dấu gạch ngang chèn mệnh đề giải thích tại «{short_match}» bằng dấu phẩy (,), dấu ngoặc đơn () hoặc tách thành câu riêng."
+            )
+        return f"Chuyển cấu trúc định dạng liệt kê «{short_match}» thành câu văn xuôi học thuật hoàn chỉnh."
+
+    # 26. FOR-01: Forensic Artifacts & Leaked Citations
+    elif rule_id == "FOR-01":
+        return f"Xóa ngay chuỗi ký hiệu rò rỉ / hội thoại AI «{short_match}» và kiểm tra lại tính xác thực của nguồn tài liệu tham khảo."
+
+    return f"Biên tập lại cụm «{short_match}»: {base_suggestion}"
+
