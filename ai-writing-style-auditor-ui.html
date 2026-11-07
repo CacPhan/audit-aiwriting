@@ -1,14 +1,12 @@
 <!DOCTYPE html>
-<html lang="vi" data-theme="dark" class="scroll-smooth">
+<html lang="vi" data-theme="dark">
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>AI Writing Style Auditor — Hệ thống Kiểm toán Văn phong Học thuật Khối ngành Kinh tế</title>
-  <!-- Google Fonts: Be Vietnam Pro (Agni.vn), Sora & Plus Jakarta Sans (EziTranslate), JetBrains Mono -->
+  <title>AI Style Auditor — Academic Writing Review</title>
   <link rel="preconnect" href="https://fonts.googleapis.com" />
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
   <link href="https://fonts.googleapis.com/css2?family=Be+Vietnam+Pro:ital,wght@0,400;0,500;0,600;0,700;0,800;1,400&family=JetBrains+Mono:wght@400;500;600;700&family=Plus+Jakarta+Sans:wght@400;500;600;700&family=Sora:wght@600;700;800&display=swap" rel="stylesheet" />
-  <!-- Tailwind CSS CDN for rapid layout utilities -->
   <script src="https://cdn.tailwindcss.com"></script>
   <script>
     tailwind.config = {
@@ -26,7 +24,7 @@
   </script>
   <style>
     /* ==========================================================================
-       1. DUAL-THEME DESIGN TOKENS (Inspired by Agni.vn & EziTranslate)
+       1. DUAL-THEME DESIGN TOKENS
        ========================================================================== */
     :root,
     :root[data-theme="dark"] {
@@ -35,7 +33,7 @@
       --bg-elevated: #0b1021;
       --bg-card: rgba(15, 23, 42, 0.68);
       --bg-card-hover: rgba(23, 35, 64, 0.84);
-      --bg-glass: rgba(15, 23, 42, 0.72);
+      --bg-glass: rgba(15, 23, 42, 0.78);
       --bg-pill: rgba(30, 41, 59, 0.75);
       --text-main: #f8fafc;
       --text-muted: #94a3b8;
@@ -54,7 +52,8 @@
       --pattern-dot: rgba(56, 189, 248, 0.13);
       --spotlight-color: rgba(56, 189, 248, 0.09);
       --shadow-elevated: 0 24px 48px -12px rgba(2, 6, 23, 0.75), 0 0 40px -10px rgba(59, 130, 246, 0.15);
-      --manuscript-bg: rgba(10, 15, 29, 0.85);
+      --manuscript-bg: rgba(10, 15, 29, 0.88);
+      --focus-ring: #38bdf8;
     }
 
     :root[data-theme="light"] {
@@ -63,7 +62,7 @@
       --bg-elevated: #f6ede6;
       --bg-card: rgba(255, 255, 255, 0.88);
       --bg-card-hover: rgba(255, 255, 255, 0.98);
-      --bg-glass: rgba(255, 250, 245, 0.86);
+      --bg-glass: rgba(255, 250, 245, 0.88);
       --bg-pill: #ffe8d9;
       --text-main: #231811;
       --text-muted: #6e5a4f;
@@ -83,6 +82,7 @@
       --spotlight-color: rgba(217, 72, 15, 0.075);
       --shadow-elevated: 0 20px 40px -15px rgba(42, 26, 18, 0.12), 0 0 32px -8px rgba(217, 72, 15, 0.10);
       --manuscript-bg: #ffffff;
+      --focus-ring: #d9480f;
     }
 
     * {
@@ -94,11 +94,20 @@
       color: var(--text-main);
       font-family: 'Be Vietnam Pro', 'Plus Jakarta Sans', system-ui, sans-serif;
       overflow-x: hidden;
-      transition: background-color 0.45s cubic-bezier(0.22, 1, 0.36, 1), color 0.35s ease;
+      transition: background-color 0.4s cubic-bezier(0.22, 1, 0.36, 1), color 0.3s ease;
+    }
+
+    /* Keyboard Focus Accessibility */
+    a:focus-visible,
+    button:focus-visible,
+    input:focus-visible,
+    [tabindex]:focus-visible {
+      outline: 2px solid var(--focus-ring);
+      outline-offset: 2px;
     }
 
     /* ==========================================================================
-       2. MULTI-LAYERED ARCHITECTURAL BACKGROUND & CURSOR SPOTLIGHT
+       2. MULTI-LAYERED BACKGROUND & SPOTLIGHT
        ========================================================================== */
     .bg-canvas {
       position: fixed;
@@ -108,7 +117,6 @@
       overflow: hidden;
     }
 
-    /* Layer A: Architectural Cross + Dot Matrix Pattern (EziTranslate + Manuscript Grid) */
     .bg-grid-pattern {
       position: absolute;
       inset: 0;
@@ -120,10 +128,8 @@
       background-position: 0 0, -1px -1px, -1px -1px;
       mask-image: radial-gradient(ellipse 90% 85% at 50% 35%, #000 45%, transparent 100%);
       -webkit-mask-image: radial-gradient(ellipse 90% 85% at 50% 35%, #000 45%, transparent 100%);
-      transition: opacity 0.4s ease;
     }
 
-    /* Layer B: SVG Cross-Hair Overlay Motif */
     .bg-cross-motif {
       position: absolute;
       inset: 0;
@@ -131,7 +137,6 @@
       background-image: url("data:image/svg+xml,%3Csvg width='128' height='128' viewBox='0 0 128 128' xmlns='http://www.w3.org/2000/svg'%3E%3Cg fill='none' stroke='%2364748b' stroke-opacity='0.16' stroke-width='1'%3E%3Cpath d='M64 58v12M58 64h12M0 0l6 6M128 0l-6 6'/%3E%3C/g%3E%3C/svg%3E");
     }
 
-    /* Layer C: Ambient Floating Glow Orbs */
     .ambient-orb {
       position: absolute;
       border-radius: 9999px;
@@ -164,7 +169,6 @@
       animation: floatOrb 16s ease-in-out 4s infinite;
     }
 
-    /* Layer D: Interactive Cursor Spotlight Aura */
     .cursor-spotlight {
       position: fixed;
       inset: 0;
@@ -175,7 +179,6 @@
         var(--spotlight-color),
         transparent 65%
       );
-      transition: opacity 0.3s ease;
     }
 
     @keyframes floatOrb {
@@ -185,7 +188,7 @@
 
     @keyframes floatBadge {
       0%, 100% { transform: translateY(0px); }
-      50% { transform: translateY(-9px); }
+      50% { transform: translateY(-8px); }
     }
 
     .animate-float-badge {
@@ -194,12 +197,9 @@
     .animate-float-badge-delayed {
       animation: floatBadge 6.5s ease-in-out 1.8s infinite;
     }
-    .animate-float-badge-slow {
-      animation: floatBadge 7.2s ease-in-out 0.9s infinite;
-    }
 
     /* ==========================================================================
-       3. GLASSMORPHISM, GRADIENT BORDERS & PROXIMITY GLOW CARDS
+       3. GLASSMORPHISM & PROXIMITY CARDS
        ========================================================================== */
     .glass-nav {
       background: var(--bg-glass);
@@ -215,14 +215,13 @@
       -webkit-backdrop-filter: blur(16px);
       border: 1px solid var(--border-subtle);
       box-shadow: var(--shadow-elevated);
-      transition: transform 0.32s cubic-bezier(0.22, 1, 0.36, 1),
-                  border-color 0.3s ease,
-                  background-color 0.3s ease,
-                  box-shadow 0.32s ease;
+      transition: transform 0.28s cubic-bezier(0.22, 1, 0.36, 1),
+                  border-color 0.28s ease,
+                  background-color 0.28s ease,
+                  box-shadow 0.28s ease;
       overflow: hidden;
     }
 
-    /* Radial border & surface illumination when mouse moves near the card */
     .proximity-card::before {
       content: "";
       position: absolute;
@@ -266,13 +265,8 @@
       z-index: 1;
     }
 
-    .proximity-card:hover {
-      transform: translateY(-3px);
-      background: var(--bg-card-hover);
-    }
-
     /* ==========================================================================
-       4. MAGNETIC PROXIMITY ICONS ("Hiệu ứng di chuột hay di gần icon")
+       4. MAGNETIC PROXIMITY ICONS
        ========================================================================== */
     .magnetic-icon {
       position: relative;
@@ -305,11 +299,11 @@
     }
 
     .magnetic-icon:hover svg {
-      transform: scale(1.14) rotate(-4deg);
+      transform: scale(1.12) rotate(-3deg);
     }
 
     /* ==========================================================================
-       5. AGNI-INSPIRED INTERACTIVE EYE MASCOT & FANNED DECK
+       5. MASCOT & FANNED CARDS DECK
        ========================================================================== */
     .auditor-mascot {
       overflow: visible;
@@ -332,31 +326,30 @@
       opacity: 0.85;
     }
 
-    /* Fanned Cards Deck (Agni.vn style stacked cards that spread on hover) */
     .fan-deck .fan-card-left {
-      transform: translateX(-115px) translateY(10px) rotate(-8deg);
+      transform: translateX(-105px) translateY(10px) rotate(-7deg);
       transition: transform 0.42s cubic-bezier(0.22, 1, 0.36, 1), box-shadow 0.35s ease;
     }
     .fan-deck .fan-card-center {
-      transform: translateY(-6px) rotate(0deg);
+      transform: translateY(-4px) rotate(0deg);
       transition: transform 0.42s cubic-bezier(0.22, 1, 0.36, 1), box-shadow 0.35s ease;
     }
     .fan-deck .fan-card-right {
-      transform: translateX(115px) translateY(12px) rotate(8deg);
+      transform: translateX(105px) translateY(12px) rotate(7deg);
       transition: transform 0.42s cubic-bezier(0.22, 1, 0.36, 1), box-shadow 0.35s ease;
     }
     .fan-deck:hover .fan-card-left {
-      transform: translateX(-158px) translateY(2px) rotate(-13deg) scale(1.03);
+      transform: translateX(-146px) translateY(2px) rotate(-12deg) scale(1.02);
     }
     .fan-deck:hover .fan-card-center {
-      transform: translateY(-18px) scale(1.05);
+      transform: translateY(-14px) scale(1.04);
     }
     .fan-deck:hover .fan-card-right {
-      transform: translateX(158px) translateY(4px) rotate(13deg) scale(1.03);
+      transform: translateX(146px) translateY(4px) rotate(12deg) scale(1.02);
     }
 
     /* ==========================================================================
-       6. MANUSCRIPT AUDIT HIGHLIGHTS (P0 - P3 & Protected Economics Lexicon)
+       6. THREE ACCESSIBLE SEVERITY LEVELS (Distinct Underlines + Color)
        ========================================================================== */
     .audit-span {
       position: relative;
@@ -370,78 +363,55 @@
       -webkit-box-decoration-break: clone;
     }
     .audit-span:hover {
-      transform: translateY(-1px);
-      filter: brightness(1.12);
+      filter: brightness(1.1);
     }
     .audit-span.active-span {
-      outline: 2px solid var(--text-main);
+      outline: 2px solid var(--focus-ring);
       outline-offset: 2px;
-      box-shadow: 0 0 22px rgba(59, 130, 246, 0.45);
+      box-shadow: 0 0 18px rgba(59, 130, 246, 0.38);
     }
 
-    /* P0: Forensic / Hallucination / Trace Leak */
-    .span-p0 {
-      background: rgba(239, 68, 68, 0.18);
+    /* Level 1: Cần sửa ngay (Wavy underline) */
+    .span-critical {
+      background: rgba(239, 68, 68, 0.17);
       border-bottom: 2px wavy #ef4444;
       color: #fca5a5;
     }
-    :root[data-theme="light"] .span-p0 {
-      background: rgba(239, 68, 68, 0.14);
+    :root[data-theme="light"] .span-critical {
+      background: rgba(239, 68, 68, 0.13);
       color: #991b1b;
     }
 
-    /* P1: Syntactic Template / Copula Avoidance / Triadic */
-    .span-p1 {
-      background: rgba(249, 115, 22, 0.18);
+    /* Level 2: Nên sửa (Solid underline) */
+    .span-warning {
+      background: rgba(249, 115, 22, 0.17);
       border-bottom: 2px solid #f97316;
       color: #fdba74;
     }
-    :root[data-theme="light"] .span-p1 {
-      background: rgba(249, 115, 22, 0.15);
+    :root[data-theme="light"] .span-warning {
+      background: rgba(249, 115, 22, 0.14);
       color: #9a3412;
     }
 
-    /* P2: Discourse Frame / Boxed Paragraph / Low Burstiness */
-    .span-p2 {
-      background: rgba(234, 179, 8, 0.17);
-      border-bottom: 2px dashed #eab308;
-      color: #fde047;
-    }
-    :root[data-theme="light"] .span-p2 {
-      background: rgba(234, 179, 8, 0.18);
-      color: #854d0e;
-    }
-
-    /* P3: Formatting / Passive Calque / Nominalization */
-    .span-p3 {
-      background: rgba(99, 102, 241, 0.18);
-      border-bottom: 2px dotted #818cf8;
+    /* Level 3: Gợi ý (Dashed underline) */
+    .span-suggestion {
+      background: rgba(99, 102, 241, 0.17);
+      border-bottom: 2px dashed #818cf8;
       color: #c7d2fe;
     }
-    :root[data-theme="light"] .span-p3 {
-      background: rgba(99, 102, 241, 0.14);
+    :root[data-theme="light"] .span-suggestion {
+      background: rgba(99, 102, 241, 0.13);
       color: #3730a3;
     }
 
-    /* Protected Economics Term (8 Unified Majors) */
-    .span-econ {
-      background: rgba(16, 185, 129, 0.13);
-      border: 1px solid rgba(16, 185, 129, 0.35);
-      color: #6ee7b7;
-      border-radius: 999px;
-      padding: 1px 8px;
-      font-size: 0.92em;
-      display: inline-flex;
-      align-items: center;
-      gap: 4px;
-    }
-    :root[data-theme="light"] .span-econ {
-      background: rgba(16, 185, 129, 0.12);
-      color: #065f46;
-      border-color: rgba(5, 150, 105, 0.35);
+    /* Resolved / Handled State */
+    .audit-span.is-resolved {
+      background: rgba(16, 185, 129, 0.12) !important;
+      border-bottom: 2px dotted #10b981 !important;
+      color: var(--text-main) !important;
+      opacity: 0.78;
     }
 
-    /* Gradient headline text */
     .text-gradient-brand {
       background: linear-gradient(135deg, var(--accent-primary) 0%, var(--accent-secondary) 55%, var(--accent-emerald) 100%);
       -webkit-background-clip: text;
@@ -449,7 +419,38 @@
       -webkit-text-fill-color: transparent;
     }
 
-    /* Custom Scrollbar */
+    /* Screen visibility transitions */
+    .app-screen {
+      display: none;
+      animation: screenFade 0.26s cubic-bezier(0.22, 1, 0.36, 1);
+    }
+    .app-screen.active-screen {
+      display: block;
+    }
+
+    @keyframes screenFade {
+      from { opacity: 0; transform: translateY(6px); }
+      to { opacity: 1; transform: translateY(0); }
+    }
+
+    /* Reduced Motion Support */
+    @media (prefers-reduced-motion: reduce) {
+      *, *::before, *::after {
+        animation-duration: 0.01ms !important;
+        animation-iteration-count: 1 !important;
+        transition-duration: 0.01ms !important;
+        scroll-behavior: auto !important;
+      }
+      .ambient-orb,
+      .animate-float-badge,
+      .animate-float-badge-delayed {
+        animation: none !important;
+      }
+      .magnetic-icon {
+        transform: none !important;
+      }
+    }
+
     ::-webkit-scrollbar {
       width: 7px;
       height: 7px;
@@ -466,10 +467,10 @@
     }
   </style>
 </head>
-<body class="min-h-screen selection:bg-blue-500/30 selection:text-blue-200">
+<body class="min-h-screen flex flex-col selection:bg-blue-500/30 selection:text-blue-200">
 
   <!-- ========================================================================
-       BACKGROUND ARCHITECTURE (Grid + Cross Motif + Glow Orbs + Mouse Spotlight)
+       BACKGROUND ARCHITECTURE
        ======================================================================== -->
   <div class="bg-canvas" aria-hidden="true">
     <div class="ambient-orb orb-1"></div>
@@ -481,16 +482,15 @@
   </div>
 
   <!-- ========================================================================
-       STICKY NAVIGATION BAR (Agni Interactive Mascot + EziTranslate Glass Nav)
+       GLOBAL HEADER (Logo, 3 Steps Hidden on Mobile, Theme Toggle, Pro Button)
        ======================================================================== -->
-  <header class="glass-nav sticky top-0 z-50 transition-all duration-300">
-    <div class="max-w-[1440px] mx-auto px-4 sm:px-6 lg:px-8 h-18 py-3 flex items-center justify-between gap-4">
+  <header class="glass-nav sticky top-0 z-40">
+    <div class="max-w-[1440px] mx-auto px-4 sm:px-6 lg:px-8 h-16 flex items-center justify-between gap-4">
       
-      <!-- Brand Logo + Eye-Tracking Auditor Mascot -->
-      <a href="#top" class="group flex items-center gap-3.5 focus:outline-none">
-        <div class="magnetic-icon w-12 h-12 rounded-2xl bg-gradient-to-br from-blue-500/20 via-cyan-500/15 to-emerald-500/20 border border-blue-400/30 flex items-center justify-center shadow-lg">
-          <!-- Interactive SVG Mascot: Eyes follow cursor + UV Beam in Dark Mode -->
-          <svg id="auditor-mascot" class="auditor-mascot w-10 h-10" viewBox="0 0 64 64" fill="none" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="AI Style Auditor Mascot">
+      <!-- Brand Logo + Mascot -->
+      <button type="button" onclick="navigateToScreen('home')" class="group flex items-center gap-3 text-left rounded-xl focus:outline-none">
+        <div class="magnetic-icon w-10 h-10 rounded-xl bg-gradient-to-br from-blue-500/20 via-cyan-500/15 to-emerald-500/20 border border-blue-400/30 flex items-center justify-center shadow-md">
+          <svg id="auditor-mascot" class="auditor-mascot w-8 h-8" viewBox="0 0 64 64" fill="none" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="AI Style Auditor">
             <defs>
               <linearGradient id="uvBeamGrad" x1="32" y1="32" x2="64" y2="8" gradientUnits="userSpaceOnUse">
                 <stop offset="0%" stop-color="#38bdf8" stop-opacity="0.55" />
@@ -500,11 +500,8 @@
               <clipPath id="eyeClipLeft"><ellipse cx="23" cy="30" rx="7.5" ry="8.5" /></clipPath>
               <clipPath id="eyeClipRight"><ellipse cx="41" cy="30" rx="7.5" ry="8.5" /></clipPath>
             </defs>
-            <!-- UV Flashlight Beam in Dark Mode (inspired by Agni.vn dark mode torch) -->
             <polygon class="uv-beam" points="32,26 64,2 64,46" fill="url(#uvBeamGrad)" />
-            <!-- Auditor Owl / Loupe Frame -->
-            <rect x="8" y="14" width="48" height="34" rx="17" fill="currentColor" class="text-slate-900 dark:text-slate-900" stroke="#38bdf8" stroke-width="2.5" />
-            <!-- Left Eye -->
+            <rect x="8" y="14" width="48" height="34" rx="17" fill="#0f172a" stroke="#38bdf8" stroke-width="2.5" />
             <ellipse cx="23" cy="30" rx="7.5" ry="8.5" fill="#fffdf9" />
             <g clip-path="url(#eyeClipLeft)">
               <g class="pupil-group" id="pupil-left">
@@ -515,7 +512,6 @@
               <rect class="eyelid" x="14" y="20" width="18" height="19" fill="#1e293b" style="transform: scaleY(0.08);" />
             </g>
             <ellipse cx="23" cy="30" rx="7.5" ry="8.5" stroke="#0f172a" stroke-width="1.8" />
-            <!-- Right Eye -->
             <ellipse cx="41" cy="30" rx="7.5" ry="8.5" fill="#fffdf9" />
             <g clip-path="url(#eyeClipRight)">
               <g class="pupil-group" id="pupil-right">
@@ -526,763 +522,1488 @@
               <rect class="eyelid" x="32" y="20" width="18" height="19" fill="#1e293b" style="transform: scaleY(0.08);" />
             </g>
             <ellipse cx="41" cy="30" rx="7.5" ry="8.5" stroke="#0f172a" stroke-width="1.8" />
-            <!-- Bridge of glasses -->
             <path d="M30.5 30H33.5" stroke="#38bdf8" stroke-width="2.2" stroke-linecap="round" />
-            <!-- Graduation cap / Academic badge top -->
             <path d="M32 6L48 12L32 18L16 12L32 6Z" fill="#3b82f6" />
           </svg>
         </div>
         <div>
-          <div class="flex items-center gap-2">
-            <span class="font-display font-extrabold text-lg sm:text-xl tracking-tight">AI Style Auditor</span>
-            <span class="px-2 py-0.5 text-[11px] font-mono font-semibold rounded-full bg-emerald-500/15 text-emerald-400 border border-emerald-500/30">ECON-26</span>
-          </div>
-          <p class="text-xs text-[var(--text-muted)] hidden sm:block">Kiểm toán văn phong học thuật 8 chuyên ngành Kinh tế · Luận văn 70–90+ trang</p>
+          <span class="font-display font-extrabold text-base sm:text-lg tracking-tight block leading-none">AI Style Auditor</span>
+          <span class="text-[11px] text-[var(--text-muted)] block mt-1">Academic Writing Review</span>
         </div>
-      </a>
+      </button>
 
-      <!-- Center Navigation Pills (Agni.vn rounded pill bar style) -->
-      <nav class="hidden xl:flex items-center gap-1.5 p-1.5 rounded-full border border-[var(--border-subtle)] bg-[var(--bg-card)] backdrop-blur-md" aria-label="Điều hướng chính">
-        <a href="#hero-upload" data-nav="hero" class="nav-pill active flex items-center gap-2 px-4 py-2 rounded-full text-xs font-semibold transition-all bg-blue-600 text-white shadow-sm">
-          <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M7 16a4 4 0 01-.88-7.903A5 5 0 1115.9 6L16 6a5 5 0 011 9.9M15 13l-3-3m0 0l-3 3m3-3v12" /></svg>
-          Tải lên Luận văn (.docx)
-        </a>
-        <a href="#audit-workspace" data-nav="workspace" class="nav-pill flex items-center gap-2 px-4 py-2 rounded-full text-xs font-semibold text-[var(--text-muted)] hover:text-[var(--text-main)] transition-all">
-          <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M9 17V7m0 10a2 2 0 01-2 2H5a2 2 0 01-2-2V7a2 2 0 012-2h2a2 2 0 012 2m0 10a2 2 0 002 2h2a2 2 0 002-2M9 7a2 2 0 012-2h2a2 2 0 012 2m0 10V7m0 10a2 2 0 002 2h2a2 2 0 002-2V7a2 2 0 00-2-2h-2a2 2 0 00-2 2" /></svg>
-          Bàn Kiểm toán 3 Cột
-        </a>
-        <a href="#metrics-matrix" data-nav="metrics" class="nav-pill flex items-center gap-2 px-4 py-2 rounded-full text-xs font-semibold text-[var(--text-muted)] hover:text-[var(--text-main)] transition-all">
-          <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M11 3.055A9.001 9.001 0 1020.945 13H11V3.055z" /><path stroke-linecap="round" stroke-linejoin="round" d="M20.488 9H15V3.512A9.025 9.025 0 0120.488 9z" /></svg>
-          6 Chỉ số Toán học & 26 Quy tắc
-        </a>
+      <!-- Center Navigation: 3 Independent Screens (Hidden on Mobile as requested) -->
+      <nav class="hidden md:flex items-center gap-1 p-1 rounded-full border border-[var(--border-subtle)] bg-[var(--bg-card)] backdrop-blur-md" aria-label="Điều hướng chính">
+        <button type="button" data-screen-target="home" onclick="navigateToScreen('home')" class="main-nav-btn px-4 py-1.5 rounded-full text-xs font-semibold transition-all bg-blue-600 text-white shadow-sm">
+          Home
+        </button>
+        <button type="button" data-screen-target="workspace" onclick="navigateToScreen('workspace')" class="main-nav-btn px-4 py-1.5 rounded-full text-xs font-semibold text-[var(--text-muted)] hover:text-[var(--text-main)] transition-all">
+          Workspace
+        </button>
+        <button type="button" data-screen-target="insights" onclick="navigateToScreen('insights')" class="main-nav-btn px-4 py-1.5 rounded-full text-xs font-semibold text-[var(--text-muted)] hover:text-[var(--text-main)] transition-all">
+          Insights
+        </button>
       </nav>
 
-      <!-- Right Actions: Unified 8-Major Shield + Theme Switcher + Pro CTA -->
+      <!-- Right Actions: Theme Switcher + Upgrade Pro (Coming soon) -->
       <div class="flex items-center gap-2.5">
-        <!-- Unified 8 Economics Majors Pill -->
-        <div class="hidden md:flex items-center gap-2 px-3.5 py-2 rounded-full border border-emerald-500/30 bg-emerald-500/10 text-xs font-medium text-emerald-400" title="Tự động bảo vệ thuật ngữ 8 ngành Kinh tế không cần chọn dropdown">
-          <span class="w-2 h-2 rounded-full bg-emerald-400 animate-pulse"></span>
-          <span>Đã gộp 8 Ngành Kinh tế</span>
-        </div>
-
-        <!-- Theme Switcher Button (Dark / Light with Magnetic Proximity) -->
-        <button id="theme-toggle-btn" type="button" class="magnetic-icon w-10 h-10 rounded-full border border-[var(--border-subtle)] bg-[var(--bg-card)] text-[var(--text-main)] hover:border-blue-400/50 shadow-sm" aria-label="Chuyển đổi nền Sáng / Tối" title="Đổi giao diện Sáng / Tối (Hiệu ứng Đèn UV Kiểm toán)">
-          <!-- Sun icon (shown in dark mode) -->
-          <svg id="icon-sun" class="w-5 h-5 text-amber-400" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+        <button id="theme-toggle-btn" type="button" class="magnetic-icon w-9 h-9 rounded-full border border-[var(--border-subtle)] bg-[var(--bg-card)] text-[var(--text-main)] hover:border-blue-400/50 shadow-sm" aria-label="Chuyển đổi giao diện Sáng hoặc Tối" title="Đổi giao diện Sáng / Tối">
+          <svg id="icon-sun" class="w-4 h-4 text-amber-400" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
             <path stroke-linecap="round" stroke-linejoin="round" d="M12 3v1m0 16v1m9-9h-1M4 12H3m15.364 6.364l-.707-.707M6.343 6.343l-.707-.707m12.728 0l-.707.707M6.343 17.657l-.707.707M16 12a4 4 0 11-8 0 4 4 0 018 0z" />
           </svg>
-          <!-- Moon icon (shown in light mode) -->
-          <svg id="icon-moon" class="w-5 h-5 text-orange-600 hidden" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+          <svg id="icon-moon" class="w-4 h-4 text-orange-600 hidden" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
             <path stroke-linecap="round" stroke-linejoin="round" d="M20.354 15.354A9 9 0 018.646 3.646 9.003 9.003 0 0012 21a9.003 9.003 0 008.354-5.646z" />
           </svg>
         </button>
 
-        <!-- Pro Upgrade Button -->
-        <button type="button" onclick="openProModal()" class="magnetic-icon inline-flex items-center gap-2 px-4 py-2.5 rounded-full text-xs sm:text-sm font-bold text-white bg-gradient-to-r from-violet-600 via-indigo-600 to-blue-600 hover:from-violet-500 hover:to-cyan-500 shadow-lg shadow-indigo-500/25">
-          <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.2"><path stroke-linecap="round" stroke-linejoin="round" d="M13 10V3L4 14h7v7l9-11h-7z" /></svg>
-          <span>Mở khóa Editor</span>
-          <span class="px-1.5 py-0.5 text-[10px] font-mono bg-white/20 rounded-md">PRO</span>
+        <button type="button" onclick="openProModal()" class="magnetic-icon inline-flex items-center gap-2 px-3.5 py-2 rounded-full text-xs font-semibold text-white bg-gradient-to-r from-violet-600/90 via-indigo-600/90 to-blue-600/90 hover:from-violet-500 hover:to-blue-500 shadow-md shadow-indigo-500/20">
+          <span>Upgrade Pro (Coming soon)</span>
         </button>
       </div>
+
     </div>
   </header>
 
-  <main id="top" class="max-w-[1440px] mx-auto px-4 sm:px-6 lg:px-8 pb-24 space-y-16">
-
-    <!-- ======================================================================
-         SECTION 1: HERO & INTERACTIVE THESIS UPLOADER
-         (Fuses EziTranslate Hero + Agni.vn Fanned Cards Deck)
-         ====================================================================== -->
-    <section id="hero-upload" class="pt-8 lg:pt-14">
-      <div class="grid lg:grid-cols-12 gap-10 lg:gap-12 items-center">
-        
-        <!-- Left Column (7 cols): Value Proposition + Interactive .docx Dropzone -->
-        <div class="lg:col-span-7 space-y-6">
-          <div class="inline-flex items-center gap-2.5 px-3.5 py-1.5 rounded-full border border-[var(--border-subtle)] bg-[var(--bg-card)] text-xs font-medium">
-            <span class="px-2 py-0.5 rounded-full bg-blue-500/20 text-blue-400 font-mono font-semibold">Rule-Based Engine</span>
-            <span class="text-[var(--text-muted)]">Không phán xét "% AI" cảm tính · Giải thích tận gốc bằng chứng ngôn ngữ học</span>
-          </div>
-
-          <h1 class="font-display font-extrabold text-3xl sm:text-5xl lg:text-[52px] leading-[1.12] tracking-tight">
-            Kiểm toán văn phong <span class="text-gradient-brand">Khóa luận & Luận văn Kinh tế</span> chuẩn xác tới từng cấu trúc câu.
-          </h1>
-
-          <p class="text-base sm:text-lg text-[var(--text-muted)] max-w-2xl leading-relaxed">
-            Tải lên toàn bộ file <code class="font-mono text-sm px-1.5 py-0.5 rounded bg-blue-500/10 text-blue-400">.docx</code> dài <strong>70–90+ trang</strong>. Hệ thống tự động bóc tách cây Chương/Mục, loại trừ Mục lục & Tài liệu tham khảo, bảo vệ thuật ngữ của <strong>8 chuyên ngành Kinh tế</strong> và rà soát <strong>26 dấu hiệu văn phong AI</strong> kèm công thức biên tập lại.
-          </p>
-
-          <!-- Unified 8 Economics Sub-disciplines Interactive Proximity Strip -->
-          <div class="space-y-2">
-            <div class="flex items-center justify-between text-xs text-[var(--text-muted)]">
-              <span class="font-semibold uppercase tracking-wider">Tự động kích hoạt Từ điển Bảo vệ 8 Chuyên ngành Kinh tế (Không cần chọn trước):</span>
-              <span class="font-mono text-emerald-400">2.400+ thuật ngữ miễn trừ</span>
-            </div>
-            <div class="flex flex-wrap gap-2">
-              <span class="magnetic-icon px-3 py-1.5 rounded-xl border border-[var(--border-subtle)] bg-[var(--bg-card)] text-xs font-medium flex items-center gap-1.5 cursor-default">
-                <svg class="w-3.5 h-3.5 text-blue-400" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M21 13.255A23.931 23.931 0 0112 15c-3.183 0-6.22-.62-9-1.745M16 6V4a2 2 0 00-2-2h-4a2 2 0 00-2 2v2m4 6h.01M5 20h14a2 2 0 002-2V8a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z" /></svg>
-                Quản trị kinh doanh
-              </span>
-              <span class="magnetic-icon px-3 py-1.5 rounded-xl border border-[var(--border-subtle)] bg-[var(--bg-card)] text-xs font-medium flex items-center gap-1.5 cursor-default">
-                <svg class="w-3.5 h-3.5 text-emerald-400" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0z" /></svg>
-                Quản trị nhân sự
-              </span>
-              <span class="magnetic-icon px-3 py-1.5 rounded-xl border border-[var(--border-subtle)] bg-[var(--bg-card)] text-xs font-medium flex items-center gap-1.5 cursor-default">
-                <svg class="w-3.5 h-3.5 text-cyan-400" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M8 7h12m0 0l-4-4m4 4l-4 4m0 6H4m0 0l4 4m-4-4l4-4" /></svg>
-                Logistics & Hậu cần
-              </span>
-              <span class="magnetic-icon px-3 py-1.5 rounded-xl border border-[var(--border-subtle)] bg-[var(--bg-card)] text-xs font-medium flex items-center gap-1.5 cursor-default">
-                <svg class="w-3.5 h-3.5 text-pink-400" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M11 5.882V19.24a1.76 1.76 0 01-3.417.592l-2.147-6.15M18 13a3 3 0 100-6M5.436 13.683A4.001 4.001 0 017 6h1.832c4.1 0 7.625-1.234 9.168-3v14c-1.543-1.766-5.067-3-9.168-3H7a3.988 3.988 0 01-1.564-.317z" /></svg>
-                Marketing
-              </span>
-              <span class="magnetic-icon px-3 py-1.5 rounded-xl border border-[var(--border-subtle)] bg-[var(--bg-card)] text-xs font-medium flex items-center gap-1.5 cursor-default">
-                <svg class="w-3.5 h-3.5 text-amber-400" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M8 14v3m4-3v3m4-3v3M3 21h18M3 10h18M3 7l9-4 9 4M4 10h16v11H4V10z" /></svg>
-                Ngân hàng
-              </span>
-              <span class="magnetic-icon px-3 py-1.5 rounded-xl border border-[var(--border-subtle)] bg-[var(--bg-card)] text-xs font-medium flex items-center gap-1.5 cursor-default">
-                <svg class="w-3.5 h-3.5 text-indigo-400" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1M21 12a9 9 0 11-18 0 9 9 0 0118 0z" /></svg>
-                Tài chính
-              </span>
-              <span class="magnetic-icon px-3 py-1.5 rounded-xl border border-[var(--border-subtle)] bg-[var(--bg-card)] text-xs font-medium flex items-center gap-1.5 cursor-default">
-                <svg class="w-3.5 h-3.5 text-teal-400" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M9 7h6m0 10v-3m-3 3h.01M9 17h.01M9 14h.01M12 14h.01M15 11h.01M12 11h.01M9 11h.01M7 21h10a2 2 0 002-2V5a2 2 0 00-2-2H7a2 2 0 00-2 2v14a2 2 0 002 2z" /></svg>
-                Kế toán – Kiểm toán
-              </span>
-              <span class="magnetic-icon px-3 py-1.5 rounded-xl border border-[var(--border-subtle)] bg-[var(--bg-card)] text-xs font-medium flex items-center gap-1.5 cursor-default">
-                <svg class="w-3.5 h-3.5 text-orange-400" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z" /><path stroke-linecap="round" stroke-linejoin="round" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" /></svg>
-                Quản trị sản xuất
-              </span>
-            </div>
-          </div>
-
-          <!-- Interactive Dropzone Card with Proximity Spotlight -->
-          <div id="dropzone-card" class="proximity-card rounded-3xl p-6 sm:p-7 border-2 border-dashed border-blue-500/35 cursor-pointer group" onclick="scrollToWorkspaceWithToast()">
-            <div class="flex flex-col sm:flex-row items-center gap-5">
-              <div class="magnetic-icon w-16 h-16 rounded-2xl bg-blue-500/15 border border-blue-400/30 flex items-center justify-center text-blue-400 shrink-0">
-                <svg class="w-8 h-8" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="1.8">
-                  <path stroke-linecap="round" stroke-linejoin="round" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
-                </svg>
-              </div>
-              <div class="flex-1 text-center sm:text-left">
-                <div class="flex flex-wrap items-center justify-center sm:justify-start gap-2">
-                  <h2 class="font-display font-bold text-lg">Kéo thả file Luận văn <code class="font-mono text-blue-400">.docx</code> vào đây để kiểm toán</h2>
-                  <span class="px-2.5 py-0.5 text-[11px] font-semibold rounded-full bg-blue-500/15 text-blue-400">Hỗ trợ 70–120+ trang</span>
-                </div>
-                <p class="text-xs sm:text-sm text-[var(--text-muted)] mt-1">
-                  Tự động nhận diện <code class="font-mono">Heading 1–3</code>, tách Chương 1–5, bỏ qua Bìa, Lời cam đoan, Mục lục và Danh mục Tài liệu tham khảo.
-                </p>
-              </div>
-              <button type="button" class="magnetic-icon px-5 py-3 rounded-2xl font-display font-bold text-sm text-white bg-gradient-to-r from-blue-600 to-cyan-500 shadow-lg shadow-blue-500/25 shrink-0">
-                Chọn file .docx
-              </button>
-            </div>
-          </div>
-        </div>
-
-        <!-- Right Column (5 cols): Agni.vn Fanned Cards Deck + EziTranslate Floating Badges -->
-        <div class="lg:col-span-5 relative">
-          <div class="fan-deck proximity-card rounded-3xl h-[380px] sm:h-[410px] flex items-center justify-center p-6 select-none cursor-pointer" onclick="document.getElementById('audit-workspace').scrollIntoView({behavior:'smooth'})">
-            
-            <!-- Left Fanned Card -->
-            <div class="fan-card-left absolute w-56 sm:w-60 rounded-2xl border border-[var(--border-subtle)] bg-[var(--bg-elevated)] p-4 shadow-2xl">
-              <div class="flex items-center justify-between text-[11px] font-mono text-amber-400 mb-2">
-                <span>CHƯƠNG 1 · LÝ LUẬN</span>
-                <span class="px-1.5 py-0.5 rounded bg-amber-500/15">SYN-01</span>
-              </div>
-              <p class="text-xs font-semibold mb-1.5">Đẳng cấu cú pháp 3 nhịp</p>
-              <p class="text-[11px] text-[var(--text-muted)] leading-relaxed line-clamp-4">
-                "Qua đó góp phần nâng cao hiệu quả vận hành, tối ưu hóa nguồn lực và thúc đẩy tăng trưởng bền vững..."
-              </p>
-              <div class="mt-3 pt-2 border-t border-[var(--border-subtle)] flex items-center justify-between text-[10px] font-mono">
-                <span class="text-emerald-400">🛡️ Logistics miễn trừ</span>
-                <span class="text-amber-400">Mức P1</span>
-              </div>
-            </div>
-
-            <!-- Right Fanned Card -->
-            <div class="fan-card-right absolute w-56 sm:w-60 rounded-2xl border border-[var(--border-subtle)] bg-[var(--bg-elevated)] p-4 shadow-2xl">
-              <div class="flex items-center justify-between text-[11px] font-mono text-red-400 mb-2">
-                <span>CHƯƠNG 3 · MÔ HÌNH</span>
-                <span class="px-1.5 py-0.5 rounded bg-red-500/15">FOR-01</span>
-              </div>
-              <p class="text-xs font-semibold mb-1.5">Dấu vết rò rỉ & DOI ảo giác</p>
-              <p class="text-[11px] text-[var(--text-muted)] leading-relaxed line-clamp-4">
-                Phát hiện chuỗi <code class="text-red-400">contentReference[oaicite:2]</code> và mã DOI không khớp chuẩn Crossref trong trích dẫn...
-              </p>
-              <div class="mt-3 pt-2 border-t border-[var(--border-subtle)] flex items-center justify-between text-[10px] font-mono">
-                <span class="text-red-400">⚡ Cảnh báo Đỏ P0</span>
-                <span>2 vị trí</span>
-              </div>
-            </div>
-
-            <!-- Center Hero Card -->
-            <div class="fan-card-center relative z-10 w-64 sm:w-72 rounded-2xl border-2 border-blue-500/40 bg-[var(--bg-elevated)] p-5 shadow-2xl">
-              <div class="flex items-center justify-between mb-3">
-                <span class="px-2.5 py-0.5 rounded-full text-[11px] font-mono font-semibold bg-blue-500/20 text-blue-400">HỒ SƠ KIỂM TOÁN MẪU</span>
-                <span class="font-mono text-xs text-[var(--text-muted)]">84 trang</span>
-              </div>
-              <h3 class="font-display font-bold text-sm sm:text-base leading-snug mb-2">
-                Luận văn ThS: Quản trị Rủi ro Tín dụng & Chuỗi Cung ứng Xanh
-              </h3>
-              <div class="grid grid-cols-3 gap-2 my-3 p-2.5 rounded-xl bg-[var(--bg-base)]/70 border border-[var(--border-subtle)] text-center">
-                <div>
-                  <div class="font-mono font-bold text-sm text-amber-400">34/100</div>
-                  <div class="text-[10px] text-[var(--text-muted)]">Điểm AI-Style</div>
-                </div>
-                <div>
-                  <div class="font-mono font-bold text-sm text-cyan-400">0.21</div>
-                  <div class="text-[10px] text-[var(--text-muted)]">Burstiness CV_L</div>
-                </div>
-                <div>
-                  <div class="font-mono font-bold text-sm text-emerald-400">18</div>
-                  <div class="text-[10px] text-[var(--text-muted)]">Thuật ngữ bảo vệ</div>
-                </div>
-              </div>
-              <div class="space-y-1.5 text-[11px]">
-                <div class="flex items-center justify-between">
-                  <span class="text-[var(--text-muted)]">P0 · Lỗi Pháp y & Nguồn ảo</span>
-                  <span class="font-mono font-semibold text-red-400">2 lỗi</span>
-                </div>
-                <div class="flex items-center justify-between">
-                  <span class="text-[var(--text-muted)]">P1 · Cú pháp & Sáo ngữ AI</span>
-                  <span class="font-mono font-semibold text-orange-400">5 lỗi</span>
-                </div>
-                <div class="flex items-center justify-between">
-                  <span class="text-[var(--text-muted)]">P2 · Đoạn văn đóng hộp 4 bước</span>
-                  <span class="font-mono font-semibold text-yellow-400">4 lỗi</span>
-                </div>
-              </div>
-              <div class="mt-4 pt-3 border-t border-[var(--border-subtle)] flex items-center justify-between text-xs font-semibold text-blue-400">
-                <span>Rê chuột để xòe thẻ · Bấm để xem</span>
-                <span>→</span>
-              </div>
-            </div>
-
-            <!-- Floating Glass Badges (EziTranslate style) -->
-            <div class="animate-float-badge absolute top-4 left-4 z-20 px-3 py-1.5 rounded-full border border-emerald-400/30 bg-[var(--bg-glass)] backdrop-blur-md shadow-lg flex items-center gap-1.5 text-xs font-mono text-emerald-400">
-              <span>🛡️</span>
-              <span>Basel III · ROA/ROE · 3PL</span>
-            </div>
-            <div class="animate-float-badge-delayed absolute bottom-4 right-4 z-20 px-3 py-1.5 rounded-full border border-cyan-400/30 bg-[var(--bg-glass)] backdrop-blur-md shadow-lg flex items-center gap-1.5 text-xs font-mono text-cyan-400">
-              <span>📐</span>
-              <span>CV_L · ISI · OPR · SVCI</span>
-            </div>
-          </div>
-        </div>
-
-      </div>
-    </section>
-
-    <!-- ======================================================================
-         SECTION 2: THREE-COLUMN ACADEMIC STYLE AUDIT WORKSPACE
-         (Left: Chapter Tree & 6 Metrics | Center: Annotated Thesis | Right: Diagnostic Drawer)
-         ====================================================================== -->
-    <section id="audit-workspace" class="space-y-5 pt-4">
+  <!-- ========================================================================
+       SCREEN 01: HOME (Streamlined SaaS Landing + Primary DOCX Upload Area)
+       ======================================================================== -->
+  <main id="screen-home" class="app-screen active-screen flex-1">
+    <div class="max-w-[1280px] mx-auto px-4 sm:px-6 lg:px-8 py-10 lg:py-16 space-y-16">
       
-      <!-- Workspace Top Control Bar -->
-      <div class="proximity-card rounded-2xl p-4 flex flex-wrap items-center justify-between gap-4">
-        <div class="flex items-center gap-3">
-          <div class="magnetic-icon w-10 h-10 rounded-xl bg-blue-500/15 border border-blue-400/30 flex items-center justify-center text-blue-400">
-            <svg class="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" /></svg>
+      <!-- Hero & Upload Section -->
+      <section class="grid lg:grid-cols-12 gap-10 lg:gap-12 items-center">
+        
+        <!-- Left Column (7 cols): Concise Value Prop + Interactive Upload Centerpiece -->
+        <div class="lg:col-span-7 space-y-6">
+          <div class="space-y-3">
+            <p class="text-xs font-semibold uppercase tracking-widest text-blue-400">Academic Writing Review</p>
+            <h1 class="font-display font-extrabold text-3xl sm:text-5xl leading-[1.12] tracking-tight">
+              Rà soát và hoàn thiện <span class="text-gradient-brand">văn phong học thuật.</span>
+            </h1>
+            <p class="text-base sm:text-lg text-[var(--text-muted)] max-w-xl leading-relaxed">
+              Tải lên tài liệu DOCX để xác định những đoạn cần chú ý, tìm hiểu nguyên nhân và tham khảo các đề xuất biên tập phù hợp.
+            </p>
           </div>
-          <div>
-            <div class="flex items-center gap-2">
-              <h2 class="font-display font-bold text-sm sm:text-base">Luan_van_ThS_Quan_tri_Chuoi_cung_ung_va_Tai_chinh_DN.docx</h2>
-              <span class="px-2 py-0.5 rounded-md text-[11px] font-mono bg-emerald-500/15 text-emerald-400 border border-emerald-500/30">Đã lọc Mục lục & Tài liệu tham khảo</span>
+
+          <!-- PRIMARY UPLOAD AREA -->
+          <div id="upload-dropzone" class="proximity-card rounded-3xl p-6 sm:p-8 border-2 border-dashed border-blue-500/35 transition-all">
+            <input id="docx-file-input" type="file" accept=".docx,application/vnd.openxmlformats-officedocument.wordprocessingml.document" class="sr-only" />
+
+            <!-- State A: Empty / Unselected File -->
+            <div id="upload-state-empty" class="space-y-5">
+              <div class="flex flex-col sm:flex-row items-center gap-5">
+                <div class="magnetic-icon w-16 h-16 rounded-2xl bg-blue-500/15 border border-blue-400/30 flex items-center justify-center text-blue-400 shrink-0">
+                  <svg class="w-8 h-8" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="1.8">
+                    <path stroke-linecap="round" stroke-linejoin="round" d="M7 16a4 4 0 01-.88-7.903A5 5 0 1115.9 6L16 6a5 5 0 011 9.9M15 13l-3-3m0 0l-3 3m3-3v12" />
+                  </svg>
+                </div>
+                <div class="flex-1 text-center sm:text-left space-y-1">
+                  <div class="flex flex-wrap items-center justify-center sm:justify-start gap-2">
+                    <h2 class="font-display font-bold text-lg">Kéo thả tài liệu vào đây hoặc chọn tệp từ máy</h2>
+                    <span class="px-2.5 py-0.5 text-[11px] font-mono font-semibold rounded-full bg-blue-500/15 text-blue-400 border border-blue-500/30">.DOCX</span>
+                  </div>
+                  <p class="text-xs sm:text-sm text-[var(--text-muted)]">
+                    Hỗ trợ định dạng Microsoft Word (.docx). Giữ nguyên cấu trúc chương mục khi rà soát.
+                  </p>
+                </div>
+              </div>
+
+              <!-- Error Notice (Hidden by default, shown if non-docx chosen) -->
+              <div id="upload-error-box" class="hidden p-3 rounded-xl bg-red-500/15 border border-red-500/35 text-xs text-red-300 flex items-center justify-between gap-2" role="alert">
+                <span id="upload-error-text">Định dạng tệp chưa phù hợp. Vui lòng chọn tài liệu có đuôi .docx.</span>
+                <button type="button" onclick="hideUploadError()" class="text-red-300 hover:text-white font-semibold px-2">Đóng</button>
+              </div>
+
+              <div class="pt-2 flex flex-wrap items-center justify-center sm:justify-start gap-3">
+                <button type="button" onclick="triggerFileBrowse()" class="magnetic-icon px-6 py-3 rounded-2xl font-display font-bold text-sm text-white bg-gradient-to-r from-blue-600 to-cyan-500 hover:from-blue-500 hover:to-cyan-400 shadow-lg shadow-blue-500/25">
+                  Browse Files (.docx)
+                </button>
+                <button type="button" onclick="exploreSampleDemo()" class="px-4 py-3 rounded-2xl text-xs sm:text-sm font-semibold border border-[var(--border-subtle)] bg-[var(--bg-elevated)] text-[var(--text-muted)] hover:text-[var(--text-main)] hover:border-blue-400/40 transition-all">
+                  Explore Demo với bản thảo mẫu
+                </button>
+              </div>
             </div>
-            <p class="text-xs text-[var(--text-muted)] font-mono mt-0.5">84 trang · 31.420 từ · 5 Chương · Thời gian quét: 1,42s</p>
+
+            <!-- State B: File Selected -->
+            <div id="upload-state-selected" class="hidden space-y-5">
+              <div class="flex flex-col sm:flex-row items-center justify-between gap-4 p-4 rounded-2xl bg-[var(--bg-elevated)] border border-emerald-500/35">
+                <div class="flex items-center gap-3.5 min-w-0">
+                  <div class="w-12 h-12 rounded-xl bg-emerald-500/15 border border-emerald-500/30 flex items-center justify-center text-emerald-400 shrink-0">
+                    <svg class="w-6 h-6" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+                      <path stroke-linecap="round" stroke-linejoin="round" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
+                    </svg>
+                  </div>
+                  <div class="min-w-0">
+                    <p id="selected-file-name" class="font-display font-bold text-sm sm:text-base truncate">Ban_thao_nghien_cuu_hoc_thuat.docx</p>
+                    <p class="text-xs text-[var(--text-muted)] font-mono mt-0.5">
+                      <span id="selected-file-size">1.48 MB</span> · Tài liệu DOCX sẵn sàng rà soát
+                    </p>
+                  </div>
+                </div>
+                <div class="flex items-center gap-2 shrink-0">
+                  <button type="button" onclick="triggerFileBrowse()" class="px-3 py-1.5 rounded-xl text-xs font-semibold border border-[var(--border-subtle)] bg-[var(--bg-card)] hover:border-blue-400/40 transition-all">
+                    Thay thế
+                  </button>
+                  <button type="button" onclick="clearSelectedFile()" class="px-3 py-1.5 rounded-xl text-xs font-semibold border border-red-500/30 bg-red-500/10 text-red-400 hover:bg-red-500/20 transition-all">
+                    Xóa file
+                  </button>
+                </div>
+              </div>
+
+              <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+                <p class="text-xs text-[var(--text-muted)]">
+                  Bản xem trước giao diện sẽ sử dụng dữ liệu minh họa cho tài liệu đã chọn.
+                </p>
+                <button type="button" id="start-audit-btn" onclick="startAuditFlow()" class="magnetic-icon px-7 py-3.5 rounded-2xl font-display font-extrabold text-sm text-white bg-gradient-to-r from-blue-600 via-cyan-500 to-emerald-500 shadow-xl shadow-blue-500/25 tracking-wide">
+                  START AUDIT →
+                </button>
+              </div>
+            </div>
+
           </div>
         </div>
 
-        <!--Severity Filter Pills (Agni.vn style quick filter bar) -->
-        <div class="flex flex-wrap items-center gap-1.5" role="group" aria-label="Bộ lọc mức độ dấu hiệu">
-          <button type="button" onclick="filterSpans('all', this)" class="filter-chip active px-3 py-1.5 rounded-full text-xs font-semibold border border-blue-500 bg-blue-600 text-white transition-all">
-            Tất cả (7)
+        <!-- Right Column (5 cols): Visual Interface Preview (Fanned Deck without instruction clutter) -->
+        <div class="lg:col-span-5 relative">
+          <div class="fan-deck proximity-card rounded-3xl h-[360px] sm:h-[390px] flex items-center justify-center p-6 select-none">
+            
+            <!-- Left Preview Card -->
+            <div class="fan-card-left absolute w-52 sm:w-56 rounded-2xl border border-[var(--border-subtle)] bg-[var(--bg-elevated)] p-4 shadow-2xl">
+              <div class="flex items-center justify-between text-[11px] font-semibold text-orange-400 mb-2">
+                <span>Chương 1 · Tổng quan</span>
+                <span class="px-2 py-0.5 rounded-full bg-orange-500/15">Nên sửa</span>
+              </div>
+              <p class="text-xs font-semibold mb-1.5">Cấu trúc câu liệt kê lặp lại</p>
+              <p class="text-[11px] text-[var(--text-muted)] leading-relaxed line-clamp-3">
+                "Qua đó góp phần nâng cao hiệu quả vận hành, tối ưu hóa nguồn lực và thúc đẩy tăng trưởng..."
+              </p>
+            </div>
+
+            <!-- Right Preview Card -->
+            <div class="fan-card-right absolute w-52 sm:w-56 rounded-2xl border border-[var(--border-subtle)] bg-[var(--bg-elevated)] p-4 shadow-2xl">
+              <div class="flex items-center justify-between text-[11px] font-semibold text-red-400 mb-2">
+                <span>Chương 3 · Thảo luận</span>
+                <span class="px-2 py-0.5 rounded-full bg-red-500/15">Cần sửa ngay</span>
+              </div>
+              <p class="text-xs font-semibold mb-1.5">Kiểm tra nguồn trích dẫn</p>
+              <p class="text-[11px] text-[var(--text-muted)] leading-relaxed line-clamp-3">
+                Phát hiện ký hiệu trích dẫn hệ thống chưa làm sạch và mã định danh tài liệu cần đối chiếu...
+              </p>
+            </div>
+
+            <!-- Center Main Preview Card -->
+            <div class="fan-card-center relative z-10 w-64 sm:w-72 rounded-2xl border-2 border-blue-500/40 bg-[var(--bg-elevated)] p-5 shadow-2xl space-y-3.5">
+              <div class="flex items-center justify-between">
+                <span class="px-2.5 py-0.5 rounded-full text-[11px] font-semibold bg-blue-500/20 text-blue-400">Tổng quan kết quả</span>
+                <span class="text-xs text-[var(--text-muted)]">4 Chương</span>
+              </div>
+              <h3 class="font-display font-bold text-sm sm:text-base leading-snug">
+                Bản thảo Nghiên cứu &amp; Phân tích Học thuật
+              </h3>
+              <div class="grid grid-cols-3 gap-2 p-2.5 rounded-xl bg-[var(--bg-base)]/70 border border-[var(--border-subtle)] text-center">
+                <div>
+                  <div class="font-mono font-bold text-sm text-red-400">2</div>
+                  <div class="text-[10px] text-[var(--text-muted)]">Cần sửa ngay</div>
+                </div>
+                <div>
+                  <div class="font-mono font-bold text-sm text-orange-400">6</div>
+                  <div class="text-[10px] text-[var(--text-muted)]">Nên sửa</div>
+                </div>
+                <div>
+                  <div class="font-mono font-bold text-sm text-indigo-400">4</div>
+                  <div class="text-[10px] text-[var(--text-muted)]">Gợi ý</div>
+                </div>
+              </div>
+              <div class="space-y-1.5 text-xs">
+                <div class="flex items-center justify-between">
+                  <span class="text-[var(--text-muted)]">Đề xuất biên tập</span>
+                  <span class="font-semibold text-emerald-400">Sẵn sàng</span>
+                </div>
+                <div class="flex items-center justify-between">
+                  <span class="text-[var(--text-muted)]">Báo cáo kiểm toán</span>
+                  <span class="font-semibold text-cyan-400">Xem trực tiếp</span>
+                </div>
+              </div>
+            </div>
+
+            <!-- Subtle Floating Badges -->
+            <div class="animate-float-badge absolute top-4 left-4 z-20 px-3 py-1.5 rounded-full border border-emerald-400/30 bg-[var(--bg-glass)] backdrop-blur-md shadow-lg text-xs font-medium text-emerald-400">
+              Đề xuất biên tập rõ ràng
+            </div>
+            <div class="animate-float-badge-delayed absolute bottom-4 right-4 z-20 px-3 py-1.5 rounded-full border border-cyan-400/30 bg-[var(--bg-glass)] backdrop-blur-md shadow-lg text-xs font-medium text-cyan-400">
+              Phân tích theo từng chương
+            </div>
+          </div>
+        </div>
+
+      </section>
+
+      <!-- Minimal Secondary Content: 3 Core Benefits -->
+      <section class="grid sm:grid-cols-3 gap-5 pt-4">
+        <div class="proximity-card rounded-2xl p-6 space-y-2.5">
+          <div class="magnetic-icon w-10 h-10 rounded-xl bg-red-500/15 border border-red-500/30 flex items-center justify-center text-red-400">
+            <svg class="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" /></svg>
+          </div>
+          <h2 class="font-display font-bold text-base">Xác định các điểm cần chú ý</h2>
+          <p class="text-xs sm:text-sm text-[var(--text-muted)] leading-relaxed">
+            Khoanh vùng các câu văn rập khuôn, trích dẫn cần xác minh hoặc lối diễn đạt thiếu tự nhiên theo ba mức độ ưu tiên.
+          </p>
+        </div>
+
+        <div class="proximity-card rounded-2xl p-6 space-y-2.5">
+          <div class="magnetic-icon w-10 h-10 rounded-xl bg-blue-500/15 border border-blue-500/30 flex items-center justify-center text-blue-400">
+            <svg class="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M9.663 17h4.673M12 3v1m6.364 1.636l-.707.707M21 12h-1M4 12H3m3.343-5.657l-.707-.707m2.828 9.9a5 5 0 117.072 0l-.548.547A3.374 3.374 0 0014 18.469V19a2 2 0 11-4 0v-.531c0-.895-.356-1.754-.988-2.386l-.548-.547z" /></svg>
+          </div>
+          <h2 class="font-display font-bold text-base">Giải thích nguyên nhân cụ thể</h2>
+          <p class="text-xs sm:text-sm text-[var(--text-muted)] leading-relaxed">
+            Cung cấp nhận xét trực diện cho từng đoạn văn bản để người viết chủ động quyết định giữ nguyên hoặc điều chỉnh.
+          </p>
+        </div>
+
+        <div class="proximity-card rounded-2xl p-6 space-y-2.5">
+          <div class="magnetic-icon w-10 h-10 rounded-xl bg-emerald-500/15 border border-emerald-500/30 flex items-center justify-center text-emerald-400">
+            <svg class="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" /></svg>
+          </div>
+          <h2 class="font-display font-bold text-base">Đề xuất biên tập sát ngữ cảnh</h2>
+          <p class="text-xs sm:text-sm text-[var(--text-muted)] leading-relaxed">
+            Gợi ý phương án viết lại ngắn gọn, khách quan và giữ nguyên nội dung chuyên môn của tài liệu gốc.
+          </p>
+        </div>
+      </section>
+
+      <!-- Compact Footer -->
+      <footer class="pt-6 border-t border-[var(--border-subtle)] flex flex-col sm:flex-row items-center justify-between gap-4 text-xs text-[var(--text-muted)]">
+        <div class="flex items-center gap-2">
+          <span class="font-display font-bold text-[var(--text-main)]">AI Style Auditor</span>
+          <span>·</span>
+          <span>Academic Writing Review</span>
+        </div>
+        <div class="flex items-center gap-4">
+          <button type="button" onclick="navigateToScreen('workspace')" class="hover:text-[var(--text-main)] transition-colors">Workspace</button>
+          <button type="button" onclick="navigateToScreen('insights')" class="hover:text-[var(--text-main)] transition-colors">Insights</button>
+          <button type="button" onclick="openReportModal()" class="hover:text-[var(--text-main)] transition-colors">Báo cáo kiểm toán</button>
+        </div>
+      </footer>
+
+    </div>
+  </main>
+
+  <!-- ========================================================================
+       SCREEN 02: WORKSPACE (Dedicated 3-Column SaaS Application View)
+       ======================================================================== -->
+  <main id="screen-workspace" class="app-screen flex-1">
+    <div class="max-w-[1440px] mx-auto px-4 sm:px-6 lg:px-8 py-5 space-y-4">
+      
+      <!-- A. Workspace Header / Application Bar -->
+      <div class="proximity-card rounded-2xl px-4 py-3 flex flex-wrap items-center justify-between gap-3">
+        
+        <!-- Left: Back + Breadcrumb + Honest Demo Label -->
+        <div class="flex flex-wrap items-center gap-2.5 min-w-0">
+          <button type="button" onclick="navigateToScreen('home')" class="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-xs font-semibold border border-[var(--border-subtle)] bg-[var(--bg-elevated)] hover:border-blue-400/40 transition-all">
+            <span>←</span>
+            <span>Home</span>
           </button>
-          <button type="button" onclick="filterSpans('P0', this)" class="filter-chip px-3 py-1.5 rounded-full text-xs font-semibold border border-red-500/35 bg-red-500/10 text-red-400 hover:bg-red-500/20 transition-all">
-            P0 · Pháp y/Ảo giác (1)
+
+          <nav aria-label="Breadcrumb" class="flex items-center gap-1.5 text-xs text-[var(--text-muted)] truncate">
+            <span>Workspace</span>
+            <span>/</span>
+            <span id="workspace-doc-title" class="font-semibold text-[var(--text-main)] truncate max-w-[220px] sm:max-w-[320px]">Ban_thao_nghien_cuu_hoc_thuat.docx</span>
+          </nav>
+
+          <span class="px-2.5 py-1 rounded-full text-[11px] font-semibold bg-amber-500/15 text-amber-400 border border-amber-500/30">
+            DEMO PREVIEW – Kết quả minh họa, chưa phân tích nội dung file
+          </span>
+        </div>
+
+        <!-- Right: Panel Collapse Controls + View Insights + Report Preview -->
+        <div class="flex flex-wrap items-center gap-2">
+          <button type="button" id="toggle-left-col-btn" onclick="toggleWorkspaceColumn('left')" class="hidden lg:inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-xs font-medium border border-[var(--border-subtle)] bg-[var(--bg-card)] text-[var(--text-muted)] hover:text-[var(--text-main)] transition-all" title="Ẩn hoặc hiện danh sách chương">
+            <span>Ẩn/Hiện Mục lục</span>
           </button>
-          <button type="button" onclick="filterSpans('P1', this)" class="filter-chip px-3 py-1.5 rounded-full text-xs font-semibold border border-orange-500/35 bg-orange-500/10 text-orange-400 hover:bg-orange-500/20 transition-all">
-            P1 · Cú pháp/Sáo ngữ (3)
+          <button type="button" id="toggle-right-col-btn" onclick="toggleWorkspaceColumn('right')" class="hidden lg:inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-xs font-medium border border-[var(--border-subtle)] bg-[var(--bg-card)] text-[var(--text-muted)] hover:text-[var(--text-main)] transition-all" title="Ẩn hoặc hiện bảng chẩn đoán">
+            <span>Ẩn/Hiện Chẩn đoán</span>
           </button>
-          <button type="button" onclick="filterSpans('P2', this)" class="filter-chip px-3 py-1.5 rounded-full text-xs font-semibold border border-yellow-500/35 bg-yellow-500/10 text-yellow-400 hover:bg-yellow-500/20 transition-all">
-            P2 · Nhịp điệu/Đoạn hộp (2)
+          <button type="button" onclick="navigateToScreen('insights')" class="inline-flex items-center gap-1.5 px-3.5 py-1.5 rounded-xl text-xs font-semibold border border-blue-500/35 bg-blue-500/10 text-blue-400 hover:bg-blue-500/20 transition-all">
+            <span>Xem Insights</span>
           </button>
-          <button type="button" onclick="filterSpans('P3', this)" class="filter-chip px-3 py-1.5 rounded-full text-xs font-semibold border border-indigo-500/35 bg-indigo-500/10 text-indigo-400 hover:bg-indigo-500/20 transition-all">
-            P3 · Bị động/Danh hóa (1)
+          <button type="button" onclick="openReportModal()" class="magnetic-icon inline-flex items-center gap-1.5 px-3.5 py-1.5 rounded-xl text-xs font-semibold text-white bg-gradient-to-r from-blue-600 to-cyan-500 shadow-sm">
+            <span>Xem trước Báo cáo</span>
           </button>
         </div>
 
-        <!-- Export Audit Report & Pro Direct Edit Actions -->
-        <div class="flex items-center gap-2">
-          <button type="button" onclick="openReportModal()" class="magnetic-icon inline-flex items-center gap-1.5 px-3.5 py-2 rounded-xl border border-[var(--border-subtle)] bg-[var(--bg-elevated)] text-xs font-semibold hover:border-blue-400/50">
-            <svg class="w-4 h-4 text-cyan-400" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M12 10v6m0 0l-3-3m3 3l3-3m2 8H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" /></svg>
-            Xuất Báo cáo Audit (HTML/PDF)
-          </button>
-          <button type="button" onclick="openProModal()" class="magnetic-icon inline-flex items-center gap-1.5 px-3.5 py-2 rounded-xl border border-violet-500/40 bg-violet-500/15 text-violet-300 text-xs font-semibold hover:bg-violet-500/25">
-            <svg class="w-4 h-4 text-violet-400" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M15.232 5.232l3.536 3.536m-2.036-5.036a2.5 2.5 0 113.536 3.536L6.5 21.036H3v-3.572L16.732 3.732z" /></svg>
-            <span>Sửa trực tiếp & Chấm Real-time</span>
-            <span class="px-1.5 py-0.2 rounded bg-violet-500 text-white font-mono text-[10px]">PRO</span>
-          </button>
-        </div>
       </div>
 
-      <!-- 3-COLUMN MAIN AUDIT GRID -->
-      <div class="grid lg:grid-cols-12 gap-5 items-start">
+      <!-- Mobile/Tablet Quick Switcher for Left/Right Drawers -->
+      <div class="flex lg:hidden items-center gap-2">
+        <button type="button" onclick="toggleMobilePanel('nav')" class="flex-1 py-2 px-3 rounded-xl text-xs font-semibold border border-[var(--border-subtle)] bg-[var(--bg-card)]">
+          Danh sách Chương &amp; Bộ lọc
+        </button>
+        <button type="button" onclick="toggleMobilePanel('diag')" class="flex-1 py-2 px-3 rounded-xl text-xs font-semibold border border-blue-500/35 bg-blue-500/10 text-blue-400">
+          Chi tiết Đề xuất Biên tập
+        </button>
+      </div>
 
-        <!-- ==================================================================
-             LEFT COLUMN (3 cols): Document Tree + 6 Quantitative Indices
-             ================================================================== -->
-        <aside class="lg:col-span-3 space-y-5">
+      <!-- B. Three-Column Workspace Grid -->
+      <div id="workspace-grid" class="grid lg:grid-cols-12 gap-5 items-start">
+
+        <!-- LEFT COLUMN (3 cols): Document Structure & Filters -->
+        <aside id="workspace-col-left" class="lg:col-span-3 space-y-4">
           
-          <!-- Chapter Navigation Tree -->
+          <!-- Document Chapters -->
           <div class="proximity-card rounded-2xl p-4 space-y-3">
             <div class="flex items-center justify-between">
-              <h3 class="font-display font-bold text-xs uppercase tracking-wider text-[var(--text-muted)]">Cây Cấu trúc Luận văn</h3>
-              <span class="text-[11px] font-mono text-blue-400">5 Chương</span>
+              <h2 class="font-display font-bold text-xs uppercase tracking-wider text-[var(--text-muted)]">Cấu trúc tài liệu</h2>
+              <span id="workspace-progress-badge" class="text-[11px] font-mono text-emerald-400">Đã xử lý 0/7</span>
             </div>
 
-            <div class="space-y-1.5 text-xs">
-              <div class="flex items-center justify-between px-3 py-2 rounded-xl opacity-50 bg-[var(--bg-base)]/40">
-                <span class="line-through">Bìa, Lời cam đoan & Mục lục</span>
-                <span class="font-mono text-[10px] px-1.5 py-0.5 rounded bg-slate-500/20">Đã bỏ qua</span>
-              </div>
-
-              <button type="button" onclick="selectChapter(1, this)" class="chapter-btn w-full flex items-center justify-between px-3 py-2.5 rounded-xl bg-blue-600/15 border border-blue-500/40 text-left font-semibold transition-all">
-                <span class="truncate pr-2">Chương 1: Cơ sở lý luận Logistics & Tài chính</span>
-                <span class="px-2 py-0.5 rounded-full text-[10px] font-mono bg-orange-500/20 text-orange-400 shrink-0">Điểm: 42</span>
-              </button>
-
-              <button type="button" onclick="selectChapter(2, this)" class="chapter-btn w-full flex items-center justify-between px-3 py-2.5 rounded-xl hover:bg-[var(--bg-base)]/60 border border-transparent text-left transition-all">
-                <span class="truncate pr-2">Chương 2: Phương pháp nghiên cứu & Dữ liệu</span>
-                <span class="px-2 py-0.5 rounded-full text-[10px] font-mono bg-emerald-500/20 text-emerald-400 shrink-0">Điểm: 18</span>
-              </button>
-
-              <button type="button" onclick="selectChapter(3, this)" class="chapter-btn w-full flex items-center justify-between px-3 py-2.5 rounded-xl hover:bg-[var(--bg-base)]/60 border border-transparent text-left transition-all">
-                <span class="truncate pr-2">Chương 3: Kết quả thực nghiệm & Kiểm định</span>
-                <span class="px-2 py-0.5 rounded-full text-[10px] font-mono bg-red-500/20 text-red-400 shrink-0">P0 · 39</span>
-              </button>
-
-              <button type="button" onclick="selectChapter(4, this)" class="chapter-btn w-full flex items-center justify-between px-3 py-2.5 rounded-xl hover:bg-[var(--bg-base)]/60 border border-transparent text-left transition-all">
-                <span class="truncate pr-2">Chương 4: Giải pháp Quản trị & Khuyến nghị</span>
-                <span class="px-2 py-0.5 rounded-full text-[10px] font-mono bg-yellow-500/20 text-yellow-400 shrink-0">Điểm: 48</span>
-              </button>
-
-              <div class="flex items-center justify-between px-3 py-2 rounded-xl opacity-50 bg-[var(--bg-base)]/40">
-                <span class="line-through">Danh mục Tài liệu tham khảo (APA)</span>
-                <span class="font-mono text-[10px] px-1.5 py-0.5 rounded bg-slate-500/20">Đã bỏ qua</span>
-              </div>
+            <div id="chapter-list" class="space-y-1.5 text-xs">
+              <!-- Populated dynamically by JS -->
             </div>
           </div>
 
-          <!-- 6 Quantitative Mathematical Metrics Panel -->
-          <div id="metrics-matrix" class="proximity-card rounded-2xl p-4 space-y-3.5">
-            <div class="flex items-center justify-between">
-              <h3 class="font-display font-bold text-xs uppercase tracking-wider text-[var(--text-muted)]">6 Chỉ số Định lượng Thực tế</h3>
-              <span class="font-mono text-[11px] text-cyan-400">Toán học 100%</span>
-            </div>
-
-            <div class="space-y-3 text-xs">
-              <!-- Metric 1: CV_L -->
-              <div class="p-2.5 rounded-xl bg-[var(--bg-base)]/55 border border-[var(--border-subtle)]">
-                <div class="flex items-center justify-between mb-1">
-                  <span class="font-semibold">Độ biến thiên độ dài câu (<code class="font-mono text-cyan-400">CV_L</code>)</span>
-                  <span class="font-mono font-bold text-yellow-400">0.15 <span class="text-[10px] font-normal text-[var(--text-muted)]">(Chuẩn ≥ 0.25)</span></span>
-                </div>
-                <div class="w-full h-1.5 rounded-full bg-slate-700/50 overflow-hidden">
-                  <div class="h-full bg-gradient-to-r from-yellow-500 to-orange-500 rounded-full" style="width: 42%"></div>
-                </div>
-                <p class="text-[11px] text-[var(--text-muted)] mt-1">Nhịp câu đều đặn máy móc (22–26 từ/câu).</p>
-              </div>
-
-              <!-- Metric 2: ISI -->
-              <div class="p-2.5 rounded-xl bg-[var(--bg-base)]/55 border border-[var(--border-subtle)]">
-                <div class="flex items-center justify-between mb-1">
-                  <span class="font-semibold">Đẳng cấu cú pháp (<code class="font-mono text-orange-400">ISI</code>)</span>
-                  <span class="font-mono font-bold text-orange-400">0.38 <span class="text-[10px] font-normal text-[var(--text-muted)]">(Ngưỡng &lt; 0.25)</span></span>
-                </div>
-                <div class="w-full h-1.5 rounded-full bg-slate-700/50 overflow-hidden">
-                  <div class="h-full bg-orange-500 rounded-full" style="width: 68%"></div>
-                </div>
-                <p class="text-[11px] text-[var(--text-muted)] mt-1">Lặp cấu trúc song hành 3 vế liên tiếp.</p>
-              </div>
-
-              <!-- Metric 3: OPR -->
-              <div class="p-2.5 rounded-xl bg-[var(--bg-base)]/55 border border-[var(--border-subtle)]">
-                <div class="flex items-center justify-between mb-1">
-                  <span class="font-semibold">Đại từ ngoại chiếu (<code class="font-mono text-blue-400">OPR</code>)</span>
-                  <span class="font-mono font-bold text-emerald-400">0.008 <span class="text-[10px] font-normal text-[var(--text-muted)]">(Đạt chuẩn)</span></span>
-                </div>
-                <div class="w-full h-1.5 rounded-full bg-slate-700/50 overflow-hidden">
-                  <div class="h-full bg-emerald-500 rounded-full" style="width: 24%"></div>
-                </div>
-                <p class="text-[11px] text-[var(--text-muted)] mt-1">Tỷ lệ "nó, họ, điều này" trong ngưỡng tự nhiên.</p>
-              </div>
-
-              <!-- Metric 4, 5, 6 compact grid -->
-              <div class="grid grid-cols-3 gap-2 pt-1 text-center">
-                <div class="p-2 rounded-xl bg-[var(--bg-base)]/55 border border-[var(--border-subtle)]" title="Synonym Cycling Index">
-                  <div class="font-mono font-bold text-sm text-cyan-400">0.12</div>
-                  <div class="text-[10px] text-[var(--text-muted)]">SVCI</div>
-                </div>
-                <div class="p-2 rounded-xl bg-[var(--bg-base)]/55 border border-[var(--border-subtle)]" title="Sino-Vietnamese Compound Density">
-                  <div class="font-mono font-bold text-sm text-orange-400">0.34</div>
-                  <div class="text-[10px] text-[var(--text-muted)]">SICD</div>
-                </div>
-                <div class="p-2 rounded-xl bg-[var(--bg-base)]/55 border border-[var(--border-subtle)]" title="Bold-Colon List Ratio">
-                  <div class="font-mono font-bold text-sm text-indigo-400">0.40</div>
-                  <div class="text-[10px] text-[var(--text-muted)]">BCR</div>
-                </div>
-              </div>
+          <!-- Severity & Resolution Status Filter -->
+          <div class="proximity-card rounded-2xl p-4 space-y-3">
+            <h2 class="font-display font-bold text-xs uppercase tracking-wider text-[var(--text-muted)]">Bộ lọc điểm cần chú ý</h2>
+            <div class="flex flex-col gap-1.5 text-xs" role="group" aria-label="Bộ lọc mức độ ưu tiên">
+              <button type="button" onclick="setFindingFilter('all', this)" class="filter-btn active flex items-center justify-between px-3 py-2 rounded-xl font-semibold bg-blue-600 text-white transition-all">
+                <span>Tất cả phát hiện</span>
+                <span id="count-all" class="font-mono text-[11px]">7</span>
+              </button>
+              <button type="button" onclick="setFindingFilter('critical', this)" class="filter-btn flex items-center justify-between px-3 py-2 rounded-xl border border-transparent hover:bg-[var(--bg-base)]/60 text-left transition-all">
+                <span class="inline-flex items-center gap-2">
+                  <span class="w-2 h-2 rounded-full bg-red-500"></span>
+                  <span>Cần sửa ngay</span>
+                </span>
+                <span id="count-critical" class="font-mono text-[11px] text-red-400">1</span>
+              </button>
+              <button type="button" onclick="setFindingFilter('warning', this)" class="filter-btn flex items-center justify-between px-3 py-2 rounded-xl border border-transparent hover:bg-[var(--bg-base)]/60 text-left transition-all">
+                <span class="inline-flex items-center gap-2">
+                  <span class="w-2 h-2 rounded-full bg-orange-500"></span>
+                  <span>Nên sửa</span>
+                </span>
+                <span id="count-warning" class="font-mono text-[11px] text-orange-400">4</span>
+              </button>
+              <button type="button" onclick="setFindingFilter('suggestion', this)" class="filter-btn flex items-center justify-between px-3 py-2 rounded-xl border border-transparent hover:bg-[var(--bg-base)]/60 text-left transition-all">
+                <span class="inline-flex items-center gap-2">
+                  <span class="w-2 h-2 rounded-full bg-indigo-400"></span>
+                  <span>Gợi ý</span>
+                </span>
+                <span id="count-suggestion" class="font-mono text-[11px] text-indigo-400">2</span>
+              </button>
+              <button type="button" onclick="setFindingFilter('resolved', this)" class="filter-btn flex items-center justify-between px-3 py-2 rounded-xl border border-transparent hover:bg-[var(--bg-base)]/60 text-left transition-all">
+                <span class="inline-flex items-center gap-2">
+                  <span class="w-2 h-2 rounded-full bg-emerald-400"></span>
+                  <span>Đã xử lý</span>
+                </span>
+                <span id="count-resolved" class="font-mono text-[11px] text-emerald-400">0</span>
+              </button>
             </div>
           </div>
 
         </aside>
 
-        <!-- ==================================================================
-             CENTER COLUMN (5 cols): Interactive Manuscript Reader
-             ================================================================== -->
-        <section class="lg:col-span-5 proximity-card rounded-3xl p-6 sm:p-8 bg-[var(--manuscript-bg)] space-y-5">
+        <!-- CENTER COLUMN (5 cols): Manuscript Viewer -->
+        <section id="workspace-col-center" class="lg:col-span-5 proximity-card rounded-3xl p-6 sm:p-8 bg-[var(--manuscript-bg)] space-y-5">
           
-          <div class="flex items-center justify-between pb-4 border-b border-[var(--border-subtle)]">
+          <!-- Viewer Top Bar -->
+          <div class="flex flex-wrap items-center justify-between gap-3 pb-4 border-b border-[var(--border-subtle)]">
             <div>
-              <span class="text-[11px] font-mono uppercase tracking-wider text-blue-400">Bản thảo đang kiểm toán · Trang 14–16</span>
-              <h3 id="manuscript-chapter-title" class="font-display font-bold text-lg mt-0.5">Chương 1: Cơ sở lý luận về Quản trị Chuỗi cung ứng & Hiệu quả Tài chính</h3>
+              <span id="viewer-section-label" class="text-[11px] font-mono uppercase tracking-wider text-blue-400">Chương 1 · Bản thảo</span>
+              <h2 id="viewer-chapter-heading" class="font-display font-bold text-base sm:text-lg mt-0.5">
+                Chương 1: Cơ sở lý luận và Tổng quan nghiên cứu
+              </h2>
             </div>
-            <span class="px-2.5 py-1 rounded-lg text-xs font-mono bg-amber-500/15 text-amber-400 border border-amber-500/30">7 phát hiện · 6 thuật ngữ bảo vệ</span>
+
+            <!-- Prev/Next Finding Stepper + Font Scale Toggle -->
+            <div class="flex items-center gap-1.5">
+              <button type="button" onclick="stepFinding(-1)" class="px-2.5 py-1.5 rounded-lg text-xs font-semibold border border-[var(--border-subtle)] bg-[var(--bg-card)] hover:border-blue-400/40" title="Điểm cần chú ý trước">
+                ← Trước
+              </button>
+              <span id="finding-stepper-label" class="px-2 text-xs font-mono text-[var(--text-muted)]">1 / 7</span>
+              <button type="button" onclick="stepFinding(1)" class="px-2.5 py-1.5 rounded-lg text-xs font-semibold border border-[var(--border-subtle)] bg-[var(--bg-card)] hover:border-blue-400/40" title="Điểm cần chú ý tiếp theo">
+                Tiếp →
+              </button>
+              <button type="button" onclick="toggleReaderFontSize()" id="font-size-btn" class="ml-1 px-2.5 py-1.5 rounded-lg text-xs font-mono border border-[var(--border-subtle)] bg-[var(--bg-card)] hover:border-blue-400/40" title="Đổi cỡ chữ vùng đọc">
+                Aa
+              </button>
+            </div>
           </div>
 
-          <!-- Interactive Annotated Thesis Paragraphs -->
-          <article class="space-y-5 text-[15px] leading-[1.85] text-[var(--text-main)]">
-            
-            <p class="text-xs font-mono text-[var(--text-muted)]">1.2. Vai trò của cấu trúc vốn và logistics xanh trong doanh nghiệp sản xuất</p>
-
-            <!-- Paragraph 1 -->
-            <p>
-              <span class="audit-span span-p2" data-sign="DIS-04" onclick="selectFinding('DIS-04', this)">Trong bối cảnh toàn cầu hóa và cuộc cách mạng công nghiệp 4.0 diễn ra mạnh mẽ hiện nay,</span>
-              hoạt động tối ưu hóa
-              <span class="span-econ" title="Thuật ngữ Logistics & Hậu cần được bảo vệ tự động">🛡️ chuỗi cung ứng lạnh (cold chain)</span>
-              kết hợp với quản trị
-              <span class="span-econ" title="Thuật ngữ Tài chính – Kế toán được bảo vệ tự động">🛡️ vốn lưu động ròng (Net Working Capital)</span>
-              <span class="audit-span span-p1 active-span" data-sign="LEX-02" onclick="selectFinding('LEX-02', this)">đóng vai trò như một chất xúc tác then chốt và mang tính bước ngoặt lịch sử</span>
-              đối với năng lực cạnh tranh của các doanh nghiệp niêm yết.
-              <span class="audit-span span-p1" data-sign="SYN-03" onclick="selectFinding('SYN-03', this)">Đây không chỉ là một giải pháp vận hành đơn thuần mà còn là một tuyên ngôn chiến lược toàn diện,</span>
-              <span class="audit-span span-p1" data-sign="SYN-01" onclick="selectFinding('SYN-01', this)">qua đó góp phần nâng cao hiệu suất sử dụng tài sản, tối ưu hóa chi phí giao dịch và thúc đẩy giá trị bền vững cho cổ đông.</span>
-            </p>
-
-            <!-- Paragraph 2 -->
-            <p>
-              Bên cạnh đó, khi phân tích tác động của
-              <span class="span-econ" title="Thuật ngữ Tài chính – Ngân hàng được bảo vệ tự động">🛡️ đòn bẩy tài chính (financial leverage)</span>
-              và
-              <span class="span-econ" title="Thuật ngữ Ngân hàng được bảo vệ tự động">🛡️ tỷ lệ an toàn vốn tối thiểu (Basel III CAR)</span>
-              lên tỷ suất sinh lời
-              <span class="span-econ" title="Thuật ngữ Tài chính – Kế toán được bảo vệ tự động">🛡️ ROA và ROE</span>,
-              <span class="audit-span span-p3" data-sign="SYN-VN-03" onclick="selectFinding('SYN-VN-03', this)">việc các quyết định phân bổ ngân sách được thực hiện bởi bộ phận kế toán quản trị đã được chứng minh là có sự ảnh hưởng đáng kể</span>
-              tới khả năng giảm thiểu
-              <span class="span-econ" title="Thuật ngữ Quản trị kinh doanh được bảo vệ tự động">🛡️ chi phí đại diện (agency cost)</span>.
-              Theo báo cáo thực nghiệm gần đây
-              <span class="audit-span span-p0" data-sign="FOR-01" onclick="selectFinding('FOR-01', this)">(Nguyen &amp; Tran, 2024, doi:10.1016/j.jcorpfin.2024.999999 — contentReference[oaicite:0]{index=0})</span>,
-              các mô hình dự báo nhu cầu tích hợp AI giúp giảm 18,4% lượng tồn kho dư thừa.
-            </p>
-
-            <!-- Paragraph 3 -->
-            <p>
-              <span class="audit-span span-p2" data-sign="DIS-02" onclick="selectFinding('DIS-02', this)">Tóm lại, có thể khẳng định chắc chắn rằng sự kết hợp hài hòa giữa chiến lược nhân sự, marketing số và quản trị sản xuất chính là chìa khóa vàng mở ra cánh cửa thành công rực rỡ cho mọi doanh nghiệp trong kỷ nguyên mới.</span>
-            </p>
-
+          <!-- Manuscript Content Container -->
+          <article id="manuscript-content" class="space-y-5 text-[15px] leading-[1.88] text-[var(--text-main)] min-h-[360px]">
+            <!-- Populated dynamically by JS based on active chapter -->
           </article>
 
-          <!-- Legend Footer inside Manuscript -->
-          <div class="pt-4 border-t border-[var(--border-subtle)] flex flex-wrap items-center justify-between gap-2 text-xs text-[var(--text-muted)]">
-            <div class="flex flex-wrap items-center gap-3">
-              <span class="inline-flex items-center gap-1.5"><span class="w-2.5 h-2.5 rounded-full bg-red-500"></span> P0 Pháp y/Ảo giác</span>
-              <span class="inline-flex items-center gap-1.5"><span class="w-2.5 h-2.5 rounded-full bg-orange-500"></span> P1 Cú pháp/Từ vựng AI</span>
-              <span class="inline-flex items-center gap-1.5"><span class="w-2.5 h-2.5 rounded-full bg-yellow-500"></span> P2 Nhịp điệu/Đoạn hộp</span>
-              <span class="inline-flex items-center gap-1.5"><span class="w-2.5 h-2.5 rounded-full bg-indigo-500"></span> P3 Bị động/Định dạng</span>
-              <span class="inline-flex items-center gap-1.5 text-emerald-400">🛡️ Thuật ngữ 8 ngành Kinh tế</span>
-            </div>
-            <span class="italic">💡 Bấm vào từng câu tô màu để xem chẩn đoán bên phải</span>
+          <!-- Accessible Underline Legend -->
+          <div class="pt-4 border-t border-[var(--border-subtle)] flex flex-wrap items-center gap-4 text-xs text-[var(--text-muted)]">
+            <span class="inline-flex items-center gap-1.5">
+              <span class="inline-block w-4 border-b-2 border-red-500" style="border-bottom-style: wavy;"></span>
+              <span>Cần sửa ngay</span>
+            </span>
+            <span class="inline-flex items-center gap-1.5">
+              <span class="inline-block w-4 border-b-2 border-orange-500"></span>
+              <span>Nên sửa</span>
+            </span>
+            <span class="inline-flex items-center gap-1.5">
+              <span class="inline-block w-4 border-b-2 border-dashed border-indigo-400"></span>
+              <span>Gợi ý</span>
+            </span>
+            <span class="inline-flex items-center gap-1.5">
+              <span class="inline-block w-4 border-b-2 border-dotted border-emerald-400"></span>
+              <span>Đã xử lý</span>
+            </span>
           </div>
 
         </section>
 
-        <!-- ==================================================================
-             RIGHT COLUMN (4 cols): Deep Linguistic Diagnostic & Rewrite Formula
-             ================================================================== -->
-        <aside class="lg:col-span-4 space-y-5 sticky top-24">
-          <div id="diagnostic-drawer" class="proximity-card rounded-3xl p-6 space-y-5 border-blue-500/35">
+        <!-- RIGHT COLUMN (4 cols): Diagnostic Panel -->
+        <aside id="workspace-col-right" class="lg:col-span-4 space-y-4 lg:sticky lg:top-20">
+          <div id="diagnostic-panel" class="proximity-card rounded-3xl p-6 space-y-5 border-blue-500/35">
             
-            <!-- Header Badge -->
+            <!-- Priority & Status Header -->
             <div class="flex items-center justify-between gap-2">
-              <div class="flex items-center gap-2">
-                <span id="diag-priority" class="px-2.5 py-1 rounded-lg text-xs font-mono font-bold bg-orange-500/20 text-orange-400 border border-orange-500/30">P1 · NGHIÊM TRỌNG</span>
-                <span id="diag-code" class="font-mono text-xs font-semibold text-cyan-400">LEX-02 &amp;LEX-03</span>
-              </div>
-              <span class="text-xs text-[var(--text-muted)]">Độ tin cậy: <strong class="text-[var(--text-main)]">96%</strong></span>
+              <span id="diag-severity-badge" class="px-3 py-1 rounded-full text-xs font-bold bg-orange-500/20 text-orange-400 border border-orange-500/30">
+                Nên sửa
+              </span>
+              <span id="diag-status-badge" class="px-2.5 py-0.5 rounded-full text-[11px] font-medium bg-slate-500/15 text-[var(--text-muted)] border border-[var(--border-subtle)]">
+                Chưa xử lý
+              </span>
             </div>
 
-            <!-- Sign Title & Excerpt -->
-            <div>
+            <!-- Finding Title & Highlighted Excerpt -->
+            <div class="space-y-2.5">
               <h3 id="diag-title" class="font-display font-bold text-lg leading-snug">
-                Né tránh hệ từ "là/có" &amp; Phóng đại tầm vóc PR (Copula Avoidance &amp; Promotional Puffery)
+                Diễn đạt phóng đại thiếu thước đo cụ thể
               </h3>
-              <div id="diag-excerpt" class="mt-2.5 p-3 rounded-xl bg-[var(--bg-base)]/80 border border-[var(--border-subtle)] text-xs italic text-orange-300">
-                "đóng vai trò như một chất xúc tác then chốt và mang tính bước ngoặt lịch sử"
+              <div class="space-y-1">
+                <span class="text-[11px] font-semibold uppercase tracking-wider text-[var(--text-muted)]">Đoạn văn bằng chứng</span>
+                <blockquote id="diag-excerpt" class="p-3.5 rounded-2xl bg-[var(--bg-base)]/80 border border-[var(--border-subtle)] text-xs sm:text-sm italic leading-relaxed">
+                  "đóng vai trò như một chất xúc tác then chốt và mang tính bước ngoặt lịch sử"
+                </blockquote>
               </div>
             </div>
 
-            <!-- Linguistic Explanation -->
-            <div class="space-y-2 text-xs sm:text-sm">
-              <div class="font-semibold text-blue-400 flex items-center gap-1.5">
-                <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M9.663 17h4.673M12 3v1m6.364 1.636l-.707.707M21 12h-1M4 12H3m3.343-5.657l-.707-.707m2.828 9.9a5 5 0 117.072 0l-.548.547A3.374 3.374 0 0014 18.469V19a2 2 0 11-4 0v-.531c0-.895-.356-1.754-.988-2.386l-.548-.547z" /></svg>
-                <span>Cơ sở Ngôn ngữ học &amp; Bằng chứng Quy tắc:</span>
-              </div>
-              <p id="diag-reason" class="text-[var(--text-muted)] leading-relaxed text-xs">
-                Mô hình ngôn ngữ lớn (LLM) thường né tránh động từ hệ từ tiếng Việt trực tiếp (<em>"là yếu tố quyết định"</em>, <em>"tác động trực tiếp đến"</em>) để thay bằng các cụm ẩn dụ quảng cáo sáo rỗng (<em>"đóng vai trò như một chất xúc tác then chốt"</em>, <em>"mang tính bước ngoặt lịch sử"</em>) không có thước đo kinh tế lượng.
+            <!-- Explanation -->
+            <div class="space-y-1.5">
+              <h4 class="text-xs font-semibold uppercase tracking-wider text-blue-400">Nguyên nhân cần lưu ý</h4>
+              <p id="diag-reason" class="text-xs sm:text-sm text-[var(--text-muted)] leading-relaxed">
+                Cụm từ mang sắc thái quảng cáo và phóng đại tầm vóc nhưng không chỉ rõ cơ chế tác động thực tế, làm giảm tính khách quan của văn phong học thuật.
               </p>
             </div>
 
-            <!-- Protected Economics Context Notice -->
-            <div class="p-3 rounded-xl bg-emerald-500/10 border border-emerald-500/25 text-xs space-y-1">
-              <div class="font-semibold text-emerald-400 flex items-center gap-1.5">
-                <span>🛡️ Bảo vệ Thuật ngữ Chuyên ngành Kinh tế:</span>
-              </div>
-              <p id="diag-econ-shield" class="text-[var(--text-muted)] leading-relaxed">
-                Hệ thống <strong>giữ nguyên 100%</strong> các thuật ngữ <code>chuỗi cung ứng lạnh (cold chain)</code> và <code>vốn lưu động ròng (Net Working Capital)</code> trong câu này, chỉ khoanh vùng cụm vị ngữ sáo rỗng.
-              </p>
-            </div>
-
-            <!-- Concrete Editorial Formula (Before / After) -->
+            <!-- Concrete Editorial Suggestion -->
             <div class="space-y-2">
-              <div class="font-semibold text-xs text-emerald-400 uppercase tracking-wider">Công thức Chỉnh sửa Học thuật Đề xuất:</div>
-              <div class="p-3.5 rounded-2xl bg-emerald-500/10 border border-emerald-500/30 text-xs space-y-1.5">
-                <div class="text-[11px] font-mono text-emerald-400">✔ CÁCH VIẾT HỌC THUẬT CHUẨN KINH TẾ:</div>
-                <p id="diag-suggestion" class="text-[var(--text-main)] font-medium leading-relaxed">
-                  "Việc đồng bộ <strong>chuỗi cung ứng lạnh</strong> với quản trị <strong>vốn lưu động ròng</strong> giúp doanh nghiệp rút ngắn chu kỳ luân chuyển tiền mặt và giảm tỷ lệ hao hụt hàng tồn kho."
+              <h4 class="text-xs font-semibold uppercase tracking-wider text-emerald-400">Đề xuất biên tập</h4>
+              <div class="p-4 rounded-2xl bg-emerald-500/10 border border-emerald-500/30 space-y-2">
+                <p id="diag-suggestion" class="text-xs sm:text-sm text-[var(--text-main)] font-medium leading-relaxed">
+                  "tác động trực tiếp đến chu kỳ luân chuyển tiền mặt và khả năng kiểm soát chi phí vận hành của doanh nghiệp."
                 </p>
               </div>
             </div>
 
-            <!-- Pro CTA Hook inside Drawer -->
-            <button type="button" onclick="openProModal()" class="magnetic-icon w-full py-3 px-4 rounded-2xl font-display font-bold text-xs sm:text-sm text-white bg-gradient-to-r from-violet-600 via-indigo-600 to-blue-600 shadow-lg shadow-indigo-500/25 flex items-center justify-center gap-2">
-              <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z" /></svg>
-              <span>Áp dụng sửa trực tiếp &amp; Hạ điểm AI Real-time</span>
-              <span class="px-1.5 py-0.5 rounded bg-white/20 font-mono text-[10px]">PRO</span>
-            </button>
+            <!-- Action Buttons: Copy, Mark Resolved, Ignore -->
+            <div class="pt-2 flex flex-wrap items-center gap-2">
+              <button type="button" id="copy-suggestion-btn" onclick="copyCurrentSuggestion()" class="flex-1 py-2.5 px-3.5 rounded-xl text-xs font-semibold border border-[var(--border-subtle)] bg-[var(--bg-elevated)] hover:border-blue-400/50 transition-all">
+                Sao chép gợi ý
+              </button>
+              <button type="button" id="resolve-finding-btn" onclick="toggleResolveCurrentFinding()" class="flex-1 py-2.5 px-3.5 rounded-xl text-xs font-bold text-white bg-emerald-600 hover:bg-emerald-500 transition-all">
+                Đánh dấu đã xử lý
+              </button>
+              <button type="button" onclick="ignoreCurrentFinding()" class="py-2.5 px-3.5 rounded-xl text-xs font-semibold border border-[var(--border-subtle)] text-[var(--text-muted)] hover:text-[var(--text-main)] transition-all">
+                Bỏ qua
+              </button>
+            </div>
 
           </div>
         </aside>
 
       </div>
-    </section>
-
-    <!-- ======================================================================
-         SECTION 3: BENTO SHOWCASE OF 26 RULES & PROXIMITY ICON CARDS
-         ====================================================================== -->
-    <section class="space-y-6 pt-6">
-      <div class="flex flex-col sm:flex-row sm:items-end justify-between gap-4">
-        <div>
-          <span class="text-xs font-mono uppercase tracking-wider text-blue-400">Knowledge Base Engine · 26 Signs</span>
-          <h2 class="font-display font-extrabold text-2xl sm:text-3xl mt-1">Ma trận 4 Cấp độ Kiểm toán Văn phong Học thuật</h2>
-        </div>
-        <p class="text-xs sm:text-sm text-[var(--text-muted)] max-w-md">
-          Di chuyển chuột lại gần các biểu tượng bên dưới để cảm nhận hiệu ứng từ tính (Magnetic Proximity) và viền sáng theo tọa độ chuột.
-        </p>
-      </div>
-
-      <div class="grid sm:grid-cols-2 lg:grid-cols-4 gap-5">
-        <!-- Card P0 -->
-        <div class="proximity-card rounded-3xl p-6 space-y-4">
-          <div class="flex items-center justify-between">
-            <div class="magnetic-icon w-12 h-12 rounded-2xl bg-red-500/15 border border-red-500/30 flex items-center justify-center text-red-400">
-              <svg class="w-6 h-6" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" /></svg>
-            </div>
-            <span class="font-mono text-xs font-bold px-2.5 py-1 rounded-full bg-red-500/15 text-red-400">CẤP P0 · FORENSIC</span>
-          </div>
-          <h3 class="font-display font-bold text-base">Dấu vết Rò rỉ &amp; Nguồn Ảo giác</h3>
-          <p class="text-xs text-[var(--text-muted)] leading-relaxed">
-            Bắt trọn mã rác <code>oaicite</code>, <code>turn0search</code>, câu mồi <em>"Chắc chắn rồi! Dưới đây là..."</em> và kiểm tra định dạng DOI/URL ảo giác trong luận văn.
-          </p>
-        </div>
-
-        <!-- Card P1 -->
-        <div class="proximity-card rounded-3xl p-6 space-y-4">
-          <div class="flex items-center justify-between">
-            <div class="magnetic-icon w-12 h-12 rounded-2xl bg-orange-500/15 border border-orange-500/30 flex items-center justify-center text-orange-400">
-              <svg class="w-6 h-6" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M4 6h16M4 12h16m-7 6h7" /></svg>
-            </div>
-            <span class="font-mono text-xs font-bold px-2.5 py-1 rounded-full bg-orange-500/15 text-orange-400">CẤP P1 · CÚ PHÁP</span>
-          </div>
-          <h3 class="font-display font-bold text-base">Khuôn mẫu 3 Nhịp &amp; Từ vựng AI</h3>
-          <p class="text-xs text-[var(--text-muted)] leading-relaxed">
-            Nhận diện cấu trúc <em>"Không chỉ X mà còn Y, qua đó góp phần Z"</em>, né tránh hệ từ <em>"là/có"</em> và lạm dụng từ vựng hoa mỹ phi học thuật.
-          </p>
-        </div>
-
-        <!-- Card P2 -->
-        <div class="proximity-card rounded-3xl p-6 space-y-4">
-          <div class="flex items-center justify-between">
-            <div class="magnetic-icon w-12 h-12 rounded-2xl bg-yellow-500/15 border border-yellow-500/30 flex items-center justify-center text-yellow-400">
-              <svg class="w-6 h-6" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z" /></svg>
-            </div>
-            <span class="font-mono text-xs font-bold px-2.5 py-1 rounded-full bg-yellow-500/15 text-yellow-400">CẤP P2 · DIỄN NGÔN</span>
-          </div>
-          <h3 class="font-display font-bold text-base">Nhịp điệu Phẳng &amp; Đoạn văn Đóng hộp</h3>
-          <p class="text-xs text-[var(--text-muted)] leading-relaxed">
-            Đo hệ số biến thiên độ dài câu $CV_L < 0,18$, phát hiện đoạn văn 4 bước khép kín và các câu kết đoạn tóm tắt đạo lý thừa thãi.
-          </p>
-        </div>
-
-        <!-- Card P3 -->
-        <div class="proximity-card rounded-3xl p-6 space-y-4">
-          <div class="flex items-center justify-between">
-            <div class="magnetic-icon w-12 h-12 rounded-2xl bg-emerald-500/15 border border-emerald-500/30 flex items-center justify-center text-emerald-400">
-              <svg class="w-6 h-6" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z" /></svg>
-            </div>
-            <span class="font-mono text-xs font-bold px-2.5 py-1 rounded-full bg-emerald-500/15 text-emerald-400">8 NGÀNH KINH TẾ</span>
-          </div>
-          <h3 class="font-display font-bold text-base">Khiên Bảo vệ Thuật ngữ Hợp nhất</h3>
-          <p class="text-xs text-[var(--text-muted)] leading-relaxed">
-            Tự động nhận diện thuật ngữ Quản trị, Nhân sự, Logistics, Marketing, Ngân hàng, Tài chính, Kế toán – Kiểm toán, Sản xuất để tránh báo lỗi giả.
-          </p>
-        </div>
-      </div>
-    </section>
-
+    </div>
   </main>
 
   <!-- ========================================================================
-       MODAL 1: PRO UPGRADE MODAL (Monetization Hook for Real-Time Web Editor)
+       SCREEN 03: INSIGHTS (Dedicated Audit Overview, Statistics & Report Screen)
        ======================================================================== -->
-  <div id="pro-modal" class="fixed inset-0 z-50 hidden items-center justify-center p-4 bg-black/70 backdrop-blur-md">
-    <div class="proximity-card max-w-lg w-full rounded-3xl p-6 sm:p-8 border border-violet-500/40 space-y-5 animate-fade-in">
-      <div class="flex items-center justify-between">
-        <span class="px-3 py-1 rounded-full text-xs font-mono font-bold bg-violet-500/20 text-violet-300 border border-violet-500/35">⚡ AI STYLE AUDITOR PRO</span>
-        <button type="button" onclick="closeProModal()" class="w-8 h-8 rounded-full bg-[var(--bg-base)] flex items-center justify-center text-[var(--text-muted)] hover:text-[var(--text-main)]">✕</button>
+  <main id="screen-insights" class="app-screen flex-1">
+    <div class="max-w-[1280px] mx-auto px-4 sm:px-6 lg:px-8 py-8 space-y-8">
+      
+      <!-- Insights Header -->
+      <div class="proximity-card rounded-2xl p-5 flex flex-wrap items-center justify-between gap-4">
+        <div class="space-y-1">
+          <div class="flex flex-wrap items-center gap-2.5">
+            <h1 class="font-display font-extrabold text-xl sm:text-2xl">Tổng quan kết quả rà soát</h1>
+            <span class="px-2.5 py-0.5 rounded-full text-[11px] font-semibold bg-amber-500/15 text-amber-400 border border-amber-500/30">
+              DEMO PREVIEW – Kết quả minh họa, chưa phân tích nội dung file
+            </span>
+          </div>
+          <p class="text-xs sm:text-sm text-[var(--text-muted)]">
+            Tài liệu: <strong id="insights-doc-title" class="text-[var(--text-main)]">Ban_thao_nghien_cuu_hoc_thuat.docx</strong>
+          </p>
+        </div>
+
+        <div class="flex items-center gap-2.5">
+          <button type="button" onclick="navigateToScreen('workspace')" class="px-4 py-2 rounded-xl text-xs font-semibold border border-[var(--border-subtle)] bg-[var(--bg-elevated)] hover:border-blue-400/40 transition-all">
+            ← Mở Workspace
+          </button>
+          <button type="button" onclick="openReportModal()" class="magnetic-icon px-4 py-2 rounded-xl text-xs font-bold text-white bg-gradient-to-r from-blue-600 to-cyan-500 shadow-md">
+            Xem trước Báo cáo
+          </button>
+        </div>
       </div>
-      <h3 class="font-display font-extrabold text-2xl">
-        Sửa trực tiếp trên Web &amp; Chấm điểm lại Real-time
-      </h3>
-      <p class="text-xs sm:text-sm text-[var(--text-muted)] leading-relaxed">
-        Bản <strong>Audit Miễn phí</strong> cho phép bạn kiểm toán toàn bộ luận văn 70–90+ trang và xuất Báo cáo Kiểm toán chi tiết. Nâng cấp lên <strong>Bản PRO</strong> để mở khóa:
-      </p>
-      <ul class="space-y-2.5 text-xs sm:text-sm">
-        <li class="flex items-start gap-2.5">
-          <span class="text-emerald-400 font-bold">✔</span>
-          <span><strong>Chỉnh sửa trực tiếp trên đoạn văn</strong> và thấy thanh điểm <em>AI-Style Index</em> cùng 6 chỉ số ($CV_L, ISI, OPR...$) giảm xuống theo đúng thuật toán thực tế ngay khi gõ.</span>
-        </li>
-        <li class="flex items-start gap-2.5">
-          <span class="text-emerald-400 font-bold">✔</span>
-          <span><strong>Áp dụng gợi ý sửa 1-click</strong> cho toàn bộ 26 dấu hiệu mà vẫn giữ nguyên các thuật ngữ chuyên ngành Kinh tế.</span>
-        </li>
-        <li class="flex items-start gap-2.5">
-          <span class="text-emerald-400 font-bold">✔</span>
-          <span><strong>Xuất lại file Word (<code>.docx</code>) hoàn chỉnh</strong> giữ nguyên cấu trúc Heading, bảng biểu và danh mục tài liệu tham khảo.</span>
-        </li>
-      </ul>
-      <div class="pt-2 flex flex-col sm:flex-row gap-3">
-        <button type="button" onclick="closeProModal()" class="flex-1 py-3 px-5 rounded-2xl font-display font-bold text-sm text-white bg-gradient-to-r from-violet-600 via-indigo-600 to-blue-600 shadow-lg shadow-indigo-500/30">
-          Đăng ký Gói Sinh viên / Học viên Cao học (99.000đ / Luận văn)
+
+      <!-- KPI Overview Cards -->
+      <section class="grid sm:grid-cols-2 lg:grid-cols-4 gap-4">
+        <div class="proximity-card rounded-2xl p-5 space-y-1.5">
+          <span class="text-xs text-[var(--text-muted)]">Tổng số điểm cần chú ý</span>
+          <div id="insights-total-count" class="font-display font-extrabold text-3xl text-[var(--text-main)]">7</div>
+          <p class="text-xs text-[var(--text-muted)]">Trên 4 chương bản thảo mẫu</p>
+        </div>
+
+        <div class="proximity-card rounded-2xl p-5 space-y-1.5">
+          <span class="text-xs text-[var(--text-muted)]">Cần sửa ngay</span>
+          <div id="insights-critical-count" class="font-display font-extrabold text-3xl text-red-400">1</div>
+          <p class="text-xs text-[var(--text-muted)]">Lỗi trích dẫn hoặc ký hiệu lạ</p>
+        </div>
+
+        <div class="proximity-card rounded-2xl p-5 space-y-1.5">
+          <span class="text-xs text-[var(--text-muted)]">Nên sửa &amp; Gợi ý</span>
+          <div id="insights-other-count" class="font-display font-extrabold text-3xl text-orange-400">6</div>
+          <p class="text-xs text-[var(--text-muted)]">Diễn đạt, cấu trúc câu &amp; liên kết đoạn</p>
+        </div>
+
+        <div class="proximity-card rounded-2xl p-5 space-y-1.5">
+          <span class="text-xs text-[var(--text-muted)]">Tiến độ xử lý</span>
+          <div id="insights-resolved-ratio" class="font-display font-extrabold text-3xl text-emerald-400">0 / 7</div>
+          <div class="w-full h-1.5 rounded-full bg-slate-700/50 overflow-hidden mt-1">
+            <div id="insights-progress-bar" class="h-full bg-emerald-500 rounded-full transition-all duration-300" style="width: 0%"></div>
+          </div>
+        </div>
+      </section>
+
+      <!-- Priority Breakdown + Chapter Distribution -->
+      <section class="grid lg:grid-cols-12 gap-6">
+        
+        <!-- Left 6 cols: Breakdown by Priority & Issue Groups -->
+        <div class="lg:col-span-6 proximity-card rounded-3xl p-6 space-y-5">
+          <h2 class="font-display font-bold text-base sm:text-lg">Các nhóm vấn đề cần chú ý</h2>
+          
+          <div class="space-y-4 text-xs sm:text-sm">
+            <div class="space-y-1.5">
+              <div class="flex items-center justify-between">
+                <span class="font-semibold text-red-400">1. Độ chính xác trích dẫn &amp; ký hiệu thừa (Cần sửa ngay)</span>
+                <span class="font-mono">1 phát hiện</span>
+              </div>
+              <div class="w-full h-2 rounded-full bg-slate-700/40 overflow-hidden">
+                <div class="h-full bg-red-500 rounded-full" style="width: 15%"></div>
+              </div>
+              <p class="text-xs text-[var(--text-muted)]">Cần kiểm tra lại mã định danh nguồn tài liệu và xóa bỏ các ký hiệu phát sinh khi sao chép.</p>
+            </div>
+
+            <div class="space-y-1.5">
+              <div class="flex items-center justify-between">
+                <span class="font-semibold text-orange-400">2. Cấu trúc câu lặp &amp; cách diễn đạt phóng đại (Nên sửa)</span>
+                <span class="font-mono">4 phát hiện</span>
+              </div>
+              <div class="w-full h-2 rounded-full bg-slate-700/40 overflow-hidden">
+                <div class="h-full bg-orange-500 rounded-full" style="width: 57%"></div>
+              </div>
+              <p class="text-xs text-[var(--text-muted)]">Các câu liệt kê ba vế liên tiếp hoặc dùng tính từ tán dương chưa gắn với số liệu thực tế.</p>
+            </div>
+
+            <div class="space-y-1.5">
+              <div class="flex items-center justify-between">
+                <span class="font-semibold text-indigo-400">3. Câu bị động dài &amp; câu chuyển đoạn chung chung (Gợi ý)</span>
+                <span class="font-mono">2 phát hiện</span>
+              </div>
+              <div class="w-full h-2 rounded-full bg-slate-700/40 overflow-hidden">
+                <div class="h-full bg-indigo-500 rounded-full" style="width: 28%"></div>
+              </div>
+              <p class="text-xs text-[var(--text-muted)]">Có thể rút gọn cụm danh hóa để câu văn chủ động, sáng rõ và dễ theo dõi hơn.</p>
+            </div>
+          </div>
+        </div>
+
+        <!-- Right 6 cols: Distribution Across Chapters -->
+        <div class="lg:col-span-6 proximity-card rounded-3xl p-6 space-y-5">
+          <div class="flex items-center justify-between">
+            <h2 class="font-display font-bold text-base sm:text-lg">Phân bố phát hiện theo chương</h2>
+            <span class="text-xs text-[var(--text-muted)]">Nhấn vào chương để mở trong Workspace</span>
+          </div>
+
+          <div class="space-y-2.5 text-xs sm:text-sm">
+            <button type="button" onclick="openChapterFromInsights(1)" class="w-full p-3.5 rounded-2xl border border-[var(--border-subtle)] bg-[var(--bg-elevated)] hover:border-blue-400/50 flex items-center justify-between gap-3 text-left transition-all">
+              <div>
+                <p class="font-semibold">Chương 1: Cơ sở lý luận và Tổng quan nghiên cứu</p>
+                <p class="text-xs text-[var(--text-muted)] mt-0.5">Tập trung ở phần mở đầu mục và câu kết đoạn</p>
+              </div>
+              <span class="px-2.5 py-1 rounded-full text-xs font-mono font-semibold bg-orange-500/15 text-orange-400 shrink-0">3 điểm</span>
+            </button>
+
+            <button type="button" onclick="openChapterFromInsights(2)" class="w-full p-3.5 rounded-2xl border border-[var(--border-subtle)] bg-[var(--bg-elevated)] hover:border-blue-400/50 flex items-center justify-between gap-3 text-left transition-all">
+              <div>
+                <p class="font-semibold">Chương 2: Phương pháp nghiên cứu và Dữ liệu</p>
+                <p class="text-xs text-[var(--text-muted)] mt-0.5">Diễn đạt câu bị động kéo dài khi mô tả quy trình</p>
+              </div>
+              <span class="px-2.5 py-1 rounded-full text-xs font-mono font-semibold bg-indigo-500/15 text-indigo-400 shrink-0">1 điểm</span>
+            </button>
+
+            <button type="button" onclick="openChapterFromInsights(3)" class="w-full p-3.5 rounded-2xl border border-[var(--border-subtle)] bg-[var(--bg-elevated)] hover:border-blue-400/50 flex items-center justify-between gap-3 text-left transition-all">
+              <div>
+                <p class="font-semibold">Chương 3: Kết quả phân tích và Thảo luận</p>
+                <p class="text-xs text-[var(--text-muted)] mt-0.5">Có 1 trích dẫn cần kiểm tra ngay và 1 câu nhận định lặp</p>
+              </div>
+              <span class="px-2.5 py-1 rounded-full text-xs font-mono font-semibold bg-red-500/15 text-red-400 shrink-0">2 điểm</span>
+            </button>
+
+            <button type="button" onclick="openChapterFromInsights(4)" class="w-full p-3.5 rounded-2xl border border-[var(--border-subtle)] bg-[var(--bg-elevated)] hover:border-blue-400/50 flex items-center justify-between gap-3 text-left transition-all">
+              <div>
+                <p class="font-semibold">Chương 4: Kết luận và Khuyến nghị quản trị</p>
+                <p class="text-xs text-[var(--text-muted)] mt-0.5">Câu tóm tắt cuối chương mang tính khẩu hiệu chung</p>
+              </div>
+              <span class="px-2.5 py-1 rounded-full text-xs font-mono font-semibold bg-orange-500/15 text-orange-400 shrink-0">1 điểm</span>
+            </button>
+          </div>
+        </div>
+
+      </section>
+
+      <!-- Report Preview Summary Banner -->
+      <section class="proximity-card rounded-3xl p-6 flex flex-col sm:flex-row items-center justify-between gap-5">
+        <div class="space-y-1 text-center sm:text-left">
+          <h2 class="font-display font-bold text-lg">Báo cáo kiểm toán tổng hợp</h2>
+          <p class="text-xs sm:text-sm text-[var(--text-muted)] max-w-xl">
+            Xem toàn bộ danh sách các đoạn văn cần lưu ý, nguyên nhân chi tiết và phương án biên tập đề xuất trên một trang tổng hợp.
+          </p>
+        </div>
+        <button type="button" onclick="openReportModal()" class="magnetic-icon px-6 py-3 rounded-2xl font-display font-bold text-xs sm:text-sm text-white bg-gradient-to-r from-blue-600 to-cyan-500 shadow-lg shrink-0">
+          Mở bản xem trước Báo cáo
         </button>
-        <button type="button" onclick="closeProModal()" class="py-3 px-4 rounded-2xl text-xs font-semibold border border-[var(--border-subtle)] text-[var(--text-muted)] hover:text-[var(--text-main)]">
-          Để sau
+      </section>
+
+    </div>
+  </main>
+
+  <!-- ========================================================================
+       MODAL 1: REPORT PREVIEW MODAL (Professional Audit Report Preview)
+       ======================================================================== -->
+  <div id="report-modal" class="fixed inset-0 z-50 hidden items-center justify-center p-4 bg-black/75 backdrop-blur-md" role="dialog" aria-modal="true" aria-labelledby="report-modal-title">
+    <div class="proximity-card max-w-3xl w-full max-h-[88vh] flex flex-col rounded-3xl border border-cyan-500/40 overflow-hidden">
+      
+      <!-- Modal Header -->
+      <div class="p-5 sm:p-6 border-b border-[var(--border-subtle)] flex items-center justify-between gap-4">
+        <div>
+          <span class="px-2.5 py-0.5 rounded-full text-[11px] font-semibold bg-amber-500/15 text-amber-400 border border-amber-500/30">
+            DEMO PREVIEW – Kết quả minh họa, chưa phân tích nội dung file
+          </span>
+          <h2 id="report-modal-title" class="font-display font-extrabold text-lg sm:text-xl mt-2">
+            Báo cáo Kiểm toán Văn phong Học thuật
+          </h2>
+          <p id="report-doc-name" class="text-xs text-[var(--text-muted)] mt-0.5">
+            Tài liệu: Ban_thao_nghien_cuu_hoc_thuat.docx
+          </p>
+        </div>
+        <button type="button" onclick="closeReportModal()" class="w-9 h-9 rounded-full border border-[var(--border-subtle)] bg-[var(--bg-base)] flex items-center justify-center text-[var(--text-muted)] hover:text-[var(--text-main)]" aria-label="Đóng cửa sổ">
+          ✕
+        </button>
+      </div>
+
+      <!-- Modal Scrollable Report Body -->
+      <div class="p-5 sm:p-6 overflow-y-auto space-y-5 text-xs sm:text-sm">
+        <div class="grid grid-cols-3 gap-3 p-3.5 rounded-2xl bg-[var(--bg-elevated)] border border-[var(--border-subtle)] text-center">
+          <div>
+            <div class="text-[11px] text-[var(--text-muted)]">Cần sửa ngay</div>
+            <div class="font-display font-bold text-lg text-red-400">1</div>
+          </div>
+          <div>
+            <div class="text-[11px] text-[var(--text-muted)]">Nên sửa</div>
+            <div class="font-display font-bold text-lg text-orange-400">4</div>
+          </div>
+          <div>
+            <div class="text-[11px] text-[var(--text-muted)]">Gợi ý</div>
+            <div class="font-display font-bold text-lg text-indigo-400">2</div>
+          </div>
+        </div>
+
+        <div id="report-findings-list" class="space-y-3">
+          <!-- Populated dynamically by JS -->
+        </div>
+      </div>
+
+      <!-- Modal Footer -->
+      <div class="p-4 sm:p-5 border-t border-[var(--border-subtle)] flex items-center justify-between gap-3 bg-[var(--bg-elevated)]">
+        <span class="text-xs text-[var(--text-muted)]">Nhấn phím Esc hoặc nút Đóng để quay lại màn hình làm việc.</span>
+        <button type="button" onclick="closeReportModal()" class="px-5 py-2.5 rounded-xl text-xs font-bold bg-blue-600 text-white hover:bg-blue-500 transition-all">
+          Đóng bản xem trước
+        </button>
+      </div>
+
+    </div>
+  </div>
+
+  <!-- ========================================================================
+       MODAL 2: UPGRADE PRO (COMING SOON)
+       ======================================================================== -->
+  <div id="pro-modal" class="fixed inset-0 z-50 hidden items-center justify-center p-4 bg-black/75 backdrop-blur-md" role="dialog" aria-modal="true" aria-labelledby="pro-modal-title">
+    <div class="proximity-card max-w-md w-full rounded-3xl p-6 sm:p-7 border border-violet-500/40 space-y-4">
+      <div class="flex items-center justify-between">
+        <span class="px-3 py-1 rounded-full text-xs font-semibold bg-violet-500/20 text-violet-300 border border-violet-500/35">
+          Upgrade Pro (Coming soon)
+        </span>
+        <button type="button" onclick="closeProModal()" class="w-8 h-8 rounded-full border border-[var(--border-subtle)] bg-[var(--bg-base)] flex items-center justify-center text-[var(--text-muted)] hover:text-[var(--text-main)]" aria-label="Đóng cửa sổ">
+          ✕
+        </button>
+      </div>
+      <h2 id="pro-modal-title" class="font-display font-extrabold text-xl">
+        Tính năng Nâng cao đang được phát triển
+      </h2>
+      <p class="text-xs sm:text-sm text-[var(--text-muted)] leading-relaxed">
+        Phiên bản Pro với không gian biên tập trực tiếp và xuất tài liệu hoàn chỉnh đang trong quá trình hoàn thiện. Hiện tại bạn có thể trải nghiệm đầy đủ luồng duyệt bản thảo và xem đề xuất biên tập trên bản Demo.
+      </p>
+      <div class="pt-2 flex justify-end">
+        <button type="button" onclick="closeProModal()" class="px-5 py-2.5 rounded-xl text-xs font-semibold border border-[var(--border-subtle)] bg-[var(--bg-elevated)] text-[var(--text-main)]">
+          Đã hiểu
         </button>
       </div>
     </div>
   </div>
 
   <!-- ========================================================================
-       MODAL 2: AUDIT REPORT EXPORT PREVIEW MODAL
-       ======================================================================== -->
-  <div id="report-modal" class="fixed inset-0 z-50 hidden items-center justify-center p-4 bg-black/70 backdrop-blur-md">
-    <div class="proximity-card max-w-lg w-full rounded-3xl p-6 sm:p-8 border border-cyan-500/40 space-y-5">
-      <div class="flex items-center justify-between">
-        <span class="px-3 py-1 rounded-full text-xs font-mono font-bold bg-cyan-500/20 text-cyan-300 border border-cyan-500/35">📄 XUẤT BÁO CÁO KIỂM TOÁN</span>
-        <button type="button" onclick="closeReportModal()" class="w-8 h-8 rounded-full bg-[var(--bg-base)] flex items-center justify-center text-[var(--text-muted)] hover:text-[var(--text-main)]">✕</button>
-      </div>
-      <h3 class="font-display font-bold text-xl">Hồ sơ Kiểm toán Văn phong Học thuật</h3>
-      <p class="text-xs sm:text-sm text-[var(--text-muted)] leading-relaxed">
-        Báo cáo bao gồm bảng tổng hợp 6 chỉ số định lượng ($CV_L, ISI, OPR, SVCI, SICD, BCR$), điểm theo từng Chương và danh sách toàn bộ câu văn cần chỉnh sửa kèm công thức biên tập.
-      </p>
-      <div class="grid grid-cols-2 gap-3 pt-2">
-        <button type="button" onclick="closeReportModal(); showToast('Đã chuẩn bị giao diện In PDF / Lưu HTML báo cáo kiểm toán!')" class="py-3 px-4 rounded-2xl font-display font-bold text-xs sm:text-sm text-white bg-gradient-to-r from-blue-600 to-cyan-500 shadow-lg">
-          🖨️ In PDF / Tải HTML
-        </button>
-        <button type="button" onclick="closeReportModal(); showToast('Đã xuất dữ liệu JSON Audit Report!')" class="py-3 px-4 rounded-2xl font-display font-bold text-xs sm:text-sm border border-[var(--border-subtle)] bg-[var(--bg-elevated)]">
-          { } Xuất file JSON
-        </button>
-      </div>
-    </div>
-  </div>
-
-  <!-- Toast Notification -->
-  <div id="toast-banner" class="fixed bottom-6 right-6 z-50 hidden items-center gap-3 px-4 py-3 rounded-2xl border border-emerald-500/40 bg-[var(--bg-glass)] backdrop-blur-xl shadow-2xl text-xs font-semibold text-emerald-400">
-    <span>✨</span>
-    <span id="toast-text">Đã tải bản thảo mẫu vào Bàn Kiểm toán 3 Cột!</span>
-  </div>
-
-  <!-- ========================================================================
-       INTERACTIVE UI SCRIPT (Theme Engine, Eye Tracking, Magnetic Icons, Findings)
+       APPLICATION STATE & INTERACTION LOGIC
        ======================================================================== -->
   <script>
-    // 1. Theme Toggle (Dark Studio <-> Light Warm Editorial)
+    // ------------------------------------------------------------------------
+    // 1. SAMPLE CHAPTERS & FINDINGS DATA (User-Centric, No Internal Jargon)
+    // ------------------------------------------------------------------------
+    const CHAPTERS_DATA = [
+      {
+        id: 1,
+        shortTitle: 'Chương 1: Cơ sở lý luận',
+        fullTitle: 'Chương 1: Cơ sở lý luận và Tổng quan nghiên cứu',
+        sectionLabel: 'Chương 1 · Mục 1.1 – 1.3',
+        paragraphs: [
+          {
+            prefix: '1.1. Bối cảnh và tính cấp thiết của đề tài',
+            segments: [
+              {
+                type: 'finding',
+                id: 'f1',
+                text: 'Trong bối cảnh toàn cầu hóa và cuộc cách mạng công nghiệp diễn ra mạnh mẽ hiện nay,'
+              },
+              {
+                type: 'text',
+                text: ' hoạt động tối ưu hóa chuỗi cung ứng lạnh (cold chain) kết hợp với quản trị vốn lưu động ròng (Net Working Capital) '
+              },
+              {
+                type: 'finding',
+                id: 'f2',
+                text: 'đóng vai trò như một chất xúc tác then chốt và mang tính bước ngoặt lịch sử'
+              },
+              {
+                type: 'text',
+                text: ' đối với năng lực cạnh tranh của các doanh nghiệp sản xuất và phân phối.'
+              }
+            ]
+          },
+          {
+            prefix: '1.2. Khung phân tích mối quan hệ giữa vận hành và hiệu quả tài chính',
+            segments: [
+              {
+                type: 'text',
+                text: 'Việc đồng bộ dữ liệu tồn kho theo thời gian thực giúp doanh nghiệp chủ động điều phối nguồn lực, '
+              },
+              {
+                type: 'finding',
+                id: 'f3',
+                text: 'qua đó góp phần nâng cao hiệu suất sử dụng tài sản, tối ưu hóa chi phí giao dịch và thúc đẩy giá trị bền vững cho cổ đông.'
+              }
+            ]
+          }
+        ]
+      },
+      {
+        id: 2,
+        shortTitle: 'Chương 2: Phương pháp nghiên cứu',
+        fullTitle: 'Chương 2: Phương pháp nghiên cứu và Dữ liệu',
+        sectionLabel: 'Chương 2 · Mục 2.1 – 2.2',
+        paragraphs: [
+          {
+            prefix: '2.1. Thiết kế nghiên cứu và quy trình thu thập dữ liệu',
+            segments: [
+              {
+                type: 'text',
+                text: 'Khi đánh giá tác động của đòn bẩy tài chính (financial leverage) và tỷ lệ an toàn vốn tối thiểu (Basel III CAR) lên tỷ suất sinh lời ROA và ROE, '
+              },
+              {
+                type: 'finding',
+                id: 'f4',
+                text: 'việc các quyết định phân bổ ngân sách được thực hiện bởi bộ phận kế toán quản trị đã được chứng minh là có sự ảnh hưởng đáng kể'
+              },
+              {
+                type: 'text',
+                text: ' tới khả năng kiểm soát chi phí đại diện (agency cost) trong doanh nghiệp.'
+              }
+            ]
+          }
+        ]
+      },
+      {
+        id: 3,
+        shortTitle: 'Chương 3: Kết quả và Thảo luận',
+        fullTitle: 'Chương 3: Kết quả phân tích và Thảo luận',
+        sectionLabel: 'Chương 3 · Mục 3.1 – 3.3',
+        paragraphs: [
+          {
+            prefix: '3.1. Kết quả kiểm định mô hình thực nghiệm',
+            segments: [
+              {
+                type: 'text',
+                text: 'Kết quả ước lượng trên dữ liệu bảng cho thấy thời gian lưu kho trung bình giảm có ý nghĩa thống kê ở mức 1%. Theo tổng hợp mới nhất '
+              },
+              {
+                type: 'finding',
+                id: 'f5',
+                text: '(Nguyen & Tran, 2024, doi:10.1016/j.jcorpfin.2024.999999 — contentReference[oaicite:0]{index=0})'
+              },
+              {
+                type: 'text',
+                text: ', việc tích hợp hệ thống dự báo nhu cầu giúp giảm 18,4% lượng hàng tồn kho chậm luân chuyển.'
+              }
+            ]
+          },
+          {
+            prefix: '3.2. Thảo luận kết quả',
+            segments: [
+              {
+                type: 'finding',
+                id: 'f6',
+                text: 'Đây không chỉ là một giải pháp vận hành đơn thuần mà còn là một tuyên ngôn chiến lược toàn diện'
+              },
+              {
+                type: 'text',
+                text: ' giúp doanh nghiệp duy trì thanh khoản ổn định trong giai đoạn biến động lãi suất.'
+              }
+            ]
+          }
+        ]
+      },
+      {
+        id: 4,
+        shortTitle: 'Chương 4: Kết luận và Khuyến nghị',
+        fullTitle: 'Chương 4: Kết luận và Khuyến nghị quản trị',
+        sectionLabel: 'Chương 4 · Mục 4.1 – 4.2',
+        paragraphs: [
+          {
+            prefix: '4.1. Kết luận chung',
+            segments: [
+              {
+                type: 'finding',
+                id: 'f7',
+                text: 'Tóm lại, có thể khẳng định chắc chắn rằng sự kết hợp hài hòa giữa chiến lược nhân sự, marketing số và quản trị sản xuất chính là chìa khóa vàng mở ra cánh cửa thành công rực rỡ cho mọi doanh nghiệp trong kỷ nguyên mới.'
+              }
+            ]
+          }
+        ]
+      }
+    ];
+
+    const FINDINGS_MAP = {
+      f1: {
+        id: 'f1',
+        chapterId: 1,
+        severity: 'suggestion',
+        severityLabel: 'Gợi ý',
+        title: 'Mở đầu đoạn bằng nhận định vĩ mô chung chung',
+        excerpt: '"Trong bối cảnh toàn cầu hóa và cuộc cách mạng công nghiệp diễn ra mạnh mẽ hiện nay,"',
+        reason: 'Cách mở đầu bằng đại cảnh toàn cầu hóa xuất hiện lặp lại ở nhiều tài liệu khiến đoạn văn chậm đi vào trọng tâm nghiên cứu cụ thể.',
+        suggestion: 'Đi thẳng vào bối cảnh ngành: "Đối với các doanh nghiệp chế biến và xuất khẩu thực phẩm, việc đồng bộ chuỗi cung ứng lạnh với quản trị vốn lưu động ròng..."',
+        status: 'pending'
+      },
+      f2: {
+        id: 'f2',
+        chapterId: 1,
+        severity: 'warning',
+        severityLabel: 'Nên sửa',
+        title: 'Diễn đạt phóng đại thiếu thước đo cụ thể',
+        excerpt: '"đóng vai trò như một chất xúc tác then chốt và mang tính bước ngoặt lịch sử"',
+        reason: 'Cụm ẩn dụ mang sắc thái tán dương nhưng không chỉ rõ cơ chế tác động định lượng, làm giảm tính khách quan của văn phong học thuật.',
+        suggestion: '"tác động trực tiếp đến chu kỳ luân chuyển tiền mặt và khả năng kiểm soát chi phí vận hành của doanh nghiệp."',
+        status: 'pending'
+      },
+      f3: {
+        id: 'f3',
+        chapterId: 1,
+        severity: 'warning',
+        severityLabel: 'Nên sửa',
+        title: 'Cấu trúc liệt kê ba động từ tổng kết lặp lại',
+        excerpt: '"qua đó góp phần nâng cao hiệu suất sử dụng tài sản, tối ưu hóa chi phí giao dịch và thúc đẩy giá trị bền vững cho cổ đông."',
+        reason: 'Đuôi câu nối tiếp bằng ba cụm động từ khái quát ("nâng cao..., tối ưu hóa..., thúc đẩy...") tạo cảm giác công thức và dàn trải.',
+        suggestion: '"nhờ đó giảm chi phí giao dịch và cải thiện trực tiếp tỷ suất sinh lời trên tổng tài sản (ROA) của doanh nghiệp."',
+        status: 'pending'
+      },
+      f4: {
+        id: 'f4',
+        chapterId: 2,
+        severity: 'suggestion',
+        severityLabel: 'Gợi ý',
+        title: 'Câu bị động và danh hóa kéo dài',
+        excerpt: '"việc các quyết định phân bổ ngân sách được thực hiện bởi bộ phận kế toán quản trị đã được chứng minh là có sự ảnh hưởng đáng kể"',
+        reason: 'Việc lồng ghép nhiều cụm danh hóa ("việc...", "sự ảnh hưởng") và thể bị động ("được thực hiện bởi", "đã được chứng minh") làm câu văn nặng nề.',
+        suggestion: '"kế toán quản trị trực tiếp kiểm soát phân bổ ngân sách sẽ giúp doanh nghiệp giảm đáng kể chi phí đại diện (agency cost)."',
+        status: 'pending'
+      },
+      f5: {
+        id: 'f5',
+        chapterId: 3,
+        severity: 'critical',
+        severityLabel: 'Cần sửa ngay',
+        title: 'Trích dẫn chứa ký hiệu hệ thống và mã nguồn cần xác minh',
+        excerpt: '"(Nguyen & Tran, 2024, doi:10.1016/j.jcorpfin.2024.999999 — contentReference[oaicite:0]{index=0})"',
+        reason: 'Xuất hiện chuỗi ký hiệu hệ thống ("contentReference[oaicite:0]") phát sinh khi sao chép văn bản và mã DOI có dấu hiệu không khớp danh mục xuất bản thực tế.',
+        suggestion: 'Xóa hoàn toàn chuỗi "contentReference[oaicite:0]{index=0}" và đối chiếu lại thông tin bài báo gốc trước khi đưa vào danh mục trích dẫn.',
+        status: 'pending'
+      },
+      f6: {
+        id: 'f6',
+        chapterId: 3,
+        severity: 'warning',
+        severityLabel: 'Nên sửa',
+        title: 'Cấu trúc đối lập khuếch đại ý nghĩa',
+        excerpt: '"Đây không chỉ là một giải pháp vận hành đơn thuần mà còn là một tuyên ngôn chiến lược toàn diện"',
+        reason: 'Cách đặt vấn đề theo khuôn mẫu "không chỉ là X đơn thuần mà còn là tuyên ngôn Y" mang tính hùng biện hơn là phân tích dữ liệu thực nghiệm.',
+        suggestion: '"Giải pháp này đồng thời hỗ trợ điều tiết tồn kho ngắn hạn và ổn định cấu trúc thanh khoản dài hạn của doanh nghiệp."',
+        status: 'pending'
+      },
+      f7: {
+        id: 'f7',
+        chapterId: 4,
+        severity: 'warning',
+        severityLabel: 'Nên sửa',
+        title: 'Câu kết đoạn mang tính khẩu hiệu chung',
+        excerpt: '"Tóm lại, có thể khẳng định chắc chắn rằng sự kết hợp hài hòa... chính là chìa khóa vàng mở ra cánh cửa thành công rực rỡ cho mọi doanh nghiệp trong kỷ nguyên mới."',
+        reason: 'Các hình ảnh ẩn dụ như "chìa khóa vàng", "thành công rực rỡ", "trong kỷ nguyên mới" không phù hợp với phần kết luận của nghiên cứu khoa học.',
+        suggestion: '"Kết quả nghiên cứu cho thấy doanh nghiệp cần phối hợp đồng bộ giữa kế hoạch nhân sự, tiếp thị và điều độ sản xuất để duy trì biên lợi nhuận mục tiêu."',
+        status: 'pending'
+      }
+    };
+
+    const FINDING_KEYS = Object.keys(FINDINGS_MAP);
+
+    // Application State
+    const appState = {
+      currentScreen: 'home',
+      documentName: 'Ban_thao_nghien_cuu_hoc_thuat.docx',
+      documentSize: '1.48 MB',
+      hasSelectedFile: false,
+      activeChapterId: 1,
+      activeFindingId: 'f2',
+      activeFilter: 'all',
+      largeFont: false,
+      leftColCollapsed: false,
+      rightColCollapsed: false
+    };
+
+    // ------------------------------------------------------------------------
+    // 2. MULTI-SCREEN NAVIGATION (True Screen Switching, No Section Scrolling)
+    // ------------------------------------------------------------------------
+    function navigateToScreen(screenName) {
+      appState.currentScreen = screenName;
+      document.querySelectorAll('.app-screen').forEach((sec) => {
+        sec.classList.remove('active-screen');
+      });
+      const target = document.getElementById(`screen-${screenName}`);
+      if (target) {
+        target.classList.add('active-screen');
+      }
+
+      document.querySelectorAll('.main-nav-btn').forEach((btn) => {
+        const isMatch = btn.getAttribute('data-screen-target') === screenName;
+        if (isMatch) {
+          btn.className = 'main-nav-btn px-4 py-1.5 rounded-full text-xs font-semibold transition-all bg-blue-600 text-white shadow-sm';
+        } else {
+          btn.className = 'main-nav-btn px-4 py-1.5 rounded-full text-xs font-semibold text-[var(--text-muted)] hover:text-[var(--text-main)] transition-all';
+        }
+      });
+
+      window.scrollTo({ top: 0, behavior: 'auto' });
+
+      if (screenName === 'workspace') {
+        renderWorkspace();
+      } else if (screenName === 'insights') {
+        renderInsights();
+      }
+    }
+
+    // ------------------------------------------------------------------------
+    // 3. FILE UPLOAD & DEMO ENTRY FLOW (Screen 01 -> Screen 02)
+    // ------------------------------------------------------------------------
+    const fileInput = document.getElementById('docx-file-input');
+    const dropzone = document.getElementById('upload-dropzone');
+
+    function triggerFileBrowse() {
+      fileInput.value = '';
+      fileInput.click();
+    }
+
+    function formatBytes(bytes) {
+      if (!bytes || bytes <= 0) return '1.42 MB';
+      const mb = bytes / (1024 * 1024);
+      if (mb >= 0.1) return `${mb.toFixed(2)} MB`;
+      return `${Math.max(1, Math.round(bytes / 1024))} KB`;
+    }
+
+    function hideUploadError() {
+      document.getElementById('upload-error-box').classList.add('hidden');
+    }
+
+    function handleFileSelection(file) {
+      if (!file) return;
+      const name = file.name || '';
+      if (!name.toLowerCase().endsWith('.docx')) {
+        document.getElementById('upload-error-box').classList.remove('hidden');
+        return;
+      }
+      hideUploadError();
+      appState.documentName = name;
+      appState.documentSize = formatBytes(file.size);
+      appState.hasSelectedFile = true;
+
+      document.getElementById('selected-file-name').textContent = appState.documentName;
+      document.getElementById('selected-file-size').textContent = appState.documentSize;
+      document.getElementById('upload-state-empty').classList.add('hidden');
+      document.getElementById('upload-state-selected').classList.remove('hidden');
+      document.getElementById('workspace-doc-title').textContent = appState.documentName;
+      document.getElementById('insights-doc-title').textContent = appState.documentName;
+      document.getElementById('report-doc-name').textContent = `Tài liệu: ${appState.documentName}`;
+    }
+
+    function clearSelectedFile() {
+      appState.hasSelectedFile = false;
+      appState.documentName = 'Ban_thao_nghien_cuu_hoc_thuat.docx';
+      document.getElementById('upload-state-selected').classList.add('hidden');
+      document.getElementById('upload-state-empty').classList.remove('hidden');
+    }
+
+    function startAuditFlow() {
+      const btn = document.getElementById('start-audit-btn');
+      const originalText = btn.textContent;
+      btn.textContent = 'Đang mở Workspace...';
+      btn.disabled = true;
+      setTimeout(() => {
+        btn.textContent = originalText;
+        btn.disabled = false;
+        navigateToScreen('workspace');
+      }, 220);
+    }
+
+    function exploreSampleDemo() {
+      appState.documentName = 'Ban_thao_nghien_cuu_hoc_thuat.docx';
+      document.getElementById('workspace-doc-title').textContent = appState.documentName;
+      document.getElementById('insights-doc-title').textContent = appState.documentName;
+      document.getElementById('report-doc-name').textContent = `Tài liệu: ${appState.documentName}`;
+      navigateToScreen('workspace');
+    }
+
+    fileInput.addEventListener('change', (e) => {
+      if (e.target.files && e.target.files[0]) {
+        handleFileSelection(e.target.files[0]);
+      }
+    });
+
+    ['dragenter', 'dragover'].forEach((evt) => {
+      dropzone.addEventListener(evt, (e) => {
+        e.preventDefault();
+        e.stopPropagation();
+        dropzone.classList.add('border-blue-400', 'bg-blue-500/5');
+      });
+    });
+
+    ['dragleave', 'drop'].forEach((evt) => {
+      dropzone.addEventListener(evt, (e) => {
+        e.preventDefault();
+        e.stopPropagation();
+        dropzone.classList.remove('border-blue-400', 'bg-blue-500/5');
+      });
+    });
+
+    dropzone.addEventListener('drop', (e) => {
+      const dt = e.dataTransfer;
+      if (dt && dt.files && dt.files[0]) {
+        handleFileSelection(dt.files[0]);
+      }
+    });
+
+    // ------------------------------------------------------------------------
+    // 4. WORKSPACE RENDERING & INTERACTIONS (Screen 02)
+    // ------------------------------------------------------------------------
+    function getSeverityClass(severity) {
+      if (severity === 'critical') return 'span-critical';
+      if (severity === 'warning') return 'span-warning';
+      return 'span-suggestion';
+    }
+
+    function getSeverityBadgeStyle(severity) {
+      if (severity === 'critical') return 'bg-red-500/20 text-red-400 border border-red-500/35';
+      if (severity === 'warning') return 'bg-orange-500/20 text-orange-400 border border-orange-500/35';
+      return 'bg-indigo-500/20 text-indigo-300 border border-indigo-500/35';
+    }
+
+    function renderChapterList() {
+      const container = document.getElementById('chapter-list');
+      container.innerHTML = '';
+
+      CHAPTERS_DATA.forEach((ch) => {
+        const chapterFindings = FINDING_KEYS.map(k => FINDINGS_MAP[k]).filter(f => f.chapterId === ch.id);
+        const unresolvedCount = chapterFindings.filter(f => f.status === 'pending').length;
+        const isCurrent = ch.id === appState.activeChapterId;
+
+        const btn = document.createElement('button');
+        btn.type = 'button';
+        btn.className = isCurrent
+          ? 'w-full flex items-center justify-between px-3 py-2.5 rounded-xl bg-blue-600/15 border border-blue-500/40 text-left font-semibold transition-all'
+          : 'w-full flex items-center justify-between px-3 py-2.5 rounded-xl hover:bg-[var(--bg-base)]/60 border border-transparent text-left transition-all';
+
+        const statusBadge = unresolvedCount === 0
+          ? `<span class="px-2 py-0.5 rounded-full text-[10px] font-mono bg-emerald-500/20 text-emerald-400 shrink-0">Hoàn tất</span>`
+          : `<span class="px-2 py-0.5 rounded-full text-[10px] font-mono bg-amber-500/20 text-amber-400 shrink-0">${unresolvedCount} điểm</span>`;
+
+        btn.innerHTML = `
+          <span class="truncate pr-2">${ch.shortTitle}</span>
+          ${statusBadge}
+        `;
+        btn.addEventListener('click', () => {
+          appState.activeChapterId = ch.id;
+          const firstFindingInChapter = chapterFindings[0];
+          if (firstFindingInChapter) {
+            appState.activeFindingId = firstFindingInChapter.id;
+          }
+          renderWorkspace();
+        });
+        container.appendChild(btn);
+      });
+    }
+
+    function renderManuscript() {
+      const ch = CHAPTERS_DATA.find(c => c.id === appState.activeChapterId) || CHAPTERS_DATA[0];
+      document.getElementById('viewer-section-label').textContent = ch.sectionLabel;
+      document.getElementById('viewer-chapter-heading').textContent = ch.fullTitle;
+
+      const article = document.getElementById('manuscript-content');
+      article.innerHTML = '';
+
+      ch.paragraphs.forEach((para) => {
+        const block = document.createElement('div');
+        block.className = 'space-y-2';
+
+        if (para.prefix) {
+          const sub = document.createElement('p');
+          sub.className = 'text-xs font-mono text-[var(--text-muted)]';
+          sub.textContent = para.prefix;
+          block.appendChild(sub);
+        }
+
+        const p = document.createElement('p');
+        para.segments.forEach((seg) => {
+          if (seg.type === 'text') {
+            p.appendChild(document.createTextNode(seg.text));
+          } else if (seg.type === 'finding') {
+            const f = FINDINGS_MAP[seg.id];
+            const span = document.createElement('span');
+            const isResolved = f.status !== 'pending';
+            const matchesFilter =
+              appState.activeFilter === 'all' ||
+              (appState.activeFilter === 'resolved' && isResolved) ||
+              (appState.activeFilter === f.severity && !isResolved);
+
+            let cls = `audit-span ${getSeverityClass(f.severity)}`;
+            if (isResolved) cls += ' is-resolved';
+            if (appState.activeFindingId === f.id) cls += ' active-span';
+
+            span.className = cls;
+            span.style.opacity = matchesFilter ? '1' : '0.25';
+            span.textContent = seg.text;
+            span.setAttribute('tabindex', '0');
+            span.setAttribute('role', 'button');
+            span.setAttribute('aria-label', `${f.severityLabel}: ${f.title}`);
+
+            span.addEventListener('click', () => {
+              appState.activeFindingId = f.id;
+              renderWorkspace();
+            });
+            span.addEventListener('keydown', (ev) => {
+              if (ev.key === 'Enter' || ev.key === ' ') {
+                ev.preventDefault();
+                appState.activeFindingId = f.id;
+                renderWorkspace();
+              }
+            });
+
+            p.appendChild(span);
+          }
+        });
+
+        block.appendChild(p);
+        article.appendChild(block);
+      });
+    }
+
+    function renderDiagnosticPanel() {
+      const f = FINDINGS_MAP[appState.activeFindingId] || FINDINGS_MAP.f1;
+      const sevBadge = document.getElementById('diag-severity-badge');
+      sevBadge.textContent = f.severityLabel;
+      sevBadge.className = `px-3 py-1 rounded-full text-xs font-bold ${getSeverityBadgeStyle(f.severity)}`;
+
+      const statusBadge = document.getElementById('diag-status-badge');
+      const resolveBtn = document.getElementById('resolve-finding-btn');
+
+      if (f.status === 'resolved') {
+        statusBadge.textContent = 'Đã đánh dấu xử lý';
+        statusBadge.className = 'px-2.5 py-0.5 rounded-full text-[11px] font-semibold bg-emerald-500/20 text-emerald-400 border border-emerald-500/35';
+        resolveBtn.textContent = 'Hoàn tác trạng thái';
+        resolveBtn.className = 'flex-1 py-2.5 px-3.5 rounded-xl text-xs font-bold border border-emerald-500/40 bg-emerald-500/15 text-emerald-300 hover:bg-emerald-500/25 transition-all';
+      } else if (f.status === 'ignored') {
+        statusBadge.textContent = 'Đã bỏ qua';
+        statusBadge.className = 'px-2.5 py-0.5 rounded-full text-[11px] font-semibold bg-slate-500/20 text-slate-300 border border-slate-500/35';
+        resolveBtn.textContent = 'Đánh dấu đã xử lý';
+        resolveBtn.className = 'flex-1 py-2.5 px-3.5 rounded-xl text-xs font-bold text-white bg-emerald-600 hover:bg-emerald-500 transition-all';
+      } else {
+        statusBadge.textContent = 'Chưa xử lý';
+        statusBadge.className = 'px-2.5 py-0.5 rounded-full text-[11px] font-medium bg-slate-500/15 text-[var(--text-muted)] border border-[var(--border-subtle)]';
+        resolveBtn.textContent = 'Đánh dấu đã xử lý';
+        resolveBtn.className = 'flex-1 py-2.5 px-3.5 rounded-xl text-xs font-bold text-white bg-emerald-600 hover:bg-emerald-500 transition-all';
+      }
+
+      document.getElementById('diag-title').textContent = f.title;
+      document.getElementById('diag-excerpt').textContent = f.excerpt;
+      document.getElementById('diag-reason').textContent = f.reason;
+      document.getElementById('diag-suggestion').textContent = f.suggestion;
+
+      const idx = FINDING_KEYS.indexOf(f.id) + 1;
+      document.getElementById('finding-stepper-label').textContent = `${idx} / ${FINDING_KEYS.length}`;
+    }
+
+    function updateFilterCounts() {
+      const all = FINDING_KEYS.map(k => FINDINGS_MAP[k]);
+      const resolved = all.filter(f => f.status !== 'pending').length;
+      const critical = all.filter(f => f.severity === 'critical' && f.status === 'pending').length;
+      const warning = all.filter(f => f.severity === 'warning' && f.status === 'pending').length;
+      const suggestion = all.filter(f => f.severity === 'suggestion' && f.status === 'pending').length;
+
+      document.getElementById('count-all').textContent = all.length;
+      document.getElementById('count-critical').textContent = critical;
+      document.getElementById('count-warning').textContent = warning;
+      document.getElementById('count-suggestion').textContent = suggestion;
+      document.getElementById('count-resolved').textContent = resolved;
+      document.getElementById('workspace-progress-badge').textContent = `Đã xử lý ${resolved}/${all.length}`;
+    }
+
+    function renderWorkspace() {
+      renderChapterList();
+      renderManuscript();
+      renderDiagnosticPanel();
+      updateFilterCounts();
+    }
+
+    function setFindingFilter(filterName, btnEl) {
+      appState.activeFilter = filterName;
+      document.querySelectorAll('.filter-btn').forEach((b) => {
+        b.className = 'filter-btn flex items-center justify-between px-3 py-2 rounded-xl border border-transparent hover:bg-[var(--bg-base)]/60 text-left transition-all';
+      });
+      btnEl.className = 'filter-btn active flex items-center justify-between px-3 py-2 rounded-xl font-semibold bg-blue-600 text-white transition-all';
+      renderManuscript();
+    }
+
+    function stepFinding(delta) {
+      const curIdx = FINDING_KEYS.indexOf(appState.activeFindingId);
+      const nextIdx = (curIdx + delta + FINDING_KEYS.length) % FINDING_KEYS.length;
+      const nextFinding = FINDINGS_MAP[FINDING_KEYS[nextIdx]];
+      appState.activeFindingId = nextFinding.id;
+      appState.activeChapterId = nextFinding.chapterId;
+      renderWorkspace();
+    }
+
+    function toggleResolveCurrentFinding() {
+      const f = FINDINGS_MAP[appState.activeFindingId];
+      if (!f) return;
+      f.status = f.status === 'resolved' ? 'pending' : 'resolved';
+      renderWorkspace();
+    }
+
+    function ignoreCurrentFinding() {
+      const f = FINDINGS_MAP[appState.activeFindingId];
+      if (!f) return;
+      f.status = 'ignored';
+      stepFinding(1);
+    }
+
+    function copyCurrentSuggestion() {
+      const f = FINDINGS_MAP[appState.activeFindingId];
+      if (!f) return;
+      const btn = document.getElementById('copy-suggestion-btn');
+      if (navigator.clipboard && navigator.clipboard.writeText) {
+        navigator.clipboard.writeText(f.suggestion).catch(() => {});
+      }
+      btn.textContent = 'Đã sao chép';
+      setTimeout(() => {
+        btn.textContent = 'Sao chép gợi ý';
+      }, 1500);
+    }
+
+    function toggleReaderFontSize() {
+      appState.largeFont = !appState.largeFont;
+      const article = document.getElementById('manuscript-content');
+      article.style.fontSize = appState.largeFont ? '17px' : '15px';
+    }
+
+    function toggleWorkspaceColumn(side) {
+      const leftCol = document.getElementById('workspace-col-left');
+      const centerCol = document.getElementById('workspace-col-center');
+      const rightCol = document.getElementById('workspace-col-right');
+
+      if (side === 'left') {
+        appState.leftColCollapsed = !appState.leftColCollapsed;
+      } else {
+        appState.rightColCollapsed = !appState.rightColCollapsed;
+      }
+
+      leftCol.classList.toggle('lg:hidden', appState.leftColCollapsed);
+      rightCol.classList.toggle('lg:hidden', appState.rightColCollapsed);
+
+      let centerSpan = 5;
+      if (appState.leftColCollapsed) centerSpan += 3;
+      if (appState.rightColCollapsed) centerSpan += 4;
+
+      centerCol.className = `lg:col-span-${centerSpan} proximity-card rounded-3xl p-6 sm:p-8 bg-[var(--manuscript-bg)] space-y-5`;
+    }
+
+    function toggleMobilePanel(which) {
+      const targetId = which === 'nav' ? 'workspace-col-left' : 'workspace-col-right';
+      const el = document.getElementById(targetId);
+      if (el) {
+        el.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+      }
+    }
+
+    // ------------------------------------------------------------------------
+    // 5. INSIGHTS & REPORT PREVIEW RENDERING (Screen 03 & Modal)
+    // ------------------------------------------------------------------------
+    function renderInsights() {
+      const all = FINDING_KEYS.map(k => FINDINGS_MAP[k]);
+      const resolved = all.filter(f => f.status !== 'pending').length;
+      const pct = Math.round((resolved / all.length) * 100);
+
+      document.getElementById('insights-resolved-ratio').textContent = `${resolved} / ${all.length}`;
+      document.getElementById('insights-progress-bar').style.width = `${pct}%`;
+    }
+
+    function openChapterFromInsights(chapterId) {
+      appState.activeChapterId = chapterId;
+      const firstFinding = FINDING_KEYS.map(k => FINDINGS_MAP[k]).find(f => f.chapterId === chapterId);
+      if (firstFinding) {
+        appState.activeFindingId = firstFinding.id;
+      }
+      navigateToScreen('workspace');
+    }
+
+    function openReportModal() {
+      const list = document.getElementById('report-findings-list');
+      list.innerHTML = '';
+
+      FINDING_KEYS.forEach((key, index) => {
+        const f = FINDINGS_MAP[key];
+        const item = document.createElement('div');
+        item.className = 'p-4 rounded-2xl border border-[var(--border-subtle)] bg-[var(--bg-card)] space-y-2';
+        item.innerHTML = `
+          <div class="flex flex-wrap items-center justify-between gap-2">
+            <span class="font-display font-bold text-sm">${index + 1}. ${f.title}</span>
+            <span class="px-2.5 py-0.5 rounded-full text-[11px] font-semibold ${getSeverityBadgeStyle(f.severity)}">${f.severityLabel}</span>
+          </div>
+          <p class="text-xs italic text-[var(--text-muted)]">${f.excerpt}</p>
+          <p class="text-xs text-[var(--text-muted)]"><strong>Nguyên nhân:</strong> ${f.reason}</p>
+          <p class="text-xs text-emerald-400"><strong>Đề xuất biên tập:</strong> ${f.suggestion}</p>
+        `;
+        list.appendChild(item);
+      });
+
+      const m = document.getElementById('report-modal');
+      m.classList.remove('hidden');
+      m.classList.add('flex');
+    }
+
+    function closeReportModal() {
+      const m = document.getElementById('report-modal');
+      m.classList.add('hidden');
+      m.classList.remove('flex');
+    }
+
+    function openProModal() {
+      const m = document.getElementById('pro-modal');
+      m.classList.remove('hidden');
+      m.classList.add('flex');
+    }
+
+    function closeProModal() {
+      const m = document.getElementById('pro-modal');
+      m.classList.add('hidden');
+      m.classList.remove('flex');
+    }
+
+    // Close modals with Escape key
+    window.addEventListener('keydown', (e) => {
+      if (e.key === 'Escape') {
+        closeReportModal();
+        closeProModal();
+      }
+    });
+
+    // ------------------------------------------------------------------------
+    // 6. THEME SWITCHER & VISUAL EFFECTS (Respecting prefers-reduced-motion)
+    // ------------------------------------------------------------------------
     const rootEl = document.documentElement;
     const themeBtn = document.getElementById('theme-toggle-btn');
     const iconSun = document.getElementById('icon-sun');
     const iconMoon = document.getElementById('icon-moon');
 
-    function setTheme(theme) {
-      rootEl.setAttribute('data-theme', theme);
-      if (theme === 'light') {
+    themeBtn.addEventListener('click', () => {
+      const next = rootEl.getAttribute('data-theme') === 'light' ? 'dark' : 'light';
+      rootEl.setAttribute('data-theme', next);
+      if (next === 'light') {
         iconSun.classList.add('hidden');
         iconMoon.classList.remove('hidden');
       } else {
         iconSun.classList.remove('hidden');
         iconMoon.classList.add('hidden');
       }
-    }
-
-    themeBtn.addEventListener('click', () => {
-      const current = rootEl.getAttribute('data-theme') === 'light' ? 'dark' : 'light';
-      setTheme(current);
-      showToast(current === 'light'
-        ? 'Đã chuyển sang Nền Sáng (Giấy Bản thảo Học thuật Ấm - cảm hứng Agni.vn)'
-        : 'Đã chuyển sang Nền Tối (Studio Kiểm toán Đèn UV - cảm hứng EziTranslate)');
     });
 
-    // 2. Cursor Spotlight + Proximity Card Glow + Magnetic Proximity Icons + Mascot Eye Tracking
+    const reducedMotionQuery = window.matchMedia('(prefers-reduced-motion: reduce)');
     const spotlight = document.getElementById('cursor-spotlight');
     const mascot = document.getElementById('auditor-mascot');
     const pupilLeft = document.getElementById('pupil-left');
     const pupilRight = document.getElementById('pupil-right');
-    const proximityCards = document.querySelectorAll('.proximity-card');
-    const magneticIcons = document.querySelectorAll('.magnetic-icon');
 
     window.addEventListener('pointermove', (e) => {
-      const { clientX, clientY } = e;
+      if (reducedMotionQuery.matches) return;
 
-      // Update global background spotlight
+      const { clientX, clientY } = e;
       spotlight.style.setProperty('--cursor-x', `${clientX}px`);
       spotlight.style.setProperty('--cursor-y', `${clientY}px`);
 
-      // Update Agni-inspired Mascot Eye Pupils to look toward cursor
       if (mascot && pupilLeft && pupilRight) {
         const rect = mascot.getBoundingClientRect();
         const cx = rect.left + rect.width / 2;
         const cy = rect.top + rect.height / 2;
         const angle = Math.atan2(clientY - cy, clientX - cx);
-        const dist = Math.min(2.6, Math.hypot(clientX - cx, clientY - cy) / 45);
+        const dist = Math.min(2.5, Math.hypot(clientX - cx, clientY - cy) / 45);
         const tx = Math.cos(angle) * dist;
         const ty = Math.sin(angle) * dist;
         pupilLeft.style.transform = `translate(${tx.toFixed(2)}px, ${ty.toFixed(2)}px)`;
         pupilRight.style.transform = `translate(${tx.toFixed(2)}px, ${ty.toFixed(2)}px)`;
       }
 
-      // Update Proximity Cards border & surface glow even when cursor is nearby
-      proximityCards.forEach((card) => {
+      document.querySelectorAll('.proximity-card').forEach((card) => {
         const rect = card.getBoundingClientRect();
         const x = clientX - rect.left;
         const y = clientY - rect.top;
-        // Distance from card bounds
         const dx = Math.max(rect.left - clientX, 0, clientX - rect.right);
         const dy = Math.max(rect.top - clientY, 0, clientY - rect.bottom);
         const distFromCard = Math.hypot(dx, dy);
@@ -1297,23 +2018,22 @@
         }
       });
 
-      // Update Magnetic Proximity Icons ("di gần icon") within 120px radius
-      magneticIcons.forEach((icon) => {
+      document.querySelectorAll('.magnetic-icon').forEach((icon) => {
         const rect = icon.getBoundingClientRect();
         const icx = rect.left + rect.width / 2;
         const icy = rect.top + rect.height / 2;
         const dist = Math.hypot(clientX - icx, clientY - icy);
-        const radius = 115;
+        const radius = 110;
 
         if (dist < radius) {
-          const pull = (1 - dist / radius);
-          const mx = (clientX - icx) * 0.22 * pull;
-          const my = (clientY - icy) * 0.22 * pull;
-          const scale = 1 + 0.08 * pull;
+          const pull = 1 - dist / radius;
+          const mx = (clientX - icx) * 0.2 * pull;
+          const my = (clientY - icy) * 0.2 * pull;
+          const scale = 1 + 0.06 * pull;
           icon.style.setProperty('--mag-x', `${mx.toFixed(1)}px`);
           icon.style.setProperty('--mag-y', `${my.toFixed(1)}px`);
           icon.style.setProperty('--mag-scale', scale.toFixed(3));
-          icon.style.setProperty('--mag-glow', (pull * 0.55).toFixed(2));
+          icon.style.setProperty('--mag-glow', (pull * 0.5).toFixed(2));
         } else {
           icon.style.setProperty('--mag-x', '0px');
           icon.style.setProperty('--mag-y', '0px');
@@ -1323,176 +2043,14 @@
       });
     });
 
-    // Periodic natural blink for the Mascot Eye
     setInterval(() => {
-      if (!mascot) return;
+      if (!mascot || reducedMotionQuery.matches) return;
       mascot.classList.add('blinking');
       setTimeout(() => mascot.classList.remove('blinking'), 150);
     }, 4200);
 
-    // 3. Interactive Diagnostic Findings Database (Clicking highlighted spans updates Right Drawer)
-    const FINDINGS_DB = {
-      'DIS-04': {
-        priority: 'P2 · CẢNH BÁO DIỄN NGÔN',
-        priorityClass: 'bg-yellow-500/20 text-yellow-400 border-yellow-500/30',
-        code: 'DIS-04 · Khung dẫn nhập vĩ mô sáo rỗng',
-        title: 'Mở đầu đoạn bằng đại cảnh vĩ mô rập khuôn (Formulaic Macro-Opening)',
-        excerpt: '"Trong bối cảnh toàn cầu hóa và cuộc cách mạng công nghiệp 4.0 diễn ra mạnh mẽ hiện nay,"',
-        reason: 'Các mô hình LLM thường mở đầu chương/mục bằng cụm trạng ngữ vĩ mô ("Trong bối cảnh toàn cầu hóa...", "Trong kỷ nguyên số...") bất kể chủ đề hẹp của luận văn là gì, làm loãng trọng tâm nghiên cứu ngay từ câu đầu tiên.',
-        econShield: 'Các thuật ngữ "chuỗi cung ứng lạnh (cold chain)" và "vốn lưu động ròng" phía sau được giữ nguyên.',
-        suggestion: 'Đi thẳng vào vấn đề nghiên cứu: "Đối với các doanh nghiệp chế biến thực phẩm niêm yết tại Việt Nam, việc đồng bộ chuỗi cung ứng lạnh với quản trị vốn lưu động ròng quyết định trực tiếp..."'
-      },
-      'LEX-02': {
-        priority: 'P1 · NGHIÊM TRỌNG',
-        priorityClass: 'bg-orange-500/20 text-orange-400 border-orange-500/30',
-        code: 'LEX-02 & LEX-03 · Né hệ từ & Ngôn ngữ PR',
-        title: 'Né tránh hệ từ "là/có" & Phóng đại tầm vóc PR (Copula Avoidance & Puffery)',
-        excerpt: '"đóng vai trò như một chất xúc tác then chốt và mang tính bước ngoặt lịch sử"',
-        reason: 'AI thường né hệ từ "là/tác động đến" để thay bằng các cụm ẩn dụ hoa mỹ ("đóng vai trò như một chất xúc tác then chốt", "mang tính bước ngoặt lịch sử") thiếu tính khách quan định lượng của văn phong kinh tế.',
-        econShield: 'Hệ thống bảo vệ nguyên vẹn cụm "chuỗi cung ứng lạnh" (Logistics) và "vốn lưu động ròng" (Tài chính).',
-        suggestion: '"...tác động trực tiếp đến chu kỳ chuyển đổi tiền mặt và năng lực cạnh tranh chi phí của các doanh nghiệp niêm yết."'
-      },
-      'SYN-03': {
-        priority: 'P1 · NGHIÊM TRỌNG',
-        priorityClass: 'bg-orange-500/20 text-orange-400 border-orange-500/30',
-        code: 'SYN-03 · Sóng đôi phủ định – khẳng định',
-        title: 'Lạm dụng cấu trúc "Không chỉ X mà còn là một tuyên ngôn Y" (Correlative Conjunction)',
-        excerpt: '"Đây không chỉ là một giải pháp vận hành đơn thuần mà còn là một tuyên ngôn chiến lược toàn diện,"',
-        reason: 'Cấu trúc bác bỏ giả ("không chỉ là... đơn thuần mà còn là...") lặp lại với mật độ cao trong văn bản AI nhằm tạo kịch tính giả tạo thay vì đưa ra số liệu chứng minh.',
-        econShield: 'Miễn trừ hoàn toàn các chỉ tiêu tài chính và thuật ngữ quản trị xung quanh.',
-        suggestion: '"Giải pháp này đồng thời giải quyết bài toán vận hành kho vận và định hình chiến lược phân bổ vốn dài hạn của doanh nghiệp."'
-      },
-      'SYN-01': {
-        priority: 'P1 · NGHIÊM TRỌNG',
-        priorityClass: 'bg-orange-500/20 text-orange-400 border-orange-500/30',
-        code: 'SYN-01 & SYN-02 · Đẳng cấu 3 nhịp + Đuôi câu "qua đó"',
-        title: 'Đuôi câu tổng kết "qua đó góp phần" kèm 3 động từ song hành (Triadic Isomorphism)',
-        excerpt: '"qua đó góp phần nâng cao hiệu suất sử dụng tài sản, tối ưu hóa chi phí giao dịch và thúc đẩy giá trị bền vững cho cổ đông."',
-        reason: 'Sự kết hợp giữa liên từ hệ quả "qua đó góp phần" với đúng 3 cụm động từ [Nâng cao A + Tối ưu hóa B + Thúc đẩy C] là chữ ký cú pháp điển hình nhất của GPT/Claude trong tiếng Việt.',
-        econShield: 'Các khái niệm "hiệu suất sử dụng tài sản", "chi phí giao dịch" và "cổ đông" được nhận diện là thuật ngữ Kinh tế chuẩn.',
-        suggestion: 'Tách thành mệnh đề nhân quả cụ thể: "...nhờ đó giảm chi phí giao dịch và cải thiện hiệu suất sử dụng tổng tài sản (ROA) cho cổ đông."'
-      },
-      'SYN-VN-03': {
-        priority: 'P3 · GỢI Ý BIÊN TẬP',
-        priorityClass: 'bg-indigo-500/20 text-indigo-300 border-indigo-500/30',
-        code: 'SYN-VN-03 · Danh hóa "Việc/Sự" & Bị động dịch máy',
-        title: 'Cấu trúc danh hóa nặng nề "Việc... được thực hiện bởi... đã được chứng minh"',
-        excerpt: '"việc các quyết định phân bổ ngân sách được thực hiện bởi bộ phận kế toán quản trị đã được chứng minh là có sự ảnh hưởng đáng kể"',
-        reason: 'Ảnh hưởng dịch máy từ câu bị động tiếng Anh ("The fact that budget allocation decisions are made by... has been proven to have a significant impact") khiến câu tiếng Việt mất chủ ngữ hành động trực tiếp.',
-        econShield: 'Bảo vệ các thuật ngữ "đòn bẩy tài chính", "Basel III CAR", "ROA/ROE" và "chi phí đại diện (agency cost)".',
-        suggestion: 'Chuyển sang chủ động tự nhiên: "...kế toán quản trị trực tiếp kiểm soát phân bổ ngân sách sẽ giúp doanh nghiệp giảm đáng kể chi phí đại diện (agency cost)."'
-      },
-      'FOR-01': {
-        priority: 'P0 · CẢNH BÁO ĐỎ PHÁP Y',
-        priorityClass: 'bg-red-500/20 text-red-400 border-red-500/30',
-        code: 'FOR-01 & CIT-01 · Rò rỉ oaicite & DOI Ảo giác',
-        title: 'Phát hiện mã truy xuất AI (oaicite) & Mã DOI không hợp lệ',
-        excerpt: '"(Nguyen & Tran, 2024, doi:10.1016/j.jcorpfin.2024.999999 — contentReference[oaicite:0]{index=0})"',
-        reason: 'Chuỗi "contentReference[oaicite:0]" là mã hệ thống rò rỉ khi sao chép trực tiếp từ ChatGPT. Ngoài ra hậu tố DOI ".999999" có dấu hiệu ảo giác nguồn trích dẫn (Hallucinated Citation). Cần kiểm tra và xóa ngay trước khi nộp hội đồng!',
-        econShield: 'Không áp dụng miễn trừ cho lỗi pháp y P0.',
-        suggestion: 'Xóa ngay chuỗi "contentReference[oaicite:0]{index=0}" và đối chiếu lại mã DOI thật của bài báo trên Crossref / Google Scholar.'
-      },
-      'DIS-02': {
-        priority: 'P2 · CẢNH BÁO DIỄN NGÔN',
-        priorityClass: 'bg-yellow-500/20 text-yellow-400 border-yellow-500/30',
-        code: 'DIS-02 · Câu kết đoạn đóng hộp sáo rỗng',
-        title: 'Kết đoạn bằng ẩn dụ "chìa khóa vàng mở ra cánh cửa thành công rực rỡ"',
-        excerpt: '"Tóm lại, có thể khẳng định chắc chắn rằng sự kết hợp hài hòa... chính là chìa khóa vàng mở ra cánh cửa thành công rực rỡ cho mọi doanh nghiệp trong kỷ nguyên mới."',
-        reason: 'AI có thói quen tự đóng gói mỗi đoạn văn bằng một câu kết đạo lý chung chung ("Tóm lại...", "chìa khóa vàng...", "trong kỷ nguyên mới"), làm đứt mạch chuyển ý sang mục tiếp theo của luận văn.',
-        econShield: 'Các danh từ "chiến lược nhân sự", "marketing số", "quản trị sản xuất" được bảo lưu.',
-        suggestion: 'Cắt bỏ câu khẩu hiệu kết đoạn, hoặc thay bằng câu chuyển ý sang mục 1.3: "Những cơ sở lý thuyết trên là tiền đề để xây dựng mô hình các giả thuyết nghiên cứu tại Mục 1.3."'
-      }
-    };
-
-    function selectFinding(signKey, el) {
-      const item = FINDINGS_DB[signKey];
-      if (!item) return;
-
-      document.querySelectorAll('.audit-span').forEach(s => s.classList.remove('active-span'));
-      el.classList.add('active-span');
-
-      const priorityEl = document.getElementById('diag-priority');
-      priorityEl.textContent = item.priority;
-      priorityEl.className = `px-2.5 py-1 rounded-lg text-xs font-mono font-bold border ${item.priorityClass}`;
-
-      document.getElementById('diag-code').textContent = item.code;
-      document.getElementById('diag-title').textContent = item.title;
-      document.getElementById('diag-excerpt').textContent = item.excerpt;
-      document.getElementById('diag-reason').textContent = item.reason;
-      document.getElementById('diag-econ-shield').textContent = item.econShield;
-      document.getElementById('diag-suggestion').textContent = item.suggestion;
-    }
-
-    // 4. Filter Spans by Severity (P0, P1, P2, P3, All)
-    function filterSpans(level, btn) {
-      document.querySelectorAll('.filter-chip').forEach(b => {
-        b.classList.remove('bg-blue-600', 'text-white', 'border-blue-500');
-      });
-      btn.classList.add('bg-blue-600', 'text-white', 'border-blue-500');
-
-      const map = { P0: 'span-p0', P1: 'span-p1', P2: 'span-p2', P3: 'span-p3' };
-      document.querySelectorAll('.audit-span').forEach(span => {
-        if (level === 'all' || span.classList.contains(map[level])) {
-          span.style.opacity = '1';
-        } else {
-          span.style.opacity = '0.22';
-        }
-      });
-    }
-
-    // 5. Chapter Switching Demo
-    function selectChapter(num, btn) {
-      document.querySelectorAll('.chapter-btn').forEach(b => {
-        b.classList.remove('bg-blue-600/15', 'border-blue-500/40', 'font-semibold');
-        b.classList.add('border-transparent');
-      });
-      btn.classList.add('bg-blue-600/15', 'border-blue-500/40', 'font-semibold');
-      const titles = {
-        1: 'Chương 1: Cơ sở lý luận về Quản trị Chuỗi cung ứng & Hiệu quả Tài chính',
-        2: 'Chương 2: Thiết kế Nghiên cứu, Mô hình Kinh tế lượng & Mẫu dữ liệu',
-        3: 'Chương 3: Kết quả Kiểm định Hồi quy FEM/REM/GMM & Thảo luận',
-        4: 'Chương 4: Hàm ý Quản trị Nhân sự, Marketing & Chuỗi cung ứng'
-      };
-      document.getElementById('manuscript-chapter-title').textContent = titles[num] || titles[1];
-      showToast(`Đã chuyển sang ${titles[num]}`);
-    }
-
-    // 6. Modals & Toast Helpers
-    function openProModal() {
-      const m = document.getElementById('pro-modal');
-      m.classList.remove('hidden');
-      m.classList.add('flex');
-    }
-    function closeProModal() {
-      const m = document.getElementById('pro-modal');
-      m.classList.add('hidden');
-      m.classList.remove('flex');
-    }
-    function openReportModal() {
-      const m = document.getElementById('report-modal');
-      m.classList.remove('hidden');
-      m.classList.add('flex');
-    }
-    function closeReportModal() {
-      const m = document.getElementById('report-modal');
-      m.classList.add('hidden');
-      m.classList.remove('flex');
-    }
-    function showToast(msg) {
-      const banner = document.getElementById('toast-banner');
-      document.getElementById('toast-text').textContent = msg;
-      banner.classList.remove('hidden');
-      banner.classList.add('flex');
-      clearTimeout(window.__toastTimer);
-      window.__toastTimer = setTimeout(() => {
-        banner.classList.add('hidden');
-        banner.classList.remove('flex');
-      }, 3400);
-    }
-    function scrollToWorkspaceWithToast() {
-      document.getElementById('audit-workspace').scrollIntoView({ behavior: 'smooth' });
-      showToast('Đã nạp bản thảo mẫu 84 trang vào Bàn Kiểm toán 3 Cột!');
-    }
+    // Initialize default workspace state
+    renderWorkspace();
   </script>
 </body>
 </html>
