@@ -12,9 +12,11 @@ import re
 import unicodedata
 from typing import Any, Dict, List, Optional, Tuple
 from api.engine.lexicon import (
+    AI_INTENSIFIER_VOCAB,
     RULE_METADATA,
     SINO_VIETNAMESE_ABSTRACT_SYLLABLES,
     SYNONYM_CYCLE_GROUPS,
+    VAGUE_HEDGING_PATTERNS,
     build_contextual_suggestion,
 )
 from api.engine.tokenizer import (
@@ -326,14 +328,24 @@ def audit_paragraph(text: str, index: int = 0) -> Dict[str, Any]:
             add_flag("FOR-01", m.start(), m.end())
 
     # -------------------------------------------------------------------------
-    # FMT-01: Mechanical Formatting (Inline bold bullet headers, excessive em-dashes, markdown bold, emojis)
+    # FMT-01: Mechanical Formatting (Inline bold bullet headers, explanatory em-dashes & spaced hyphens, markdown bold, emojis)
     # -------------------------------------------------------------------------
     for m in re.finditer(r"(?:^|\n)\s*[-*•]\s*(?:\*\*[^*]+\*\*|[A-ZÀ-Ỹ][^:\n]{2,35})\s*:", text):
         add_flag("FMT-01", m.start(), m.end())
 
+    for m in re.finditer(r"\s+—\s+[a-zà-ỹ]", text):
+        add_flag("FMT-01", max(0, m.start() - 10), min(len(text), m.end() + 25))
+
     if text.count("—") >= 2:
         for m in re.finditer(r"\s*—\s*", text):
             add_flag("FMT-01", max(0, m.start() - 12), min(len(text), m.end() + 25))
+
+    for m in re.finditer(
+        r"\s+-\s+(?:tức\s+là|nghĩa\s+là|nơi\s+|con\s+số\s+|yếu\s+tố\s+|đây\s+là|một\s+trong\s+những|không\s+phải)\b",
+        text,
+        re.IGNORECASE,
+    ):
+        add_flag("FMT-01", max(0, m.start() - 10), min(len(text), m.end() + 20))
 
     for m in re.finditer(r"\*\*[^*\n]{2,60}\*\*|[📌💡🚀✅🔹✨📊🔥🎯🌟]", text):
         add_flag("FMT-01", m.start(), m.end())
@@ -343,7 +355,7 @@ def audit_paragraph(text: str, index: int = 0) -> Dict[str, Any]:
     # -------------------------------------------------------------------------
     connective_openers = (
         r"^(?:Cụ thể|Tuy nhiên|Do đó|Hơn nữa|Thêm vào đó|Bên cạnh đó|"
-        r"Ngoài ra|Đáng chú ý là|Thật vậy|Ngược lại|Vì vậy|Như vậy|Mặt khác|Đồng thời|Không những vậy|Chính vì vậy)\s*,"
+        r"Ngoài ra|Đáng chú ý là|Thật vậy|Ngược lại|Vì vậy|Như vậy|Mặt khác|Đồng thời|Không những vậy|Chính vì vậy|Song song với đó)\s*,"
     )
     conn_matches = []
     for s in sentences:
@@ -361,28 +373,34 @@ def audit_paragraph(text: str, index: int = 0) -> Dict[str, Any]:
                 s_item["start"] + m_item.end(),
             )
 
-    # DIS-01: 4-step Boxed Paragraph ([Topic] -> [Cụ thể,] -> [Tuy nhiên,] -> [Do đó,/Như vậy,/Tóm lại,])
+    # DIS-01: 4-step Boxed Paragraph ([Topic] -> [Cụ thể,/Thực tế,] -> [Tuy nhiên,/Bên cạnh đó,] -> [Do đó,/Như vậy,/Tóm lại,])
+    # Strictly requires n_sent >= 4 per test_rhy01_and_dis01_never_trigger_on_short_paragraphs_under_4_sentences
     bcr = 0.0
     if n_sent >= 4 and not is_outline_para:
-        s1_txt = sentences[1]["text"]
-        s2_txt = sentences[2]["text"]
         s_last = sentences[-1]
-        has_elab = bool(re.match(r"^(?:Cụ thể|Thực tế|Theo đó|Trước hết)\s*,", s1_txt, re.IGNORECASE))
-        has_pivot = bool(re.match(r"^(?:Tuy nhiên|Song|Mặt khác|Ngược lại|Bên cạnh đó)\s*,", s2_txt, re.IGNORECASE))
+        mid_texts = [s["text"] for s in sentences[1:-1]]
+        has_mid_transition = any(
+            re.match(
+                r"^(?:Cụ thể|Thực tế|Theo đó|Trước hết|Tuy nhiên|Song|Mặt khác|Ngược lại|Bên cạnh đó|Trong khi đó|Đồng thời)\s*,",
+                mt,
+                re.IGNORECASE,
+            )
+            for mt in mid_texts
+        )
         has_box_close = bool(
             re.match(
-                r"^(?:Do đó|Như vậy|Tóm lại|Nhìn chung|Vì vậy|Chính vì vậy|Có thể nói|Từ đó cho thấy|Qua đó cho thấy)\s*,?",
+                r"^(?:Do đó|Như vậy|Tóm lại|Nhìn chung|Vì vậy|Chính vì vậy|Có thể nói|Từ đó cho thấy|Qua đó cho thấy|Tựu trung lại|Qua đó|Từ đó)\s*,?",
                 s_last["text"],
                 re.IGNORECASE,
             )
             or re.search(
-                r"(?:để đảm bảo sự phát triển bền vững|phát triển bền vững trong tương lai|điều này khẳng định tầm quan trọng của|qua đó tạo nền tảng vững chắc cho)",
+                r"(?:để đảm bảo sự phát triển bền vững|phát triển bền vững trong tương lai|điều này khẳng định tầm quan trọng của|qua đó tạo nền tảng vững chắc cho|Đây là cơ sở để|Đây là những nội dung cần)",
                 s_last["text"],
                 re.IGNORECASE,
             )
         )
         if (
-            (has_elab and has_pivot and has_box_close)
+            (has_mid_transition and has_box_close)
             or (len(conn_matches) >= 3 and has_box_close)
             or bool(
                 re.match(
@@ -395,34 +413,54 @@ def audit_paragraph(text: str, index: int = 0) -> Dict[str, Any]:
             bcr = 1.0
             add_flag("DIS-01", s_last["start"], s_last["end"])
 
-    # DIS-02: Redundant / Echoic summary sentence (Regex + Jaccard Content-Word Overlap)
+    # DIS-02: Redundant / Echoic summary sentence or subsection closure (Works on 1-3 sentence closing paragraphs too!)
     dis02_re = re.compile(
         r"(?:Tóm lại,\s*có thể khẳng định(?: chắc chắn)? rằng[^.!?]+[.!?]?|"
-        r"(?:Tóm lại|Nhìn chung|Như vậy(?:,\s*qua đó có thể thấy)?|Có thể nói|Chính vì vậy)\s*,?[^.!?]*(?:chìa khóa vàng|thành công rực rỡ|kỷ nguyên mới|phát triển bền vững|mở ra hướng đi mới|khẳng định vị thế vững chắc)[^.!?]*[.!?]?)",
+        r"(?:Tóm lại|Nhìn chung|Như vậy(?:,\s*qua đó có thể thấy)?|Có thể nói|Có thể thấy|Chính vì vậy|Tổng hợp kết quả cho thấy|Từ những phân tích trên)\s*,?[^.!?]*(?:chìa khóa vàng|thành công rực rỡ|kỷ nguyên mới|phát triển bền vững|mở ra hướng đi mới|khẳng định vị thế vững chắc)[^.!?]*[.!?]?|"
+        r"(?:Đây\s+là\s+(?:cơ\s+sở|tiền\s+đề|căn\s+cứ)\s+(?:quan\s+trọng\s+|thực\s+tiễn\s+)?để\s+(?:tiếp\s+tục\s+|khóa\s+luận\s+|tác\s+giả\s+)?(?:xem\s+xét|phân\s+tích|đề\s+xuất|xây\s+dựng|hoàn\s+thiện)[^.!?]*(?:ở\s+phần\s+tiếp\s+theo|tại\s+Chương\s+\d|trong\s+Chương\s+\d|ở\s+chương\s+sau)[^.!?]*[.!?]?|"
+        r"Đây\s+là\s+những\s+(?:nội\s+dung|vấn\s+đề|hạn\s+chế|yếu\s+tố|điểm\s+nghẽn)\s+[^.!?]{0,60}?\s+cần\s+(?:được\s+)?(?:ưu\s+tiên\s+|tiếp\s+tục\s+)?(?:rà\s+soát|xem\s+xét|hoàn\s+thiện|khắc\s+phục|cải\s+thiện)\s+trong\s+(?:thời\s+gian\s+tới|giai\s+đoạn\s+tiếp\s+theo|tương\s+lai|Chương\s+\d)[^.!?]*[.!?]?))",
         re.IGNORECASE,
     )
     for m in dis02_re.finditer(text):
         bcr = 1.0
         add_flag("DIS-02", m.start(), m.end())
 
+    # Short echoic closing paragraph (1-3 sentences) opening with "Như vậy, / Nhìn chung, / Tóm lại, / Có thể thấy, / Tổng hợp kết quả cho thấy,"
+    if 1 <= n_sent <= 3 and not is_outline_para:
+        first_s = sentences[0]
+        if (
+            re.match(
+                r"^(?:Như\s+vậy|Nhìn\s+chung|Tóm\s+lại|Có\s+thể\s+thấy(?:\s+rằng)?|Tổng\s+hợp\s+(?:lại|kết\s+quả\s+cho\s+thấy)|Từ\s+những\s+phân\s+tích\s+trên)\s*,",
+                first_s["text"],
+                re.IGNORECASE,
+            )
+            and not has_quantitative_evidence(text)
+        ):
+            bcr = 1.0
+            add_flag("DIS-02", first_s["start"], sentences[-1]["end"])
+
     if n_sent >= 4 and not is_outline_para:
         first_s = sentences[0]
         last_s = sentences[-1]
         if re.match(
-            r"^(?:Tóm lại|Nhìn chung|Như vậy|Có thể nói|Qua đó có thể thấy|Tựu trung lại)\b",
+            r"^(?:Tóm lại|Nhìn chung|Như vậy|Có thể nói|Có thể thấy|Qua đó có thể thấy|Tựu trung lại|Tổng hợp kết quả cho thấy)\b",
             last_s["text"],
             re.IGNORECASE,
         ) and not has_quantitative_evidence(last_s["text"]):
             overlap = _compute_content_word_jaccard(first_s["text"], last_s["text"])
-            if overlap >= 0.40:
+            if overlap >= 0.35:
                 bcr = 1.0
                 add_flag("DIS-02", last_s["start"], last_s["end"])
 
-    # DIS-04: Header-echo definition opener & robotic meta-discourse signposting
+    # DIS-04: Header-echo definition opener, robotic meta-discourse table signposting & category labeling
     dis04_re = re.compile(
-        r"(?:^[^,.]{3,60}\s+(?:là một tập hợp các|đề cập đến quá trình|được định nghĩa như là một khái niệm)\b"
-        r"|Sau khi đã (?:phân tích|tìm hiểu|làm rõ)[^,]{3,65},\s*(?:tiếp theo chúng ta sẽ|phần tiếp theo sẽ|chúng ta hãy cùng)"
-        r"|Như đã (?:đề cập|trình bày) ở (?:phần )?trên,\s*(?:phần này sẽ|tiếp theo sẽ|chúng ta sẽ))",
+        r"(?:^[A-ZÀ-ỸĐ][^,.]{2,65}\s+(?:được\s+hiểu\s+là|có\s+thể\s+được\s+hiểu\s+là|được\s+định\s+nghĩa\s+(?:như\s+)?là|là\s+một\s+tập\s+hợp\s+các|đề\s+cập\s+đến\s+quá\s+trình)\b|"
+        r"^[A-ZÀ-ỸĐ][^,.]{2,45}\s+là\s+(?:hạng\s+mục|bước|yếu\s+tố|công\s+cụ|khâu|nhiệm\s+vụ)\s+(?:trọng\s+tâm|cốt\s+lõi|bắt\s+buộc|quan\s+trọng\s+hàng\s+đầu|then\s+chốt)\b|"
+        r"(?:Trong\s+phạm\s+vi\s+(?:nghiên\s+cứu|khóa\s+luận|chuyên\s+đề)(?:\s+này)?,\s*[^.!?]+được\s+xem\s+xét\s+(?:qua|trên|theo|dưới)\b|"
+        r"Bảng\s+(?:trên|dưới\s+đây|số\s+liệu|[\d.]+)\s+cho\s+thấy\s+(?:ba|bốn|hai|năm|\d+)\s+(?:điểm|điều|đặc\s+điểm|xu\s+hướng|nhận\s+định)\b|"
+        r"Để\s+đánh\s+giá\s+[^,]{5,60},\s*(?:tác\s+giả|nghiên\s+cứu|khóa\s+luận)\s+(?:tiến\s+hành\s+)?(?:khảo\s+sát|sử\s+dụng)\s+(?:năm|bốn|ba|\d+)\s+(?:biến\s+quan\s+sát|tiêu\s+chí|khía\s+cạnh))|"
+        r"Sau khi đã (?:phân tích|tìm hiểu|làm rõ)[^,]{3,65},\s*(?:tiếp theo chúng ta sẽ|phần tiếp theo sẽ|chúng ta hãy cùng)|"
+        r"Như đã (?:đề cập|trình bày) ở (?:phần )?trên,\s*(?:phần này sẽ|tiếp theo sẽ|chúng ta sẽ))",
         re.IGNORECASE,
     )
     for m in dis04_re.finditer(text):
@@ -435,20 +473,30 @@ def audit_paragraph(text: str, index: int = 0) -> Dict[str, Any]:
         r"^(?:Trong bối cảnh|Trước những|Thông qua việc|Bằng việc|Bằng cách|Dựa trên(?: việc| cơ sở)?|Trên cơ sở|Trên phương diện|Xét về(?: mặt| phương diện)?|Về mặt|Về phương diện|Đối với|Nhằm hướng tới)\b[^,]{3,65},",
         re.IGNORECASE,
     )
+    criterion_opener_re = re.compile(
+        r"^(?:(?:Tiêu\s+chí|Chỉ\s+tiêu|Yếu\s+tố|Khía\s+cạnh|Biến\s+quan\s+sát|Nội\s+dung)\s+[^,]{2,45}\s+đạt\s+[\d.,]+\s*điểm|(?:Về|Xét\s+về)\s+[^,]{2,35},\s*)",
+        re.IGNORECASE,
+    )
     tail_clause_re = re.compile(
-        r",\s*(?:(?:qua đó|từ đó|nhờ đó|theo đó)\s+(?:góp phần|giúp|tạo điều kiện|tạo tiền đề|thúc đẩy|nâng cao|khẳng định|mở ra|đảm bảo|củng cố|tối ưu hóa)|góp phần\s+(?:quan trọng\s+)?(?:vào việc|nâng cao|thúc đẩy|tối ưu hóa|đảm bảo|củng cố|hoàn thiện)|điều này phản ánh|mở ra triển vọng|tạo tiền đề vững chắc)\s+[^.!?]+[.!?]?",
+        r",\s*(?:(?:qua đó|từ đó|nhờ đó|theo đó)\s+(?:góp phần|giúp|tạo điều kiện|tạo tiền đề|tạo cơ sở|tạo nền tảng|thúc đẩy|nâng cao|khẳng định|mở ra|đảm bảo|củng cố|tối ưu hóa)|"
+        r"(?:đồng\s+thời\s+)?(?:góp\s+phần|giúp|tạo\s+cơ\s+sở|tạo\s+điều\s+kiện|tạo\s+nền\s+tảng|tạo\s+tiền\s+đề|làm\s+cơ\s+sở|hướng\s+tới\s+việc)\s+(?:quan\s+trọng\s+)?(?:vào\s+việc\s+|cho\s+việc\s+)?(?:nâng\s+cao|cải\s+thiện|duy\s+trì|đảm\s+bảo|bảo\s+đảm|thúc\s+đẩy|tối\s+ưu\s+hóa|củng\s+cố|hoàn\s+thiện|hình\s+thành)\b|"
+        r"điều này phản ánh|mở ra triển vọng|tạo tiền đề vững chắc)\s*[^.!?]+[.!?]?",
         re.IGNORECASE,
     )
 
     opener_indices: List[int] = []
+    criterion_opener_indices: List[int] = []
     tail_indices: List[int] = []
     both_indices: List[int] = []
 
     for s_idx, s in enumerate(sentences):
         has_adv = bool(adv_opener_re.search(s["text"]))
+        has_crit = bool(criterion_opener_re.search(s["text"]))
         tail_matches = list(tail_clause_re.finditer(s["text"]))
         if has_adv:
             opener_indices.append(s_idx)
+        if has_crit:
+            criterion_opener_indices.append(s_idx)
         if tail_matches:
             tail_indices.append(s_idx)
             for tm in tail_matches:
@@ -463,6 +511,8 @@ def audit_paragraph(text: str, index: int = 0) -> Dict[str, Any]:
     isomorphic_idx_set = set(both_indices)
     if len(opener_indices) >= 2:
         isomorphic_idx_set.update(opener_indices)
+    if len(criterion_opener_indices) >= 2:
+        isomorphic_idx_set.update(criterion_opener_indices)
     if len(tail_indices) >= 3:
         isomorphic_idx_set.update(tail_indices)
 
@@ -485,12 +535,21 @@ def audit_paragraph(text: str, index: int = 0) -> Dict[str, Any]:
             sentences[sorted_iso[-1]]["end"],
         )
 
-    # SYN-03: Negative Parallelism ("không chỉ... mà còn...", "không đơn thuần là... mà là...") & False Ranges ("Từ A đến B, từ C đến D")
+    # SYN-03: Negative Parallelism (All 4 Variants + False Ranges)
     syn03_re = re.compile(
-        r"(?:(?:Đây\s+)?(?:không\s+chỉ\s+(?:là\s+)?[^.!?]{3,80}\s+mà\s+còn\s+(?:là\s+)?[^.!?]{3,80}|"
-        r"không\s+đơn\s+thuần\s+là\s+[^.!?]{3,60}\s+mà\s+(?:còn\s+)?là\s+[^.!?]{3,60}|"
-        r"thay\s+vì\s+chỉ\s+đơn\s+thuần\s+(?:là\s+)?[^,.;!?]{3,60})|"
-        r"\bTừ\s+[^,.;]{3,35}\s+đến\s+[^,.;]{3,35},\s*(?:từ\s+[^,.;]{3,35}\s+đến\s+[^,.;]{3,35}|tất\s+cả\s+đều|mọi\s+khía\s+cạnh\s+đều))",
+        r"(?:"
+        # Variant 1: không chỉ... mà còn...
+        r"\bkhông\s+chỉ\s+[^.!?]{2,90}?\s+mà\s+còn\s+[^.!?]{3,90}|"
+        # Variant 2: không đơn thuần/dừng lại/giới hạn ở/là... mà (còn) là/ở/hướng tới...
+        r"\bkhông\s+(?:đơn\s+thuần|dừng\s+lại|giới\s+hạn)\s+(?:ở|là)\s+[^.!?]{3,80}?\s+mà\s+(?:còn\s+)?(?:là|ở|hướng\s+tới|mở\s+rộng)\s+[^.!?]{3,80}|"
+        # Variant 3: không phải (chỉ) (là) X mà (còn) (là) Y (Karve Meilleur & An Cường)
+        r"\bkhông\s+phải\s+(?:chỉ\s+)?(?:đơn\s+thuần\s+)?(?:là\s+)?[^,.;!?]{3,85}?,?\s+mà\s+(?:còn\s+)?(?:là|phải\s+là|nằm\s+ở|ở|cần\s+được|đòi\s+hỏi|hướng\s+tới)\s+[^.!?]{3,85}|"
+        # Variant 4: X chứ không (chỉ) (phải) (đơn thuần) (là) Y (Hecatech)
+        r"\bchứ\s+không\s+(?:chỉ\s+)?(?:phải\s+)?(?:đơn\s+thuần\s+)?(?:dừng\s+lại\s+ở\s+)?(?:là\s+)?[^,.;!?]{3,70}|"
+        # Variant 5: thay vì chỉ đơn thuần... / Từ A đến B, từ C đến D...
+        r"\bthay\s+vì\s+chỉ\s+đơn\s+thuần\s+(?:là\s+)?[^,.;!?]{3,60}|"
+        r"\bTừ\s+[^,.;]{3,35}\s+đến\s+[^,.;]{3,35},\s*(?:từ\s+[^,.;]{3,35}\s+đến\s+[^,.;]{3,35}|tất\s+cả\s+đều|mọi\s+khía\s+cạnh\s+đều)"
+        r")",
         re.IGNORECASE,
     )
     for m in syn03_re.finditer(text):
@@ -503,7 +562,9 @@ def audit_paragraph(text: str, index: int = 0) -> Dict[str, Any]:
         r"chặt chẽ,\s*linh hoạt\s+và\s+hiệu quả|"
         r"kịp thời,\s*chính xác\s+và\s+minh bạch|"
         r"toàn diện,\s*sâu sắc\s+và\s+triệt để|"
-        r"(?:qua đó\s+)?(?:góp phần\s+)?(?:nâng cao|tăng cường|xây dựng)\s+[^,.]+,\s*(?:tối ưu hóa|củng cố|hoàn thiện)\s+[^,.]+\s+và\s+(?:thúc đẩy|phát triển|đảm bảo)\s+[^.!?]+)",
+        r"rõ ràng,\s*minh bạch\s+và\s+nhất quán|"
+        r"khách quan,\s*công bằng\s+và\s+minh bạch|"
+        r"(?:qua đó\s+)?(?:góp phần\s+)?(?:nâng cao|tăng cường|xây dựng|đảm bảo|củng cố|mở rộng)\s+[^,.]{2,45},\s*(?:tối ưu hóa|củng cố|hoàn thiện|cải thiện|duy trì|nâng cao)\s+[^,.]{2,45}\s+và\s+(?:thúc đẩy|phát triển|đảm bảo|gia tăng|tạo dựng)\s+[^.!?]{2,55})",
         re.IGNORECASE,
     )
     for m in syn04_re.finditer(text):
@@ -513,7 +574,7 @@ def audit_paragraph(text: str, index: int = 0) -> Dict[str, Any]:
         r"\b([a-zà-ỹ]+(?:\s+[a-zà-ỹ]+){1,3}),\s*([a-zà-ỹ]+(?:\s+[a-zà-ỹ]+){1,3})\s+(?:và|cũng\s+như|lẫn)\s+([a-zà-ỹ]+(?:\s+[a-zà-ỹ]+){1,3})\b",
         re.IGNORECASE | re.UNICODE,
     )
-    abstract_triads: List[Tuple[int, int]] = []
+    abstract_triads: List[Tuple[int, int, int]] = []
     for m in general_triad_re.finditer(masked_text):
         if "§" in m.group(0):
             continue
@@ -521,9 +582,9 @@ def audit_paragraph(text: str, index: int = 0) -> Dict[str, Any]:
         if 2 <= len(w1) <= 4 and 2 <= len(w2) <= 4 and 2 <= len(w3) <= 4:
             sv_cnt = sum(1 for w in (w1 + w2 + w3) if w in SINO_VIETNAMESE_ABSTRACT_SYLLABLES)
             if sv_cnt >= 5:
-                abstract_triads.append((m.start(), m.end()))
-    if len(abstract_triads) >= 2:
-        for t_s, t_e in abstract_triads:
+                abstract_triads.append((m.start(), m.end(), sv_cnt))
+    for t_s, t_e, sv_cnt in abstract_triads:
+        if sv_cnt >= 6 or len(abstract_triads) >= 2:
             add_flag("SYN-04", t_s, t_e)
 
     # -------------------------------------------------------------------------
@@ -536,13 +597,38 @@ def audit_paragraph(text: str, index: int = 0) -> Dict[str, Any]:
             re.IGNORECASE,
         )
     )
-    opr = round((len(opr_matches) / total_words) * 100, 2)
+    # Mid-clause "Subject + vì vậy + Verb" English calque (Hecatech & E-COM WOW)
+    vi_vay_calque_matches = list(
+        re.finditer(
+            r"\b[A-ZÀ-ỸĐ][a-zà-ỹ]+(?:\s+[a-zà-ỹ]+){1,6}\s+vì\s+vậy\s+(?:cần|phải|có\s+thể|sẽ|được|bị|không|luôn|thường|trở\s+nên|đòi\s+hỏi|tăng|giảm|thay\s+đổi|lệch|chịu|mang|đặt\s+ra)\b",
+            text,
+        )
+    )
+    # Repeated demonstrative sentence openers ("Điều này / Kết quả này / Thực trạng này cho thấy...")
+    demo_opener_matches = []
+    for s in sentences:
+        m_dem = re.match(
+            r"^(?:Điều\s+này|Việc\s+này|Kết\s+quả\s+này|Thực\s+trạng\s+này|Diễn\s+biến\s+này|Cách\s+tiếp\s+cận\s+này|Chính\s+sách\s+này)\s+(?:cho\s+thấy|phản\s+ánh|giúp|làm\s+cho|góp\s+phần|đòi\s+hỏi|đặt\s+ra)\b",
+            s["text"],
+            re.IGNORECASE,
+        )
+        if m_dem:
+            demo_opener_matches.append((s["start"], s["start"] + m_dem.end()))
+
+    total_syn_vn01_hits = len(opr_matches) + len(vi_vay_calque_matches)
+    opr = round((total_syn_vn01_hits / total_words) * 100, 2)
     for m in opr_matches:
         add_flag("SYN-VN-01", m.start(), m.end())
+    for m in vi_vay_calque_matches:
+        add_flag("SYN-VN-01", m.start(), m.end())
+    if len(demo_opener_matches) >= 2:
+        for d_s, d_e in demo_opener_matches:
+            add_flag("SYN-VN-01", d_s, d_e)
 
-    # SYN-VN-02: Topic-Comment loss ("Đối với vấn đề X, nó thường được...")
+    # SYN-VN-02: Topic-Comment loss ("Đối với..., / Về mặt..., nó thường được...")
     syn_vn02_re = re.compile(
-        r"(?:Đối với vấn đề|Liên quan đến khía cạnh|Xét trên phương diện)\s+[^,]+,\s*(?:nó\s+)?(?:thường\s+)?(?:được|bị)?",
+        r"(?:(?:Đối\s+với\s+vấn\s+đề|Liên\s+quan\s+đến\s+khía\s+cạnh|Xét\s+trên\s+phương\s+diện)\s+[^,]+,\s*(?:nó\s+)?(?:thường\s+)?(?:được|bị)?|"
+        r"(?:Đối\s+với|Liên\s+quan\s+đến|Xét\s+(?:về|trên)\s+(?:mặt|phương\s+diện|góc\s+độ|khía\s+cạnh)|Về\s+(?:mặt|phương\s+diện|phía|khía\s+cạnh)|Dưới\s+góc\s+(?:độ|nhìn)\s+(?:của)?)\s+[^,]{3,55},\s*(?:nó|chúng|điều\s+này|việc\s+này|hoạt\s+động\s+này|quá\s+trình\s+này|yếu\s+tố\s+này|tiêu\s+chí\s+này|chỉ\s+tiêu\s+này|kết\s+quả\s+này)?\s*(?:thường\s+|luôn\s+|cũng\s+|vẫn\s+)?(?:được|bị|đóng\s+vai\s+trò|giữ\s+vai\s+trò|chịu\s+ảnh\s+hưởng|có\s+ý\s+nghĩa))",
         re.IGNORECASE,
     )
     for m in syn_vn02_re.finditer(text):
@@ -557,9 +643,22 @@ def audit_paragraph(text: str, index: int = 0) -> Dict[str, Any]:
     )
     for m in syn_vn03_explicit_re.finditer(text):
         masked_slice = masked_text[m.start() : m.end()]
-        # Skip only if the entire matched phrase is a protected economics term (e.g., "sự hài lòng của khách hàng")
         if masked_slice.replace(" ", "").strip("§") != "":
             add_flag("SYN-VN-03", m.start(), m.end())
+
+    # Repeated "Việc + [V_phrase] + giúp/làm cho/khiến/góp phần..." sentence subjects (>= 2 sentences in paragraph)
+    viec_subject_spans: List[Tuple[int, int]] = []
+    for s in sentences:
+        m_viec = re.match(
+            r"^Việc\s+[a-zà-ỹ]+(?:\s+[a-zà-ỹ]+){3,12}\s+(?:giúp|làm\s+cho|khiến|góp\s+phần|tạo\s+điều\s+kiện|đóng\s+vai\s+trò|có\s+ý\s+nghĩa|là\s+cơ\s+sở|đã\s+và\s+đang)\b",
+            s["text"],
+            re.IGNORECASE,
+        )
+        if m_viec:
+            viec_subject_spans.append((s["start"], s["start"] + m_viec.end()))
+    if len(viec_subject_spans) >= 2:
+        for v_s, v_e in viec_subject_spans:
+            add_flag("SYN-VN-03", v_s, v_e)
 
     syn_vn03_passive_re = re.compile(
         r"\b(?:được|bị)\s+([a-zA-ZÀ-ỹ]+(?:\s+[a-zA-ZÀ-ỹ]+){0,2})\s+bởi\s+([^,.;!?()]{3,35})",
@@ -583,7 +682,7 @@ def audit_paragraph(text: str, index: int = 0) -> Dict[str, Any]:
     nominal_chain_re = re.compile(
         r"(?:thực hiện quy trình chuyển đổi mô hình quản trị[^,.]{0,40}|"
         r"thực hiện việc tiết giảm|triển khai sự tái cấu trúc|quá trình tối ưu hóa hiệu suất|"
-        r"(?:việc|sự|quá trình)\s+(?:triển khai|thực hiện|tối ưu hóa|hoàn thiện|tăng cường)\s+(?:đồng bộ\s+|toàn diện\s+)?(?:các\s+)?(?:giải pháp|cơ chế|chính sách|quy trình|phương thức|chiến lược|hệ thống)\s+(?:vận hành|quản trị|kiểm soát|phát triển|tích hợp|chuyển đổi)(?:\s+[a-zA-ZÀ-ỹ]+){1,4})",
+        r"(?:việc|sự|quá\s+trình|hoạt\s+động|công\s+tác)\s+(?:triển\s+khai|thực\s+hiện|tối\s+ưu\s+hóa|hoàn\s+thiện|tăng\s+cường|đẩy\s+mạnh|xây\s+dựng)\s+(?:đồng\s+bộ\s+|toàn\s+diện\s+|thực\s+hiện\s+)?(?:các\s+|những\s+)?(?:hoạt\s+động|quy\s+trình|chính\s+sách|giải\s+pháp|hệ\s+thống|cơ\s+chế|nội\s+dung|công\s+tác|phương\s+thức|chiến\s+lược)\s+(?:vận\s+hành|quản\s+trị|kiểm\s+soát|phát\s+triển|tích\s+hợp|chuyển\s+đổi|đánh\s+giá)(?:\s+[a-zA-ZÀ-ỹ]+){1,4})",
         re.IGNORECASE,
     )
     for m in nominal_chain_re.finditer(text):
@@ -597,51 +696,78 @@ def audit_paragraph(text: str, index: int = 0) -> Dict[str, Any]:
         if not is_legal_citation_sentence(sent_ctx):
             add_flag("LEX-VN-01", sv_s, sv_e)
 
-    # LEX-01: AI Vocabulary & Clichés
+    # LEX-01: AI Vocabulary & Clichés + LEX-01b Intensifier Density Cluster Counter
     lex01_re = re.compile(
         r"(?:đóng vai trò (?:như một chất xúc tác )?(?:vô cùng )?(?:then chốt|sống còn|quyết định)(?:\s+và\s+mang\s+tính\s+bước\s+ngoặt\s+lịch\s+sử)?|"
         r"bức tranh toàn cảnh|tấm thảm đa sắc|điều hướng qua những thách thức|"
         r"tích hợp một cách liền mạch|sự giao thoa phức tạp|bối cảnh không ngừng biến đổi|"
         r"nuôi dưỡng sự đổi mới|góc nhìn đa chiều|khai phá tiềm năng|kiến tạo hệ sinh thái|"
-        r"đòn bẩy chiến lược|không thể phủ nhận rằng)",
+        r"đòn bẩy chiến lược|không thể phủ nhận rằng|"
+        r"\b(?:kim\s+chỉ\s+nam(?:\s+xuyên\s+suốt)?|bệ\s+phóng(?:\s+vững\s+chắc)?|nút\s+thắt\s+cổ\s+chai|tảng\s+băng\s+chìm|mắt\s+xích\s+(?:then\s+chốt|trung\s+tâm|quan\s+trọng)|trụ\s+cột\s+chiến\s+lược|bóc\s+tách\s+toàn\s+diện|lăng\s+kính\s+đa\s+chiều|luồng\s+sinh\s+khí\s+mới|bước\s+đệm\s+vững\s+chắc|tiền\s+đề\s+quyết\s+định|cát\s+cứ\s+tri\s+thức)\b)",
         re.IGNORECASE,
     )
     for m in lex01_re.finditer(text):
         add_flag("LEX-01", m.start(), m.end())
 
-    # LEX-02: Copula Avoidance
+    # LEX-01b: AI Intensifier Vocabulary Density Counter (outside protected economics terms)
+    intensifier_pattern = re.compile(
+        r"\b(?:" + "|".join(re.escape(w) for w in sorted(AI_INTENSIFIER_VOCAB, key=len, reverse=True)) + r")\b",
+        re.IGNORECASE,
+    )
+    intensifier_hits = [
+        m for m in intensifier_pattern.finditer(masked_text) if "§" not in m.group(0)
+    ]
+    if len(intensifier_hits) >= 4 or (
+        total_words >= 35 and len(intensifier_hits) >= 3 and (len(intensifier_hits) / total_words) >= 0.045
+    ):
+        first_hit = intensifier_hits[0]
+        add_flag("LEX-01", first_hit.start(), first_hit.end())
+
+    # LEX-02: Copula Avoidance (Expanded "là" & "có" replacement patterns)
     lex02_re = re.compile(
-        r"(?:đóng vai trò như là|đóng vai trò là|đứng như một|hoạt động như một|giữ vị thế là|tự hào có|nổi bật với|phục vụ như một)",
+        r"(?:\b(?:đóng|giữ)\s+vai\s+trò\s+(?:như\s+)?(?:là\s+)?(?:một\s+)?(?:yếu\s+tố|nền\s+tảng|công\s+cụ|mắt\s+xích|trụ\s+cột|đòn\s+bẩy|hạt\s+nhân|thành\s+phần|bộ\s+phận|chìa\s+khóa|tiền\s+đề|động\s+lực|cầu\s+nối|thước\s+đo|minh\s+chứng)\b|"
+        r"\bđược\s+(?:xem|coi|nhìn\s+nhận|đánh\s+giá|hiểu|định\s+nghĩa)\s+(?:như\s+)?là\s+một\b|"
+        r"\b(?:đóng\s+vai\s+trò\s+như\s+là|đóng\s+vai\s+trò\s+là|đứng\s+như\s+một|hoạt\s+động\s+như\s+một|giữ\s+vị\s+thế\s+là|phục\s+vụ\s+như\s+một|đại\s+diện\s+cho\s+một)\b|"
+        r"\b(?:sở\s+hữu|tự\s+hào\s+có|nổi\s+bật\s+với|mang\s+trong\s+mình)\s+(?:những|các|một|hệ\s+thống|đội\s+ngũ|quy\s+mô|bề\s+dày|lợi\s+thế|ưu\s+điểm)\b|"
+        r"\b(?:tự\s+hào\s+có|nổi\s+bật\s+với)\b)",
         re.IGNORECASE,
     )
     for m in lex02_re.finditer(text):
         add_flag("LEX-02", m.start(), m.end())
 
-    # LEX-03: Promotional Puffery & Figurative Clichés
+    # LEX-03: Promotional & Corporate Puffery
     lex03_re = re.compile(
         r"(?:mang tính bước ngoặt lịch sử|bước ngoặt lịch sử|minh chứng sống động cho|"
         r"tiên phong mang tính đột phá|sự kết hợp hoàn hảo giữa|chìa khóa vàng(?:\s+mở ra cánh cửa thành công rực rỡ)?|"
         r"cam kết không ngừng nghỉ|bề dày lịch sử phong phú|luồng gió mới|kim chỉ nam|"
-        r"cơn địa chấn|mảnh đất màu mỡ|bệ phóng vững chắc|cú hích mạnh mẽ)",
+        r"cơn địa chấn|mảnh đất màu mỡ|bệ phóng vững chắc|cú hích mạnh mẽ|"
+        r"\b(?:vươn\s+mình\s+mạnh\s+mẽ|vươn\s+ra\s+biển\s+lớn|vươn\s+tầm\s+(?:quốc\s+tế|toàn\s+cầu|khu\s+vực|châu\s+lục)|bứt\s+phá\s+(?:mạnh\s+mẽ|ngoạn\s+mục|vượt\s+bậc|lớn\s+nhất)|nhảy\s+vọt\s+phi\s+mã|tăng\s+trưởng\s+(?:vô\s+cùng\s+)?ấn\s+tượng|thành\s+tựu\s+(?:kinh\s+doanh\s+)?rực\s+rỡ|năng\s+lực\s+thực\s+chiến\s+đỉnh\s+cao|tài\s+sản\s+(?:trí\s+tuệ\s+)?vô\s+giá|kho\s+tàng\s+tri\s+thức\s+[^,.!?]{0,25}?\s*đồ\s+sộ|đáng\s+tự\s+hào|sự\s+ưu\s+việt|tinh\s+hoa\s+quản\s+trị|cực\s+kỳ\s+(?:phong\s+phú|khốc\s+liệt|mạnh\s+mẽ))\b)",
         re.IGNORECASE,
     )
     for m in lex03_re.finditer(text):
         add_flag("LEX-03", m.start(), m.end())
 
-    # LEX-04: Artificial Synonym Cycling across 7 Economics Entity Groups
+    # LEX-04: Artificial Synonym Cycling across 12 Economics Entity Groups
+    demonstrative_suffix_re = re.compile(r"\b(?:này|đó|trên|nói\s+trên|vừa\s+nêu)\b", re.IGNORECASE)
     for grp in SYNONYM_CYCLE_GROUPS:
         found = [re.search(r"\b" + p + r"\b", text, re.IGNORECASE) for p in grp]
         found = [m for m in found if m is not None]
-        # Bank group triggers at >= 2 when explicit demonstratives ("này/trên/định chế tài chính") are cycled
-        min_cycle = 2 if grp is SYNONYM_CYCLE_GROUPS[0] and any("định chế" in m.group(0).lower() or "nhà băng" in m.group(0).lower() for m in found) else 3
+        has_demo_or_stylized = any(
+            demonstrative_suffix_re.search(m.group(0))
+            or any(
+                styl in m.group(0).lower()
+                for styl in ["định chế", "nhà băng", "pháp nhân", "nhà mốt", "thương trường", "thượng đế", "tài sản con người"]
+            )
+            for m in found
+        )
+        min_cycle = 2 if has_demo_or_stylized else 3
         if len(found) >= min_cycle:
             found.sort(key=lambda m: m.start())
             add_flag("LEX-04", found[0].start(), found[-1].end())
 
-    # LEX-05: Vague Association & Inflation
+    # LEX-05: Vague Association & Stealth AI Hedging Qualifier Inflation ("tương đối...", "nhất định")
     lex05_re = re.compile(
-        r"(?:gắn liền với các hoạt động|có mối liên hệ mật thiết với|"
-        r"được ghi nhận trong mối tương quan với|xoay quanh các lĩnh vực liên quan đến|"
+        r"(?:\b(?:gắn\s+liền\s+với(?:\s+các\s+hoạt\s+động)?|có\s+mối\s+(?:liên\s+hệ|quan\s+hệ|tương\s+quan)\s+(?:mật\s+thiết|chặt\s+chẽ)\s+với|xoay\s+quanh\s+các(?:\s+lĩnh\s+vực)?|được\s+ghi\s+nhận\s+trong\s+mối\s+tương\s+quan(?:\s+với)?|chịu\s+ảnh\s+hưởng\s+đồng\s+thời\s+bởi\s+nhiều\s+yếu\s+tố)\b|"
         r"vô cùng (?:quan trọng|to lớn|cấp thiết|sâu sắc)|cực kỳ (?:quan trọng|hiệu quả|ấn tượng)|"
         r"tăng trưởng vượt bậc|bước tiến vượt bậc|thành công rực rỡ)",
         re.IGNORECASE,
@@ -649,33 +775,47 @@ def audit_paragraph(text: str, index: int = 0) -> Dict[str, Any]:
     for m in lex05_re.finditer(text):
         add_flag("LEX-05", m.start(), m.end())
 
+    hedging_matches: List[re.Match] = []
+    for h_pat in VAGUE_HEDGING_PATTERNS:
+        hedging_matches.extend(re.finditer(h_pat, text, re.IGNORECASE))
+    if len(hedging_matches) >= 2:
+        hedging_matches.sort(key=lambda m: m.start())
+        for hm in hedging_matches:
+            add_flag("LEX-05", hm.start(), hm.end())
+
     # -------------------------------------------------------------------------
     # ARG-01..04 & PRG-01..02: Argumentation & Epistemic Stance
     # -------------------------------------------------------------------------
-    # ARG-01: Flat Epistemic Weight ("Thứ nhất,... Thứ hai,... Thứ ba,..." without numbers)
+    # ARG-01: Flat Epistemic Weight ("Thứ nhất,... Thứ hai,... Thứ ba,..." or "Trước hết,... Bên cạnh đó,... Ngoài ra,..." without numbers)
     if (
-        re.search(r"(?:Thứ nhất|Một là)\s*,.*(?:Thứ hai|Hai là)\s*,.*(?:Thứ ba|Ba là)\s*,", text, re.IGNORECASE | re.DOTALL)
+        re.search(
+            r"(?:(?:Thứ nhất|Một là)\s*,.*(?:Thứ hai|Hai là)\s*,.*(?:Thứ ba|Ba là)\s*,|"
+            r"Trước hết\s*,.*Bên cạnh đó\s*,.*(?:Ngoài ra|Đồng thời|Cuối cùng)\s*,)",
+            text,
+            re.IGNORECASE | re.DOTALL,
+        )
         and not has_quantitative_evidence(text)
     ):
         add_flag("ARG-01", 0, len(text))
 
-    # ARG-02: Pendulum Hedging ("Tuy nhiên... thách thức... Do đó... toàn diện / hài hòa ... bền vững" or "Mặc dù không thể phủ nhận... song cũng cần nhìn nhận...")
+    # ARG-02: 3-Phase Pendulum Hedging ("Khen/Kết quả -> Tuy nhiên hạn chế/chưa đồng đều -> Do đó/Vì vậy/Đây là cơ sở cần hoàn thiện/rà soát")
     arg02_re = re.compile(
-        r"(?:Tuy nhiên\s*,[^.!?]*(?:thách thức|hạn chế|rủi ro)[^.!?]*\.\s*"
-        r"(?:Do đó|Vì vậy|Như vậy)\s*,[^.!?]*(?:toàn diện|đồng bộ|hài hòa|cân bằng|phát triển bền vững)[^.!?]*[.!?]?|"
+        r"(?:(?:Tuy\s+nhiên|Song|Mặt\s+khác|Bên\s+cạnh\s+những\s+(?:kết\s+quả|ưu\s+điểm|điểm\s+tích\s+cực)[^,]{0,40})\s*,[^.!?]*(?:thách\s+thức|hạn\s+chế|rủi\s+ro|khó\s+khăn|chưa\s+đồng\s+đều|chưa\s+rõ\s+ràng|chưa\s+đầy\s+đủ|chưa\s+thực\s+sự|khoảng\s+trống|bất\s+cập|phụ\s+thuộc)[^.!?]*\.\s*"
+        r"(?:Do\s+đó|Vì\s+vậy|Như\s+vậy|Chính\s+vì\s+vậy|Đây\s+là\s+cơ\s+sở\s+để|Điều\s+này\s+(?:đòi\s+hỏi|đặt\s+ra\s+yêu\s+cầu))\s*,?[^.!?]*(?:toàn\s+diện|đồng\s+bộ|hài\s+hòa|cân\s+bằng|phát\s+triển\s+bền\s+vững|tiếp\s+tục\s+hoàn\s+thiện|cần\s+rà\s+soát|cần\s+xây\s+dựng|cần\s+điều\s+chỉnh|cần\s+cải\s+thiện|cần\s+kết\s+hợp)[^.!?]*[.!?]?|"
         r"Mặc dù không thể phủ nhận[^,]{5,80},\s*(?:song|nhưng)\s+cũng cần\s+(?:nhìn nhận|thừa nhận|lưu ý)[^.!?]*[.!?]?|"
-        r"Một mặt\s+[^,]{5,70},\s*mặt khác\s+[^.!?]{5,80}(?:đòi hỏi sự cân nhắc|cần được xem xét hài hòa)[^.!?]*[.!?]?)",
+        r"Một mặt\s+[^,]{5,80},\s*mặt khác\s+[^.!?]{5,90}(?:đòi hỏi sự cân nhắc|cần được xem xét hài hòa|cần có sự kết hợp)[^.!?]*[.!?]?)",
         re.IGNORECASE,
     )
     for m in arg02_re.finditer(text):
         add_flag("ARG-02", m.start(), m.end())
 
-    # ARG-03: Macro-significance / Broad Context Inflation
+    # ARG-03: Macro-significance / Broad Context Inflation (expanded up to 140 chars before comma)
     arg03_re = re.compile(
-        r"(?:Trong bối cảnh (?:toàn cầu hóa|hội nhập kinh tế|chuyển đổi số|cách mạng công nghiệp)[^,]{0,65},|"
-        r"Trước những biến động không ngừng của[^,]{4,55},|"
-        r"Cùng với sự phát triển mạnh mẽ của[^,]{4,55},|"
-        r"phản ánh xu hướng rộng lớn hơn|để lại dấu ấn không phai mờ|đặt nền móng cho)",
+        r"(?:Trong\s+bối\s+cảnh\s+(?:toàn\s+cầu\s+hóa|hội\s+nhập\s+kinh\s+tế|chuyển\s+đổi\s+số|cách\s+mạng\s+công\s+nghiệp|cạnh\s+tranh\s+ngày\s+càng\s+gay\s+gắt|nền\s+kinh\s+tế)[^.!?]{0,140}?,|"
+        r"Trong\s+(?:kỷ\s+nguyên\s+kinh\s+tế\s+số|nền\s+kinh\s+tế\s+tri\s+thức\s+hiện\s+đại|thời\s+đại\s+công\s+nghệ\s+số)[^.!?]{0,100}?,|"
+        r"Trước\s+những\s+biến\s+động\s+không\s+ngừng\s+của[^,]{4,90},|"
+        r"Cùng\s+với\s+sự\s+phát\s+triển\s+mạnh\s+mẽ\s+của[^,]{4,90},|"
+        r"\b(?:phản\s+ánh\s+xu\s+hướng\s+rộng\s+lớn\s+hơn|để\s+lại\s+dấu\s+ấn(?:\s+không\s+phai\s+mờ)?|đặt\s+nền\s+móng\s+cho|mở\s+ra\s+kỷ\s+nguyên|khẳng\s+định\s+tầm\s+vóc)\b)",
         re.IGNORECASE,
     )
     for m in arg03_re.finditer(text):
@@ -683,7 +823,8 @@ def audit_paragraph(text: str, index: int = 0) -> Dict[str, Any]:
 
     # ARG-04: Formulaic Challenges & Prospects / Hollow Policy Slogans
     arg04_re = re.compile(
-        r"(?:Mặc dù đạt được\s+[^,]+,\s*[^,]+\s+vẫn đối mặt với nhiều thách thức|"
+        r"(?:Mặc\s+dù\s+(?:đã\s+)?(?:đạt\s+được|ghi\s+nhận|có)\s+[^,]{5,90},\s*[^,]{3,60}\s+vẫn\s+(?:còn\s+)?(?:đối\s+mặt|tồn\s+tại|gặp\s+phải)\s+[^.!?]{5,90}|"
+        r"Nếu\s+được\s+triển\s+khai\s+(?:đồng\s+bộ|phù\s+hợp)[^,]{0,60},\s*(?:hệ\s+thống\s+)?các\s+giải\s+pháp\s+(?:đề\s+xuất\s+)?có\s+thể\s+góp\s+phần\s+nâng\s+cao\s+[^.!?]+trong\s+(?:những\s+năm\s+tiếp\s+theo|thời\s+gian\s+tới|dài\s+hạn)|"
         r"Thách thức và Triển vọng tương lai|"
         r"Cần tăng cường (?:hơn nữa )?(?:sự |công tác )?phối hợp đồng bộ[^.!?]{0,60}|"
         r"Đẩy mạnh (?:việc )?ứng dụng công nghệ thông tin và chuyển đổi số một cách toàn diện[^.!?]{0,50})",
@@ -692,23 +833,35 @@ def audit_paragraph(text: str, index: int = 0) -> Dict[str, Any]:
     for m in arg04_re.finditer(text):
         add_flag("ARG-04", m.start(), m.end())
 
-    # PRG-01: Weasel Attribution ("Theo các chuyên gia cho rằng...") & Vague Unquantified Claims
+    # PRG-01: Weasel Attribution ("Theo các chuyên gia cho rằng...") & PRG-01b Media Coverage Clichés (Karve Meilleur)
     prg01_weasel_re = re.compile(
-        r"(?:Theo\s+)?(?:các chuyên gia(?:\s+kinh tế)? cho rằng|nhiều nhà quan sát nhận định|"
-        r"các nghiên cứu(?: trước đây)? chỉ ra rằng|giới phân tích nhận định rằng|thực tế đã chứng minh rằng|"
-        r"sự đưa tin độc lập từ các cơ quan truyền thông|các ấn phẩm thương mại chuyên ngành)",
+        r"\b(?:(?:Theo\s+)?(?:các\s+chuyên\s+gia(?:\s+kinh\s+tế)?|nhiều\s+nhà\s+quan\s+sát|nhiều\s+nghiên\s+cứu|các\s+nghiên\s+cứu\s+trước\s+đây|giới\s+phân\s+tích|nhiều\s+học\s+giả|thực\s+tế\s+cho\s+thấy|thực\s+tiễn\s+cho\s+thấy|thực\s+tế\s+đã\s+chứng\s+minh\s+rằng)\s*(?:cho\s+rằng|nhận\s+định(?:\s+rằng)?|chỉ\s+ra\s+rằng|khẳng\s+định\s+rằng)?|"
+        r"được\s+đưa\s+tin\s+bởi\s+[^.!?]+tạp\s+chí|được\s+đăng\s+tải\s+trên\s+các\s+ấn\s+phẩm|sự\s+đưa\s+tin\s+độc\s+lập\s+từ\s+các\s+cơ\s+quan\s+truyền\s+thông|các\s+ấn\s+phẩm\s+thương\s+mại\s+chuyên\s+ngành)\b",
         re.IGNORECASE,
     )
     for m in prg01_weasel_re.finditer(text):
         sent_ctx = _find_sentence_containing(sentences, m.start(), m.end())
-        # Always flag ungrammatical calque "Theo các chuyên gia cho rằng" or when sentence lacks academic citation
-        if "theo các chuyên gia cho rằng" in m.group(0).lower() or not has_academic_citation(sent_ctx):
+        matched_lower = m.group(0).lower()
+        is_media_cliche = any(w in matched_lower for w in ["đưa tin", "ấn phẩm", "tạp chí"])
+        if (
+            "theo các chuyên gia cho rằng" in matched_lower
+            or is_media_cliche
+            or (not has_academic_citation(sent_ctx) and not has_quantitative_evidence(sent_ctx))
+        ):
             add_flag("PRG-01", m.start(), m.end())
 
-    # PRG-02: Didactic Hedging & Disclaimer
+    # PRG-02: Comprehensive 3-Branch Disclaimers (PRG-02a Didactic, PRG-02b Data Scarcity, PRG-02c Methodological Hedging)
     prg02_re = re.compile(
-        r"(?:điều quan trọng cần lưu ý là|cần phải nhớ rằng|"
-        r"mặc dù chi tiết cụ thể không được công bố rộng rãi|không ngoa khi nói rằng)",
+        r"\b(?:"
+        # PRG-02a: Didactic hedging
+        r"điều\s+quan\s+trọng\s+(?:cần\s+lưu\s+ý\s+)?là|cần\s+(?:phải\s+)?(?:lưu\s+ý|nhớ|nhấn\s+mạnh)\s+rằng|một\s+(?:điểm|lưu\s+ý|nguyên\s+tắc)\s+(?:quan\s+trọng\s+)?cần\s+(?:nhấn\s+mạnh|lưu\s+ý)\s+là|không\s+ngoa\s+khi\s+nói\s+rằng|"
+        # PRG-02b: Prompt data scarcity self-disclaimer (WP:AIDISCLAIMER)
+        r"trong\s+phạm\s+vi\s+dữ\s+liệu\s+nghiên\s+cứu,\s*chưa\s+có\s+(?:tài\s+liệu|cơ\s+sở|thông\s+tin)\s+cho\s+thấy|mặc\s+dù\s+chi\s+tiết\s+cụ\s+thể\s+không\s+được\s+công\s+bố(?:\s+rộng\s+rãi)?|dữ\s+liệu\s+hiện\s+có\s+mới\s+cho\s+thấy[^.!?]*?để\s+khẳng\s+định\s+quan\s+hệ\s+nhân\s+quả\s+cần\s+thêm|"
+        # PRG-02c: Methodological & metric interpretation disclaimer (E-COM WOW, An Cường, Hecatech)
+        r"(?:khóa\s+luận|nghiên\s+cứu|chuyên\s+đề|tác\s+giả)\s+(?:không\s+sử\s+dụng\s+[^.!?]{3,55}\s+để\s+[^.!?]{3,55}\s+mà\s+chỉ\s+coi\s+đây\s+là\s+khung\s+tham\s+chiếu|(?:chỉ\s+)?sử\s+dụng\s+[^.!?]{3,55}\s+như\s+(?:một\s+|các\s+)?(?:khung\s+tham\s+chiếu|chỉ\s+báo\s+bổ\s+sung|cơ\s+sở\s+bổ\s+trợ)[^.!?]*?\s+(?:chứ\s+)?không\s+(?:coi|dùng|sử\s+dụng|đồng\s+nhất))|"
+        r"không\s+tính\s+trực\s+tiếp\s+(?:khoảng\s+)?chênh\s+lệch\s+giữa\s+hai\s+loại\s+điểm\s+vì\s+hai\s+loại\s+điểm\s+phản\s+ánh\s+hai\s+khía\s+cạnh\s+khác\s+nhau|"
+        r"không\s+dùng\s+sự\s+thay\s+đổi\s+của\s+chỉ\s+tiêu\s+này\s+để\s+khẳng\s+định\s+trực\s+tiếp\s+quan\s+hệ\s+nhân\s+quả"
+        r")\b",
         re.IGNORECASE,
     )
     for m in prg02_re.finditer(text):
